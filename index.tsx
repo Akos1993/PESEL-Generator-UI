@@ -23,9 +23,168 @@ import {
   Type,
   Eye,
   ZapOff,
-  Play
+  Play,
+  Globe
 } from 'lucide-react';
 import { GoogleGenAI, Modality } from "@google/genai";
+
+/**
+ * Translations Dictionary
+ */
+type Language = 'PL' | 'ENG' | 'UKR';
+
+const LANGUAGE_CONFIG: Record<Language, { label: string; flag: string }> = {
+  PL: { label: 'PL', flag: '🇵🇱' },
+  ENG: { label: 'EN', flag: '🇬🇧' },
+  UKR: { label: 'UA', flag: '🇺🇦' }
+};
+
+const TRANSLATIONS = {
+  PL: {
+    title: 'PESEL Master',
+    subtitle: 'System Zarządzania Numerami PESEL',
+    bulkGenerate: 'Generuj Grupowo',
+    export: 'Eksportuj',
+    manualEntry: 'Wprowadzanie Ręczne',
+    firstName: 'Imię',
+    lastName: 'Nazwisko',
+    dob: 'Data Urodzenia',
+    gender: 'Płeć',
+    male: 'Mężczyzna',
+    female: 'Kobieta',
+    generateIdentity: 'Generuj Tożsamość',
+    databaseOverview: 'Przegląd Bazy Danych',
+    totalRecords: 'Łącznie Rekordów',
+    mfSplit: 'Podział M / K',
+    identities: 'Wygenerowane Tożsamości',
+    searchPlaceholder: 'Szukaj imienia lub PESEL...',
+    tableIdentity: 'Tożsamość',
+    tableBirthData: 'Dane Urodzenia',
+    tablePesel: 'PESEL',
+    tableAccessibility: 'Dostępność',
+    readOutLoud: 'Czytaj na głos',
+    explainStructure: 'Wyjaśnij strukturę PESEL',
+    a11yOptions: 'Opcje Dostępności',
+    textSize: 'Rozmiar Tekstu',
+    defaultSize: 'Domyślny',
+    mediumSize: 'Średni',
+    largeSize: 'Duży',
+    highContrast: 'Wysoki Kontrast',
+    highContrastDesc: 'Ostrzejsze kolory i krawędzie',
+    reduceMotion: 'Ogranicz Ruch',
+    reduceMotionDesc: 'Wyłącz animacje',
+    voiceAssistant: 'Asystent Głosowy AI',
+    readSummary: 'Czytaj Podsumowanie Strony',
+    generatingAudio: 'Generowanie dźwięku...',
+    analyzing: 'Analizowanie struktury PESEL...',
+    applyChanges: 'Zastosuj Zmiany',
+    noRecords: 'Nie znaleziono rekordów',
+    addFirst: 'Dodaj pierwszą tożsamość, aby zacząć',
+    footerStandard: 'Zgodność ze standardami',
+    footerAi: 'Wsparcie AI',
+    footerCentury: 'Wiele wieków',
+    footerDesc: 'To narzędzie edukacyjne symuluje Polskie Numery Powszechnego Elektronicznego Systemu Ewidencji Ludności. Logika generowania jest zgodna z oficjalnym algorytmem wag 1-3-7-9. Funkcje AI wykorzystują Google Gemini.',
+    recentRecord: 'Ostatni rekord to {name}, urodzony {dob}, z numerem PESEL {pesel}.',
+    emptyDb: 'Twoja baza danych jest pusta. Możesz dodać osobę ręcznie lub użyć przycisku generowania grupowego.',
+    totalSummary: 'Masz obecnie {count} tożsamości w bazie danych.'
+  },
+  ENG: {
+    title: 'PESEL Master',
+    subtitle: 'Polish Identity Number Management System',
+    bulkGenerate: 'Bulk Generate',
+    export: 'Export',
+    manualEntry: 'Manual Entry',
+    firstName: 'First Name',
+    lastName: 'Last Name',
+    dob: 'Birth Date',
+    gender: 'Gender',
+    male: 'Male',
+    female: 'Female',
+    generateIdentity: 'Generate Identity',
+    databaseOverview: 'Database Overview',
+    totalRecords: 'Total Records',
+    mfSplit: 'M / F Split',
+    identities: 'Generated Identities',
+    searchPlaceholder: 'Search name or PESEL...',
+    tableIdentity: 'Identity',
+    tableBirthData: 'Birth Data',
+    tablePesel: 'PESEL',
+    tableAccessibility: 'Accessibility',
+    readOutLoud: 'Read out loud',
+    explainStructure: 'Explain PESEL structure',
+    a11yOptions: 'Accessibility Options',
+    textSize: 'Text Size',
+    defaultSize: 'Default',
+    mediumSize: 'Medium',
+    largeSize: 'Large',
+    highContrast: 'High Contrast',
+    highContrastDesc: 'Sharper colors & borders',
+    reduceMotion: 'Reduce Motion',
+    reduceMotionDesc: 'Disable animations',
+    voiceAssistant: 'AI Voice Assistant',
+    readSummary: 'Read Page Summary',
+    generatingAudio: 'Generating Audio...',
+    analyzing: 'Analyzing PESEL structure...',
+    applyChanges: 'Apply Changes',
+    noRecords: 'No records found',
+    addFirst: 'Add a new identity to get started',
+    footerStandard: 'Standard Compliant',
+    footerAi: 'AI-Enhanced Readout',
+    footerCentury: 'Multi-Century',
+    footerDesc: 'This educational tool simulates Polish National Identification Numbers. All generation logic follows the official 1-3-7-9 weight algorithm. AI Features use Google Gemini.',
+    recentRecord: 'The most recent record is for {name}, born on {dob}, with PESEL {pesel}.',
+    emptyDb: 'Your identity database is currently empty. You can add a person manually or use the bulk generate button to start.',
+    totalSummary: 'You currently have {count} identities in your database.'
+  },
+  UKR: {
+    title: 'PESEL Майстер',
+    subtitle: 'Система управління польськими ідентифікаційними номерами',
+    bulkGenerate: 'Масове створення',
+    export: 'Експорт',
+    manualEntry: 'Ручне введення',
+    firstName: "Ім'я",
+    lastName: 'Прізвище',
+    dob: 'Дата народження',
+    gender: 'Стать',
+    male: 'Чоловік',
+    female: 'Жінка',
+    generateIdentity: 'Створити особу',
+    databaseOverview: 'Огляд бази даних',
+    totalRecords: 'Всього записів',
+    mfSplit: 'Ч / Ж Розподіл',
+    identities: 'Створені особи',
+    searchPlaceholder: 'Пошук за ім\'ям або PESEL...',
+    tableIdentity: 'Особа',
+    tableBirthData: 'Дані про народження',
+    tablePesel: 'PESEL',
+    tableAccessibility: 'Доступність',
+    readOutLoud: 'Читати вголос',
+    explainStructure: 'Пояснити структуру PESEL',
+    a11yOptions: 'Налаштування доступності',
+    textSize: 'Розмір тексту',
+    defaultSize: 'Стандартний',
+    mediumSize: 'Середній',
+    largeSize: 'Великий',
+    highContrast: 'Високий контраст',
+    highContrastDesc: 'Чіткіші кольори та межі',
+    reduceMotion: 'Менше анімації',
+    reduceMotionDesc: 'Вимкнути анімацію',
+    voiceAssistant: 'Голосовий помічник AI',
+    readSummary: 'Прочитати огляд сторінки',
+    generatingAudio: 'Генерація аудіо...',
+    analyzing: 'Аналіз структури PESEL...',
+    applyChanges: 'Застосувати зміни',
+    noRecords: 'Записів не знайдено',
+    addFirst: 'Додайте нову особу, щоб почати',
+    footerStandard: 'Відповідність стандартам',
+    footerAi: 'Підтримка AI',
+    footerCentury: 'Мульти-століття',
+    footerDesc: 'Цей освітній інструмент моделює польські національні ідентифікаційні номери. Логіка генерації відповідає офіційному алгоритму ваг 1-3-7-9. Функції AI використовують Google Gemini.',
+    recentRecord: 'Останній запис — {name}, народився {dob}, номер PESEL {pesel}.',
+    emptyDb: 'Ваша база даних наразі порожня. Ви можете додати особу вручну або скористатися кнопкою масового створення.',
+    totalSummary: 'Наразі у вашій базі даних є {count} осіб.'
+  }
+};
 
 /**
  * Audio Decoding Helpers for Gemini TTS raw PCM
@@ -116,6 +275,9 @@ const App: React.FC = () => {
     return saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
   });
   
+  // Language State
+  const [lang, setLang] = useState<Language>(() => (localStorage.getItem('pesel_lang') as Language) || 'PL');
+  
   // Accessibility States
   const [isA11yMenuOpen, setIsA11yMenuOpen] = useState(false);
   const [fontScale, setFontScale] = useState(() => Number(localStorage.getItem('pesel_font_scale')) || 1);
@@ -136,6 +298,9 @@ const App: React.FC = () => {
   const [globalAudioLoading, setGlobalAudioLoading] = useState(false);
   const [explainingId, setExplainingId] = useState<string | null>(null);
   const [aiExplanation, setAiExplanation] = useState<string | null>(null);
+
+  // Helper to get translated string
+  const t = (key: keyof typeof TRANSLATIONS['PL']) => TRANSLATIONS[lang][key] || TRANSLATIONS['PL'][key];
 
   // Persistence
   useEffect(() => {
@@ -161,6 +326,10 @@ const App: React.FC = () => {
       document.documentElement.classList.remove('dark');
     }
   }, [isDarkMode]);
+
+  useEffect(() => {
+    localStorage.setItem('pesel_lang', lang);
+  }, [lang]);
 
   // Persist A11y Settings
   useEffect(() => {
@@ -232,7 +401,7 @@ const App: React.FC = () => {
     
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const prompt = `Read out the following identity details clearly and professionally: 
+      const prompt = `Translate to ${lang === 'UKR' ? 'Ukrainian' : lang === 'ENG' ? 'English' : 'Polish'} and read out the following identity details clearly: 
       Full name: ${person.firstName} ${person.lastName}. 
       Birth date: ${person.dob}. 
       PESEL identity number: ${person.pesel.split('').join(' ')}.`;
@@ -278,14 +447,13 @@ const App: React.FC = () => {
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const summaryText = people.length > 0 
-        ? `You currently have ${people.length} identities in your database. 
-           The most recent record is for ${people[0].firstName} ${people[0].lastName}, 
-           born on ${people[0].dob}, with PESEL ${people[0].pesel.split('').join(' ')}.`
-        : "Your identity database is currently empty. You can add a person manually or use the bulk generate button to start.";
+        ? t('totalSummary').replace('{count}', people.length.toString()) + " " + 
+          t('recentRecord').replace('{name}', `${people[0].firstName} ${people[0].lastName}`).replace('{dob}', people[0].dob).replace('{pesel}', people[0].pesel.split('').join(' '))
+        : t('emptyDb');
 
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash-preview-tts",
-        contents: [{ parts: [{ text: `Speak as a helpful accessibility assistant: ${summaryText}` }] }],
+        contents: [{ parts: [{ text: `Speak in ${lang === 'UKR' ? 'Ukrainian' : lang === 'ENG' ? 'English' : 'Polish'} as a helpful accessibility assistant: ${summaryText}` }] }],
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: {
@@ -324,7 +492,7 @@ const App: React.FC = () => {
 
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const prompt = `Explain the structure of this Polish PESEL number: ${person.pesel}. 
+      const prompt = `Explain the structure of this Polish PESEL number: ${person.pesel} in ${lang === 'UKR' ? 'Ukrainian' : lang === 'ENG' ? 'English' : 'Polish'}. 
       Break down the segments (YYMMDD ZZZ S Q) and what they signify for this specific individual born on ${person.dob}. 
       Be concise and helpful for someone using an accessibility tool. Use markdown.`;
 
@@ -333,7 +501,7 @@ const App: React.FC = () => {
         contents: prompt,
       });
 
-      setAiExplanation(response.text || "Could not generate explanation.");
+      setAiExplanation(response.text || "Error generating explanation.");
     } catch (err) {
       console.error("AI Explain Error:", err);
       setAiExplanation("Error communicating with AI assistant.");
@@ -369,55 +537,76 @@ const App: React.FC = () => {
               <div className="bg-indigo-600 p-2 rounded-lg text-white shadow-lg shadow-indigo-500/20">
                 <IdCard size={28} />
               </div>
-              <h1 className="text-3xl font-bold tracking-tight">PESEL Master</h1>
+              <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
             </div>
-            <p className={`${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Polish Identity Number Management System</p>
+            <p className={`${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{t('subtitle')}</p>
           </div>
           
-          <div className="flex flex-wrap gap-2">
-            {/* AI Global Read Aloud Button - Prominent Placement */}
-            <button 
-              onClick={handleReadGlobalSummary}
-              disabled={globalAudioLoading}
-              className={`p-2 rounded-lg transition-all border flex items-center justify-center ${globalAudioLoading ? 'bg-indigo-100 dark:bg-indigo-900/50' : (isDarkMode ? 'bg-slate-800 border-slate-700 text-indigo-400 hover:bg-slate-700' : 'bg-white border-slate-200 text-indigo-600 hover:bg-slate-50')} shadow-sm`}
-              title="Read Page Summary (AI Voice)"
-              aria-label="Read page summary out loud"
-            >
-              {globalAudioLoading ? <Loader2 size={20} className="animate-spin text-indigo-500" /> : <Volume2 size={20} />}
-            </button>
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Enhanced Language Switcher with Flags */}
+            <div className={`flex items-center p-1 rounded-xl border ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'} shadow-sm`}>
+              {(['PL', 'ENG', 'UKR'] as Language[]).map((l) => (
+                <button
+                  key={l}
+                  onClick={() => setLang(l)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${lang === l ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-indigo-500 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                >
+                  <span className="text-base leading-none" role="img" aria-label={l}>
+                    {LANGUAGE_CONFIG[l].flag}
+                  </span>
+                  <span className="hidden sm:inline">{LANGUAGE_CONFIG[l].label}</span>
+                </button>
+              ))}
+            </div>
 
-            {/* Accessibility Menu Trigger */}
-            <button 
-              onClick={() => setIsA11yMenuOpen(true)}
-              className={`p-2 rounded-lg transition-colors border flex items-center justify-center ${isDarkMode ? 'bg-slate-800 border-slate-700 text-indigo-400 hover:bg-slate-700' : 'bg-white border-slate-200 text-indigo-600 hover:bg-slate-50'} shadow-sm`}
-              title="Accessibility Settings"
-              aria-label="Open accessibility settings"
-            >
-              <Accessibility size={20} />
-            </button>
-            
-            <button 
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className={`p-2 rounded-lg transition-colors border flex items-center justify-center ${isDarkMode ? 'bg-slate-800 border-slate-700 text-yellow-400 hover:bg-slate-700' : 'bg-white border-slate-200 text-indigo-600 hover:bg-slate-50'} shadow-sm`}
-              title="Toggle theme"
-            >
-              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
-            <button 
-              onClick={() => generateRandom(10)}
-              disabled={isAutoGenerating}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors border ${isDarkMode ? 'bg-indigo-900/30 text-indigo-300 border-indigo-500/30 hover:bg-indigo-900/50' : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'}`}
-            >
-              <RefreshCw size={18} className={isAutoGenerating ? 'animate-spin' : ''} />
-              <span>Bulk Generate</span>
-            </button>
-            <button 
-              onClick={exportData}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors border shadow-sm ${isDarkMode ? 'bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'}`}
-            >
-              <Download size={18} />
-              <span>Export</span>
-            </button>
+            <div className="flex items-center gap-2">
+              {/* AI Global Read Aloud Button */}
+              <button 
+                onClick={handleReadGlobalSummary}
+                disabled={globalAudioLoading}
+                className={`p-2 rounded-lg transition-all border flex items-center justify-center ${globalAudioLoading ? 'bg-indigo-100 dark:bg-indigo-900/50' : (isDarkMode ? 'bg-slate-800 border-slate-700 text-indigo-400 hover:bg-slate-700' : 'bg-white border-slate-200 text-indigo-600 hover:bg-slate-50')} shadow-sm`}
+                title={t('readSummary')}
+                aria-label={t('readSummary')}
+              >
+                {globalAudioLoading ? <Loader2 size={20} className="animate-spin text-indigo-500" /> : <Volume2 size={20} />}
+              </button>
+
+              {/* Accessibility Menu Trigger */}
+              <button 
+                onClick={() => setIsA11yMenuOpen(true)}
+                className={`p-2 rounded-lg transition-colors border flex items-center justify-center ${isDarkMode ? 'bg-slate-800 border-slate-700 text-indigo-400 hover:bg-slate-700' : 'bg-white border-slate-200 text-indigo-600 hover:bg-slate-50'} shadow-sm`}
+                title={t('a11yOptions')}
+                aria-label={t('a11yOptions')}
+              >
+                <Accessibility size={20} />
+              </button>
+              
+              <button 
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                className={`p-2 rounded-lg transition-colors border flex items-center justify-center ${isDarkMode ? 'bg-slate-800 border-slate-700 text-yellow-400 hover:bg-slate-700' : 'bg-white border-slate-200 text-indigo-600 hover:bg-slate-50'} shadow-sm`}
+                title="Toggle theme"
+              >
+                {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => generateRandom(10)}
+                disabled={isAutoGenerating}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors border ${isDarkMode ? 'bg-indigo-900/30 text-indigo-300 border-indigo-500/30 hover:bg-indigo-900/50' : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'}`}
+              >
+                <RefreshCw size={18} className={isAutoGenerating ? 'animate-spin' : ''} />
+                <span className="hidden sm:inline">{t('bulkGenerate')}</span>
+              </button>
+              <button 
+                onClick={exportData}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors border shadow-sm ${isDarkMode ? 'bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'}`}
+              >
+                <Download size={18} />
+                <span className="hidden sm:inline">{t('export')}</span>
+              </button>
+            </div>
           </div>
         </header>
 
@@ -431,12 +620,12 @@ const App: React.FC = () => {
               <div className={`${isDarkMode ? 'bg-slate-800/50 border-slate-800' : 'bg-slate-50 border-slate-200'} border-b px-6 py-4`}>
                 <h2 className="font-semibold flex items-center gap-2">
                   <Plus size={18} className="text-indigo-500" />
-                  Manual Entry
+                  {t('manualEntry')}
                 </h2>
               </div>
               <form onSubmit={handleAddPerson} className="p-6 space-y-4">
                 <div>
-                  <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>First Name</label>
+                  <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>{t('firstName')}</label>
                   <div className="relative">
                     <User className="absolute left-3 top-2.5 text-slate-400" size={18} />
                     <input 
@@ -445,12 +634,11 @@ const App: React.FC = () => {
                       value={formData.firstName}
                       onChange={e => setFormData({...formData, firstName: e.target.value})}
                       className={`w-full pl-10 pr-4 py-2 rounded-lg border transition-all outline-none focus:ring-2 focus:ring-indigo-500 ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'}`}
-                      placeholder="e.g. Adam"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>Last Name</label>
+                  <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>{t('lastName')}</label>
                   <div className="relative">
                     <User className="absolute left-3 top-2.5 text-slate-400" size={18} />
                     <input 
@@ -459,13 +647,12 @@ const App: React.FC = () => {
                       value={formData.lastName}
                       onChange={e => setFormData({...formData, lastName: e.target.value})}
                       className={`w-full pl-10 pr-4 py-2 rounded-lg border transition-all outline-none focus:ring-2 focus:ring-indigo-500 ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'}`}
-                      placeholder="e.g. Kowalski"
                     />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>Birth Date</label>
+                    <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>{t('dob')}</label>
                     <div className="relative">
                       <Calendar className="absolute left-3 top-2.5 text-slate-400" size={18} />
                       <input 
@@ -478,14 +665,14 @@ const App: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>Gender</label>
+                    <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>{t('gender')}</label>
                     <select 
                       value={formData.gender}
                       onChange={e => setFormData({...formData, gender: e.target.value as 'male' | 'female'})}
                       className={`w-full px-4 py-2 rounded-lg border transition-all outline-none focus:ring-2 focus:ring-indigo-500 appearance-none ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'}`}
                     >
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
+                      <option value="male">{t('male')}</option>
+                      <option value="female">{t('female')}</option>
                     </select>
                   </div>
                 </div>
@@ -494,7 +681,7 @@ const App: React.FC = () => {
                   className="w-full bg-indigo-600 text-white font-semibold py-2.5 rounded-lg hover:bg-indigo-700 transition-all shadow-md hover:shadow-lg hover:shadow-indigo-500/20 flex items-center justify-center gap-2 mt-2"
                 >
                   <CheckCircle2 size={18} />
-                  Generate Identity
+                  {t('generateIdentity')}
                 </button>
               </form>
             </div>
@@ -505,7 +692,7 @@ const App: React.FC = () => {
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
                     <HelpCircle size={18} />
-                    AI Assistant
+                    {t('voiceAssistant')}
                   </h3>
                   <button onClick={() => {setExplainingId(null); setAiExplanation(null)}} className="text-slate-400 hover:text-slate-600" aria-label="Close AI explanation">&times;</button>
                 </div>
@@ -516,7 +703,7 @@ const App: React.FC = () => {
                 ) : (
                   <div className="flex items-center gap-3 text-slate-500 text-sm italic py-4">
                     <Loader2 size={16} className="animate-spin text-indigo-500" />
-                    Analyzing PESEL structure...
+                    {t('analyzing')}
                   </div>
                 )}
               </div>
@@ -527,15 +714,15 @@ const App: React.FC = () => {
               <div className="relative z-10">
                 <h3 className="text-indigo-200 font-medium mb-4 flex items-center gap-2">
                   <Info size={18} />
-                  Database Overview
+                  {t('databaseOverview')}
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-                    <p className="text-xs text-indigo-200 uppercase tracking-wider mb-1">Total Records</p>
+                    <p className="text-xs text-indigo-200 uppercase tracking-wider mb-1">{t('totalRecords')}</p>
                     <p className="text-3xl font-bold">{people.length}</p>
                   </div>
                   <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-                    <p className="text-xs text-indigo-200 uppercase tracking-wider mb-1">M / F Split</p>
+                    <p className="text-xs text-indigo-200 uppercase tracking-wider mb-1">{t('mfSplit')}</p>
                     <p className="text-xl font-bold">
                       {people.filter(p => p.gender === 'male').length} / {people.filter(p => p.gender === 'female').length}
                     </p>
@@ -557,13 +744,13 @@ const App: React.FC = () => {
               <div className={`p-6 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'} flex flex-col md:flex-row gap-4 items-center justify-between`}>
                 <h2 className="text-xl font-bold flex items-center gap-2">
                   <Users size={20} className="text-indigo-500" />
-                  Generated Identities
+                  {t('identities')}
                 </h2>
                 <div className="relative w-full md:w-72">
                   <Search className="absolute left-3 top-2.5 text-slate-400" size={18} />
                   <input 
                     type="text" 
-                    placeholder="Search name or PESEL..."
+                    placeholder={t('searchPlaceholder')}
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                     className={`w-full pl-10 pr-4 py-2 rounded-full border-transparent focus:border-indigo-500 outline-none transition-all ${isDarkMode ? 'bg-slate-800 text-slate-200' : 'bg-slate-50 text-slate-900'}`}
@@ -577,10 +764,10 @@ const App: React.FC = () => {
                   <table className="w-full text-left border-collapse">
                     <thead className={`${isDarkMode ? 'bg-slate-800/50' : 'bg-slate-50'} sticky top-0 z-10`}>
                       <tr>
-                        <th className={`px-6 py-4 text-xs font-semibold uppercase tracking-wider border-b ${isDarkMode ? 'text-slate-400 border-slate-800' : 'text-slate-500 border-slate-100'}`}>Identity</th>
-                        <th className={`px-6 py-4 text-xs font-semibold uppercase tracking-wider border-b ${isDarkMode ? 'text-slate-400 border-slate-800' : 'text-slate-500 border-slate-100'}`}>Birth Data</th>
-                        <th className={`px-6 py-4 text-xs font-semibold uppercase tracking-wider border-b ${isDarkMode ? 'text-slate-400 border-slate-800' : 'text-slate-500 border-slate-100'}`}>PESEL</th>
-                        <th className={`px-6 py-4 text-xs font-semibold uppercase tracking-wider border-b text-right ${isDarkMode ? 'text-slate-400 border-slate-800' : 'text-slate-500 border-slate-100'}`}>Accessibility</th>
+                        <th className={`px-6 py-4 text-xs font-semibold uppercase tracking-wider border-b ${isDarkMode ? 'text-slate-400 border-slate-800' : 'text-slate-500 border-slate-100'}`}>{t('tableIdentity')}</th>
+                        <th className={`px-6 py-4 text-xs font-semibold uppercase tracking-wider border-b ${isDarkMode ? 'text-slate-400 border-slate-800' : 'text-slate-500 border-slate-100'}`}>{t('tableBirthData')}</th>
+                        <th className={`px-6 py-4 text-xs font-semibold uppercase tracking-wider border-b ${isDarkMode ? 'text-slate-400 border-slate-800' : 'text-slate-500 border-slate-100'}`}>{t('tablePesel')}</th>
+                        <th className={`px-6 py-4 text-xs font-semibold uppercase tracking-wider border-b text-right ${isDarkMode ? 'text-slate-400 border-slate-800' : 'text-slate-500 border-slate-100'}`}>{t('tableAccessibility')}</th>
                       </tr>
                     </thead>
                     <tbody className={`divide-y ${isDarkMode ? 'divide-slate-800' : 'divide-slate-100'}`}>
@@ -593,7 +780,7 @@ const App: React.FC = () => {
                               </div>
                               <div>
                                 <div className={`font-semibold ${isDarkMode ? 'text-slate-200' : 'text-slate-900'}`}>{person.firstName} {person.lastName}</div>
-                                <div className="text-xs text-slate-400 capitalize">{person.gender}</div>
+                                <div className="text-xs text-slate-400 capitalize">{person.gender === 'male' ? t('male') : t('female')}</div>
                               </div>
                             </div>
                           </td>
@@ -615,8 +802,8 @@ const App: React.FC = () => {
                                 onClick={() => handleReadOutLoud(person)}
                                 disabled={audioLoadingId !== null}
                                 className={`p-2 rounded-lg transition-all border ${isDarkMode ? 'bg-slate-800 border-slate-700 text-indigo-400 hover:text-indigo-300 hover:bg-slate-700' : 'bg-white border-slate-200 text-indigo-600 hover:bg-slate-50'} shadow-sm flex items-center justify-center`}
-                                title="Read out loud (AI Assistant)"
-                                aria-label={`Read ${person.firstName}'s details out loud`}
+                                title={t('readOutLoud')}
+                                aria-label={`${t('readOutLoud')} ${person.firstName}`}
                               >
                                 {audioLoadingId === person.id ? <Loader2 size={16} className="animate-spin" /> : <Volume2 size={16} />}
                               </button>
@@ -625,8 +812,8 @@ const App: React.FC = () => {
                               <button 
                                 onClick={() => handleExplainPESEL(person)}
                                 className={`p-2 rounded-lg transition-all border ${isDarkMode ? 'bg-slate-800 border-slate-700 text-emerald-400 hover:text-emerald-300 hover:bg-slate-700' : 'bg-white border-slate-200 text-emerald-600 hover:bg-slate-50'} shadow-sm flex items-center justify-center`}
-                                title="Explain PESEL structure (AI Assistant)"
-                                aria-label={`Explain structure of PESEL ${person.pesel}`}
+                                title={t('explainStructure')}
+                                aria-label={t('explainStructure')}
                               >
                                 <HelpCircle size={16} />
                               </button>
@@ -634,8 +821,7 @@ const App: React.FC = () => {
                               <button 
                                 onClick={() => deletePerson(person.id)}
                                 className="text-slate-400 hover:text-red-500 p-2 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
-                                title="Delete entry"
-                                aria-label={`Delete entry for ${person.firstName} ${person.lastName}`}
+                                title="Delete"
                               >
                                 <Trash2 size={18} />
                               </button>
@@ -648,8 +834,8 @@ const App: React.FC = () => {
                 ) : (
                   <div className="flex flex-col items-center justify-center py-20 text-slate-500">
                     <IdCard size={64} strokeWidth={1} className="mb-4 opacity-20" />
-                    <p className="text-lg">No records found</p>
-                    <p className="text-sm opacity-60">Add a new identity to get started</p>
+                    <p className="text-lg">{t('noRecords')}</p>
+                    <p className="text-sm opacity-60">{t('addFirst')}</p>
                   </div>
                 )}
               </div>
@@ -668,23 +854,22 @@ const App: React.FC = () => {
                 <div className="bg-indigo-600 p-2 rounded-xl text-white">
                   <Accessibility size={24} />
                 </div>
-                <h2 className="text-2xl font-bold">Accessibility Options</h2>
+                <h2 className="text-2xl font-bold">{t('a11yOptions')}</h2>
               </div>
               <button 
                 onClick={() => setIsA11yMenuOpen(false)}
                 className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                aria-label="Close settings"
               >
                 <X size={20} />
               </button>
             </div>
 
             <div className="space-y-6">
-              {/* AI Read Aloud Section - Repurposed in menu too for redundancy */}
+              {/* Voice Assistant Option */}
               <div className="p-4 rounded-2xl border border-indigo-200 dark:border-indigo-900 bg-indigo-50/50 dark:bg-indigo-900/20">
                 <label className="flex items-center gap-2 text-sm font-semibold mb-3 text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
                   <Volume2 size={18} />
-                  AI Voice Assistant
+                  {t('voiceAssistant')}
                 </label>
                 <button
                   onClick={handleReadGlobalSummary}
@@ -694,12 +879,12 @@ const App: React.FC = () => {
                   {globalAudioLoading ? (
                     <>
                       <Loader2 size={20} className="animate-spin" />
-                      Generating Audio...
+                      {t('generatingAudio')}
                     </>
                   ) : (
                     <>
                       <Play size={20} fill="currentColor" />
-                      Read Page Summary
+                      {t('readSummary')}
                     </>
                   )}
                 </button>
@@ -709,7 +894,7 @@ const App: React.FC = () => {
               <div>
                 <label className="flex items-center gap-2 text-sm font-semibold mb-3">
                   <Type size={18} className="text-indigo-500" />
-                  Text Size
+                  {t('textSize')}
                 </label>
                 <div className="flex gap-2">
                   {[1, 1.15, 1.3].map((scale) => (
@@ -718,7 +903,7 @@ const App: React.FC = () => {
                       onClick={() => setFontScale(scale)}
                       className={`flex-1 py-3 rounded-xl border-2 transition-all font-bold ${fontScale === scale ? 'border-indigo-600 bg-indigo-600/10 text-indigo-600' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'}`}
                     >
-                      {scale === 1 ? 'Default' : scale === 1.15 ? 'Medium' : 'Large'}
+                      {scale === 1 ? t('defaultSize') : scale === 1.15 ? t('mediumSize') : t('largeSize')}
                     </button>
                   ))}
                 </div>
@@ -731,8 +916,8 @@ const App: React.FC = () => {
                     <Eye size={18} />
                   </div>
                   <div>
-                    <p className="font-semibold">High Contrast</p>
-                    <p className="text-xs text-slate-500">Sharper colors & borders</p>
+                    <p className="font-semibold">{t('highContrast')}</p>
+                    <p className="text-xs text-slate-500">{t('highContrastDesc')}</p>
                   </div>
                 </div>
                 <button 
@@ -750,8 +935,8 @@ const App: React.FC = () => {
                     <ZapOff size={18} />
                   </div>
                   <div>
-                    <p className="font-semibold">Reduce Motion</p>
-                    <p className="text-xs text-slate-500">Disable animations</p>
+                    <p className="font-semibold">{t('reduceMotion')}</p>
+                    <p className="text-xs text-slate-500">{t('reduceMotionDesc')}</p>
                   </div>
                 </div>
                 <button 
@@ -767,7 +952,7 @@ const App: React.FC = () => {
               onClick={() => setIsA11yMenuOpen(false)}
               className="w-full mt-8 bg-indigo-600 text-white font-bold py-4 rounded-2xl hover:bg-indigo-700 transition-shadow shadow-lg hover:shadow-indigo-500/30"
             >
-              Apply Changes
+              {t('applyChanges')}
             </button>
           </div>
         </div>
@@ -776,14 +961,12 @@ const App: React.FC = () => {
       {/* Footer Info */}
       <footer className={`max-w-6xl mx-auto mt-12 pb-8 text-center text-xs transition-colors ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
         <div className="flex items-center justify-center gap-4 mb-3">
-          <span className="flex items-center gap-1"><CheckCircle2 size={14} className="text-green-500" /> Standard Compliant</span>
-          <span className="flex items-center gap-1"><CheckCircle2 size={14} className="text-green-500" /> AI-Enhanced Readout</span>
-          <span className="flex items-center gap-1"><CheckCircle2 size={14} className="text-green-500" /> Multi-Century</span>
+          <span className="flex items-center gap-1"><CheckCircle2 size={14} className="text-green-500" /> {t('footerStandard')}</span>
+          <span className="flex items-center gap-1"><CheckCircle2 size={14} className="text-green-500" /> {t('footerAi')}</span>
+          <span className="flex items-center gap-1"><CheckCircle2 size={14} className="text-green-500" /> {t('footerCentury')}</span>
         </div>
         <p className="max-w-xl mx-auto leading-relaxed">
-          This educational tool simulates Polish National Identification Numbers. 
-          All generation logic follows the official 1-3-7-9 weight algorithm.
-          AI Features use Google Gemini for accessibility assistance.
+          {t('footerDesc')}
         </p>
       </footer>
     </div>
