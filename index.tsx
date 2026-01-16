@@ -35,7 +35,13 @@ import {
   ExternalLink,
   Fingerprint,
   CreditCard,
-  Home
+  Home,
+  Smartphone,
+  Wallet,
+  ArrowRight,
+  Shield,
+  VolumeX,
+  Globe
 } from 'lucide-react';
 import { GoogleGenAI, Modality } from "@google/genai";
 
@@ -44,6 +50,8 @@ import { GoogleGenAI, Modality } from "@google/genai";
  */
 type Language = 'PL' | 'ENG' | 'UKR';
 type VerificationStatus = 'none' | 'pending' | 'verified' | 'rejected';
+type PaymentStatus = 'unpaid' | 'processing' | 'paid';
+type PaymentMethod = 'card' | 'gpay' | 'applepay' | 'blik' | null;
 type View = 'user' | 'login' | 'admin';
 
 interface Person {
@@ -52,9 +60,11 @@ interface Person {
   lastName: string;
   dob: string;
   gender: 'male' | 'female';
+  nationality: string;
   pesel: string;
   createdAt: number;
   verificationStatus: VerificationStatus;
+  paymentStatus: PaymentStatus;
   verificationDetails?: string;
   idPhoto?: string;
 }
@@ -75,6 +85,7 @@ const TRANSLATIONS = {
     lastName: 'Nazwisko',
     dob: 'Data Urodzenia',
     gender: 'Płeć',
+    nationality: 'Obywatelstwo',
     male: 'Mężczyzna',
     female: 'Kobieta',
     generateIdentity: 'Generuj Tożsamość',
@@ -98,7 +109,7 @@ const TRANSLATIONS = {
     verify: 'Wgraj i Sprawdź Dokumenty',
     docVerification: 'Weryfikacja Tożsamości',
     uploadId: 'Wybierz Pliki',
-    idDesc: 'Wgraj dowód, paszport lub potwierdzenie zameldowania (>6 m-cy). Pamiętaj o opłacie 17 PLN.',
+    idDesc: 'Wgraj dowód, paszport lub potwierdzenie zameldowania (>6 m-cy).',
     statusPending: 'Oczekiwanie',
     statusVerified: 'Zweryfikowany',
     statusRejected: 'Odrzucony',
@@ -115,7 +126,13 @@ const TRANSLATIONS = {
     totalRecords: 'Wszystkich rekordów',
     invalidPass: 'Błędne hasło',
     feeNotice: 'Opłata skarbowa: 17 PLN',
-    docsRequired: 'Wymagane dokumenty'
+    docsRequired: 'Wymagane dokumenty',
+    payToVerify: 'Opłać wniosek (17 PLN)',
+    paymentMethod: 'Wybierz metodę płatności',
+    processingPayment: 'Przetwarzanie płatności...',
+    paymentSuccess: 'Płatność zaakceptowana',
+    unpaid: 'Nieopłacony',
+    paid: 'Opłacony'
   },
   ENG: {
     title: 'PESEL Master',
@@ -125,6 +142,7 @@ const TRANSLATIONS = {
     lastName: 'Last Name',
     dob: 'Birth Date',
     gender: 'Gender',
+    nationality: 'Nationality',
     male: 'Male',
     female: 'Female',
     generateIdentity: 'Generate Identity',
@@ -148,7 +166,7 @@ const TRANSLATIONS = {
     verify: 'Upload & Verify Docs',
     docVerification: 'Identity Verification',
     uploadId: 'Select Files',
-    idDesc: 'Upload ID, passport, or proof of residence (>6 months). Note the 17 PLN fee.',
+    idDesc: 'Upload ID, passport, or proof of residence (>6 months).',
     statusPending: 'Pending',
     statusVerified: 'Verified',
     statusRejected: 'Rejected',
@@ -165,7 +183,13 @@ const TRANSLATIONS = {
     totalRecords: 'Total Records',
     invalidPass: 'Invalid password',
     feeNotice: 'Service Fee: 17 PLN',
-    docsRequired: 'Documents required'
+    docsRequired: 'Documents required',
+    payToVerify: 'Pay Application Fee (17 PLN)',
+    paymentMethod: 'Select Payment Method',
+    processingPayment: 'Processing payment...',
+    paymentSuccess: 'Payment successful',
+    unpaid: 'Unpaid',
+    paid: 'Paid'
   },
   UKR: {
     title: 'PESEL Майстер',
@@ -175,6 +199,7 @@ const TRANSLATIONS = {
     lastName: 'Прізвище',
     dob: 'Дата народження',
     gender: 'Стать',
+    nationality: 'Громадянство',
     male: 'Чоловік',
     female: 'Жінка',
     generateIdentity: 'Створити особу',
@@ -198,7 +223,7 @@ const TRANSLATIONS = {
     verify: 'Завантажити та перевірити',
     docVerification: 'Перевірка особи',
     uploadId: 'Обрати файли',
-    idDesc: 'Завантажте ID, паспорт або підтвердження проживання (>6 міс). Не забудьте про збір 17 PLN.',
+    idDesc: 'Завантажте ID, паспорт або підтвердження проживання (>6 міс).',
     statusPending: 'Очікується',
     statusVerified: 'Підтверджено',
     statusRejected: 'Відхилено',
@@ -215,7 +240,13 @@ const TRANSLATIONS = {
     totalRecords: 'Всього записів',
     invalidPass: 'Невірний пароль',
     feeNotice: 'Збір: 17 PLN',
-    docsRequired: 'Необхідні документи'
+    docsRequired: 'Необхідні документи',
+    payToVerify: 'Сплатити збір (17 PLN)',
+    paymentMethod: 'Оберіть метод оплати',
+    processingPayment: 'Обробка платежу...',
+    paymentSuccess: 'Оплата прийнята',
+    unpaid: 'Неоплачено',
+    paid: 'Оплачено'
   }
 };
 
@@ -272,16 +303,19 @@ const App: React.FC = () => {
   const [isA11yMenuOpen, setIsA11yMenuOpen] = useState(false);
   const [fontScale, setFontScale] = useState(() => Number(localStorage.getItem('pesel_font_scale')) || 1);
   const [isHighContrast, setIsHighContrast] = useState(() => localStorage.getItem('pesel_high_contrast') === 'true');
-  const [formData, setFormData] = useState({ firstName: '', lastName: '', dob: '', gender: 'male' as 'male' | 'female' });
+  const [formData, setFormData] = useState({ firstName: '', lastName: '', dob: '', gender: 'male' as 'male' | 'female', nationality: '' });
   const [adminPass, setAdminPass] = useState('');
   
   const [verificationModalPerson, setVerificationModalPerson] = useState<Person | null>(null);
-  const [audioLoadingId, setAudioLoadingId] = useState<string | null>(null);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>(null);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isPaying, setIsPaying] = useState(false);
+  const [audioLoadingId, setAudioLoadingId] = useState<string | null>(null);
   const [aiExplanation, setAiExplanation] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const t = (key: keyof typeof TRANSLATIONS['PL']) => TRANSLATIONS[lang][key] || TRANSLATIONS['PL'][key];
+  const t = (key: keyof typeof TRANSLATIONS['PL']) => (TRANSLATIONS[lang] as any)[key] || (TRANSLATIONS['PL'] as any)[key];
 
   useEffect(() => {
     const saved = localStorage.getItem('pesel_vault_admin');
@@ -302,17 +336,70 @@ const App: React.FC = () => {
 
   const handleAddPerson = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.firstName || !formData.lastName || !formData.dob) return;
+    if (!formData.firstName || !formData.lastName || !formData.dob || !formData.nationality) return;
     const newPerson: Person = {
       id: crypto.randomUUID(),
       ...formData,
       pesel: generatePESEL(new Date(formData.dob), formData.gender),
       createdAt: Date.now(),
-      verificationStatus: 'none'
+      verificationStatus: 'none',
+      paymentStatus: 'unpaid'
     };
-    // Removed immediate addition to 'people' (the admin database)
     setActivePerson(newPerson);
-    setFormData({ firstName: '', lastName: '', dob: '', gender: 'male' });
+    setFormData({ firstName: '', lastName: '', dob: '', gender: 'male', nationality: '' });
+  };
+
+  const handleSimulatePayment = () => {
+    if (!selectedPaymentMethod || !activePerson) return;
+    setIsPaying(true);
+    setTimeout(() => {
+      const updated = { ...activePerson, paymentStatus: 'paid' as PaymentStatus };
+      setActivePerson(updated);
+      setIsPaying(false);
+      setPaymentModalOpen(false);
+      setSelectedPaymentMethod(null);
+    }, 2000);
+  };
+
+  const handleReadAloud = async (person: Person) => {
+    if (audioLoadingId) return;
+    setAudioLoadingId('tts');
+    
+    const textToRead = lang === 'PL' 
+      ? `Oto tożsamość dla: ${person.firstName} ${person.lastName}. Obywatelstwo: ${person.nationality}. Data urodzenia: ${person.dob}. Numer PESEL to: ${person.pesel}. Status weryfikacji: ${person.verificationStatus === 'verified' ? 'Zweryfikowany' : 'W oczekiwaniu'}.`
+      : lang === 'UKR'
+      ? `Ось особа для: ${person.firstName} ${person.lastName}. Громадянство: ${person.nationality}. Дата народження: ${person.dob}. Номер ПЕСЕЛЬ: ${person.pesel}. Статус верифікації: ${person.verificationStatus === 'verified' ? 'Підтверджено' : 'Очікується'}.`
+      : `Here is the identity for: ${person.firstName} ${person.lastName}. Nationality: ${person.nationality}. Date of birth: ${person.dob}. PESEL number is: ${person.pesel}. Verification status: ${person.verificationStatus === 'verified' ? 'Verified' : 'Pending'}.`;
+
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash-preview-tts",
+        contents: [{ parts: [{ text: textToRead }] }],
+        config: {
+          responseModalities: [Modality.AUDIO],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: 'Kore' },
+            },
+          },
+        },
+      });
+
+      const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      if (base64Audio) {
+        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+        const buffer = await decodeAudioData(decode(base64Audio), audioCtx, 24000, 1);
+        const source = audioCtx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioCtx.destination);
+        source.start();
+      }
+    } catch (err) {
+      console.error("TTS Error:", err);
+    } finally {
+      setAudioLoadingId(null);
+    }
   };
 
   const handleLogin = (e: React.FormEvent) => {
@@ -353,10 +440,8 @@ const App: React.FC = () => {
         const status: VerificationStatus = result.isValidDoc && result.isMatch ? 'verified' : 'rejected';
         const updated = { ...activePerson, verificationStatus: status, verificationDetails: result.reason || (status === 'verified' ? t('aiMatch') : t('aiMismatch').replace('{name}', result.nameOnDoc || 'N/A')), idPhoto: reader.result as string };
         
-        // Add to database ONLY after successful evaluation
         if (status === 'verified') {
            setPeople(prev => {
-             // Avoid duplicates if user clicks verify again
              const exists = prev.some(p => p.pesel === updated.pesel);
              if (exists) return prev;
              return [updated, ...prev];
@@ -375,7 +460,7 @@ const App: React.FC = () => {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const res = await ai.models.generateContent({ 
         model: "gemini-3-flash-preview", 
-        contents: `Explain Polish PESEL ${person.pesel} (birth ${person.dob}, gender ${person.gender}) in ${lang}. Markdown format.` 
+        contents: `Explain Polish PESEL ${person.pesel} (birth ${person.dob}, gender ${person.gender}, nationality ${person.nationality}) in ${lang}. Markdown format.` 
       });
       setAiExplanation(res.text || "Error.");
     } catch { setAiExplanation("Error."); }
@@ -414,7 +499,12 @@ const App: React.FC = () => {
               <tbody className="divide-y divide-slate-500/10">
                 {people.length > 0 ? people.map(p => (
                   <tr key={p.id} className="hover:bg-indigo-500/5 transition-colors">
-                    <td className="px-6 py-4 font-bold">{p.firstName} {p.lastName} <span className="opacity-40 font-normal ml-2">{p.dob}</span></td>
+                    <td className="px-6 py-4 font-bold">
+                      {p.firstName} {p.lastName}
+                      <div className="flex gap-2 text-[10px] opacity-40 font-normal mt-1">
+                        <span>{p.dob}</span> • <span>{p.nationality}</span>
+                      </div>
+                    </td>
                     <td className="px-6 py-4"><code className="bg-indigo-500/10 px-2 py-1 rounded text-indigo-500 font-bold">{p.pesel}</code></td>
                     <td className="px-6 py-4">
                       <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${p.verificationStatus === 'verified' ? 'bg-green-500 text-white' : p.verificationStatus === 'rejected' ? 'bg-red-500 text-white' : 'bg-slate-500/10 text-slate-500'}`}>
@@ -504,6 +594,10 @@ const App: React.FC = () => {
                     <label className="text-[10px] font-black uppercase opacity-40 block mb-2 tracking-widest">{t('lastName')}</label>
                     <input type="text" required value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} className={`w-full px-5 py-3.5 rounded-2xl border outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`} />
                   </div>
+                  <div>
+                    <label className="text-[10px] font-black uppercase opacity-40 block mb-2 tracking-widest">{t('nationality')}</label>
+                    <input type="text" required placeholder="e.g. Polish, Ukrainian, American" value={formData.nationality} onChange={e => setFormData({...formData, nationality: e.target.value})} className={`w-full px-5 py-3.5 rounded-2xl border outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`} />
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-6">
                   <div>
@@ -530,7 +624,7 @@ const App: React.FC = () => {
                   <div className={`p-4 rounded-2xl flex items-start gap-3 text-[10px] font-black uppercase tracking-widest shadow-sm ${isDarkMode ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'bg-indigo-50 text-indigo-600 border border-indigo-100'}`}>
                     <Home size={18} className="shrink-0" />
                     <div>
-                      <p className="opacity-60">{t('docsRequired')}: ID/Pass + Zameldowanie</p>
+                      <p className="opacity-60">{t('docsRequired')}</p>
                     </div>
                   </div>
                 </div>
@@ -548,25 +642,41 @@ const App: React.FC = () => {
               <div className={`rounded-[3rem] shadow-2xl border overflow-hidden animate-in zoom-in-95 duration-500 ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
                 <div className="p-10 md:p-14">
                   <div className="flex flex-col md:flex-row gap-14 items-start">
-                    <div className={`w-44 h-44 rounded-[3rem] flex items-center justify-center text-6xl font-black shadow-2xl ring-8 ring-offset-4 ${isDarkMode ? 'ring-slate-800 ring-offset-slate-900' : 'ring-slate-100 ring-offset-white'} ${activePerson.gender === 'male' ? 'bg-blue-600 text-white' : 'bg-pink-600 text-white'}`}>
-                      {activePerson.firstName[0]}{activePerson.lastName[0]}
+                    <div className="relative">
+                      <div className={`w-44 h-44 rounded-[3rem] flex items-center justify-center text-6xl font-black shadow-2xl ring-8 ring-offset-4 ${isDarkMode ? 'ring-slate-800 ring-offset-slate-900' : 'ring-slate-100 ring-offset-white'} ${activePerson.gender === 'male' ? 'bg-blue-600 text-white' : 'bg-pink-600 text-white'}`}>
+                        {activePerson.firstName[0]}{activePerson.lastName[0]}
+                      </div>
+                      <button 
+                        onClick={() => handleReadAloud(activePerson)}
+                        className={`absolute -bottom-4 -right-4 p-5 rounded-3xl shadow-2xl transition-all active:scale-90 flex items-center justify-center ${audioLoadingId ? 'animate-pulse bg-slate-500 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
+                        title={t('readOutLoud')}
+                      >
+                        {audioLoadingId === 'tts' ? <Loader2 className="animate-spin" size={24} /> : <Volume2 size={24} />}
+                      </button>
                     </div>
                     <div className="flex-1 space-y-8 w-full">
                       <div className="flex items-center justify-between">
                         <div>
                           <h2 className="text-5xl font-black tracking-tighter leading-tight">{activePerson.firstName} {activePerson.lastName}</h2>
-                          <div className="flex gap-6 mt-3 font-black uppercase text-[11px] tracking-widest opacity-40">
+                          <div className="flex flex-wrap gap-x-6 gap-y-2 mt-3 font-black uppercase text-[11px] tracking-widest opacity-40">
                             <span className="flex items-center gap-2"><User size={14} /> {activePerson.gender === 'male' ? t('male') : t('female')}</span>
                             <span className="flex items-center gap-2"><Calendar size={14} /> {activePerson.dob}</span>
+                            <span className="flex items-center gap-2"><Globe size={14} /> {activePerson.nationality}</span>
                           </div>
                         </div>
-                        <div className={`px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] flex items-center gap-3 shadow-xl ${
-                          activePerson.verificationStatus === 'verified' ? 'bg-green-500 text-white shadow-green-500/20' :
-                          activePerson.verificationStatus === 'rejected' ? 'bg-red-500 text-white shadow-red-500/20' :
-                          'bg-indigo-500/10 text-indigo-500'
-                        }`}>
-                          {activePerson.verificationStatus === 'verified' ? <ShieldCheck size={18} /> : activePerson.verificationStatus === 'rejected' ? <AlertCircle size={18} /> : <Clock size={18} />}
-                          {activePerson.verificationStatus === 'none' ? t('statusPending') : activePerson.verificationStatus === 'verified' ? t('statusVerified') : t('statusRejected')}
+                        <div className="flex flex-col items-end gap-2">
+                          <div className={`px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] flex items-center gap-3 shadow-xl ${
+                            activePerson.verificationStatus === 'verified' ? 'bg-green-500 text-white' :
+                            activePerson.verificationStatus === 'rejected' ? 'bg-red-500 text-white' :
+                            'bg-indigo-500/10 text-indigo-500'
+                          }`}>
+                            {activePerson.verificationStatus === 'verified' ? <ShieldCheck size={18} /> : activePerson.verificationStatus === 'rejected' ? <AlertCircle size={18} /> : <Clock size={18} />}
+                            {activePerson.verificationStatus === 'none' ? t('statusPending') : activePerson.verificationStatus === 'verified' ? t('statusVerified') : t('statusRejected')}
+                          </div>
+                          <div className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 ${activePerson.paymentStatus === 'paid' ? 'bg-green-500/10 text-green-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                            {activePerson.paymentStatus === 'paid' ? <CheckCircle2 size={12} /> : <CreditCard size={12} />}
+                            {activePerson.paymentStatus === 'paid' ? t('paid') : t('unpaid')}
+                          </div>
                         </div>
                       </div>
 
@@ -579,9 +689,15 @@ const App: React.FC = () => {
                       </div>
 
                       <div className="flex flex-wrap gap-5">
-                        <button onClick={() => setVerificationModalPerson(activePerson)} className="flex-1 min-w-[280px] flex items-center justify-center gap-4 py-5 rounded-[1.5rem] bg-indigo-600 text-white font-black hover:bg-indigo-700 transition-all shadow-2xl shadow-indigo-500/40 uppercase text-[11px] tracking-[0.2em]">
-                          <Scan size={24} /> {t('verify')}
-                        </button>
+                        {activePerson.paymentStatus === 'paid' ? (
+                          <button onClick={() => setVerificationModalPerson(activePerson)} className="flex-1 min-w-[280px] flex items-center justify-center gap-4 py-5 rounded-[1.5rem] bg-indigo-600 text-white font-black hover:bg-indigo-700 transition-all shadow-2xl shadow-indigo-500/40 uppercase text-[11px] tracking-[0.2em]">
+                            <Scan size={24} /> {t('verify')}
+                          </button>
+                        ) : (
+                          <button onClick={() => setPaymentModalOpen(true)} className="flex-1 min-w-[280px] flex items-center justify-center gap-4 py-5 rounded-[1.5rem] bg-amber-500 text-white font-black hover:bg-amber-600 transition-all shadow-2xl shadow-amber-500/40 uppercase text-[11px] tracking-[0.2em]">
+                            <CreditCard size={24} /> {t('payToVerify')}
+                          </button>
+                        )}
                         <button onClick={() => setActivePerson(null)} className="p-5 rounded-[1.5rem] border hover:bg-red-500/10 hover:text-red-500 transition-all hover:scale-105 active:scale-95"><Trash2 size={28} /></button>
                       </div>
                     </div>
@@ -614,6 +730,81 @@ const App: React.FC = () => {
           </div>
         </footer>
       </div>
+
+      {/* Payment Modal */}
+      {paymentModalOpen && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-6 bg-black/90 backdrop-blur-2xl animate-in fade-in duration-300">
+          <div className={`w-full max-w-md rounded-[3rem] shadow-2xl border overflow-hidden ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+            <div className="p-8 border-b flex items-center justify-between">
+              <h2 className="text-2xl font-black tracking-tighter flex items-center gap-3"><Wallet className="text-indigo-500" /> {t('payToVerify')}</h2>
+              <button onClick={() => setPaymentModalOpen(false)} className="p-2 hover:bg-slate-500/10 rounded-full"><X size={24} /></button>
+            </div>
+            <div className="p-10 space-y-6">
+              <p className="text-xs font-black uppercase tracking-widest opacity-40">{t('paymentMethod')}</p>
+              <div className="grid grid-cols-1 gap-4">
+                {/* BLIK */}
+                <button 
+                  onClick={() => setSelectedPaymentMethod('blik')}
+                  className={`p-6 rounded-2xl border-2 flex items-center justify-between transition-all ${selectedPaymentMethod === 'blik' ? 'border-pink-600 bg-pink-500/5' : 'border-slate-500/10 hover:border-slate-500/30'}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-pink-600 rounded-xl flex items-center justify-center text-white font-black text-xs">BLIK</div>
+                    <span className="font-black uppercase text-xs tracking-widest">BLIK</span>
+                  </div>
+                  {selectedPaymentMethod === 'blik' && <CheckCircle2 className="text-pink-600" size={20} />}
+                </button>
+                {/* GPay */}
+                <button 
+                  onClick={() => setSelectedPaymentMethod('gpay')}
+                  className={`p-6 rounded-2xl border-2 flex items-center justify-between transition-all ${selectedPaymentMethod === 'gpay' ? 'border-blue-500 bg-blue-500/5' : 'border-slate-500/10 hover:border-slate-500/30'}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white border border-slate-200 rounded-xl flex items-center justify-center overflow-hidden">
+                       <span className="font-black text-blue-500 text-lg">G</span><span className="font-black text-red-500 text-lg">P</span><span className="font-black text-amber-500 text-lg">a</span><span className="font-black text-green-500 text-lg">y</span>
+                    </div>
+                    <span className="font-black uppercase text-xs tracking-widest">Google Pay</span>
+                  </div>
+                  {selectedPaymentMethod === 'gpay' && <CheckCircle2 className="text-blue-500" size={20} />}
+                </button>
+                {/* Apple Pay */}
+                <button 
+                  onClick={() => setSelectedPaymentMethod('applepay')}
+                  className={`p-6 rounded-2xl border-2 flex items-center justify-between transition-all ${selectedPaymentMethod === 'applepay' ? 'border-black dark:border-white bg-slate-500/5' : 'border-slate-500/10 hover:border-slate-500/30'}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-black text-white rounded-xl flex items-center justify-center">
+                       <Smartphone size={24} />
+                    </div>
+                    <span className="font-black uppercase text-xs tracking-widest">Apple Pay</span>
+                  </div>
+                  {selectedPaymentMethod === 'applepay' && <CheckCircle2 size={20} />}
+                </button>
+                {/* Card */}
+                <button 
+                  onClick={() => setSelectedPaymentMethod('card')}
+                  className={`p-6 rounded-2xl border-2 flex items-center justify-between transition-all ${selectedPaymentMethod === 'card' ? 'border-indigo-600 bg-indigo-500/5' : 'border-slate-500/10 hover:border-slate-500/30'}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-indigo-600 text-white rounded-xl flex items-center justify-center">
+                       <CreditCard size={24} />
+                    </div>
+                    <span className="font-black uppercase text-xs tracking-widest">Credit Card</span>
+                  </div>
+                  {selectedPaymentMethod === 'card' && <CheckCircle2 className="text-indigo-600" size={20} />}
+                </button>
+              </div>
+
+              <button 
+                disabled={!selectedPaymentMethod || isPaying}
+                onClick={handleSimulatePayment}
+                className="w-full mt-8 bg-indigo-600 text-white font-black py-5 rounded-[1.5rem] shadow-2xl shadow-indigo-500/30 uppercase tracking-[0.2em] text-xs flex items-center justify-center gap-3 disabled:opacity-50 transition-all hover:bg-indigo-700 active:scale-95"
+              >
+                {isPaying ? <Loader2 className="animate-spin" size={20} /> : <><ArrowRight size={20} /> {t('payToVerify')}</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Verification Modal */}
       {verificationModalPerson && (
@@ -656,6 +847,10 @@ const App: React.FC = () => {
                    <p className="text-[10px] font-black uppercase tracking-widest text-amber-500 flex items-center gap-2">
                      <AlertCircle size={14} /> {t('idDesc')}
                    </p>
+                </div>
+                <div className="p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 flex items-center gap-3">
+                   <Shield size={16} className="text-indigo-500" />
+                   <p className="text-[10px] font-black uppercase tracking-widest text-indigo-500">{t('paymentSuccess')}</p>
                 </div>
               </div>
             </div>
