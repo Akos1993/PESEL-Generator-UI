@@ -41,7 +41,9 @@ import {
   ArrowRight,
   Shield,
   VolumeX,
-  Globe
+  Globe,
+  Mic,
+  MicOff
 } from 'lucide-react';
 import { GoogleGenAI, Modality } from "@google/genai";
 
@@ -92,6 +94,7 @@ const TRANSLATIONS = {
     activeIdentity: 'Twoja Tożsamość',
     verification: 'Weryfikacja',
     readOutLoud: 'Czytaj na głos',
+    dictate: 'Dyktuj',
     explainStructure: 'Struktura PESEL',
     a11yOptions: 'Dostępność',
     textSize: 'Rozmiar Tekstu',
@@ -132,7 +135,9 @@ const TRANSLATIONS = {
     processingPayment: 'Przetwarzanie płatności...',
     paymentSuccess: 'Płatność zaakceptowana',
     unpaid: 'Nieopłacony',
-    paid: 'Opłacony'
+    paid: 'Opłacony',
+    listening: 'Słucham...',
+    identifyingGender: 'Rozpoznaję płeć...'
   },
   ENG: {
     title: 'PESEL Master',
@@ -148,7 +153,8 @@ const TRANSLATIONS = {
     generateIdentity: 'Generate Identity',
     activeIdentity: 'Your Identity',
     verification: 'Verification',
-    readOutLoud: 'Read out loud',
+    readOutLoud: 'Read aloud',
+    dictate: 'Dictate',
     explainStructure: 'PESEL Structure',
     a11yOptions: 'Accessibility',
     textSize: 'Text Size',
@@ -189,7 +195,9 @@ const TRANSLATIONS = {
     processingPayment: 'Processing payment...',
     paymentSuccess: 'Payment successful',
     unpaid: 'Unpaid',
-    paid: 'Paid'
+    paid: 'Paid',
+    listening: 'Listening...',
+    identifyingGender: 'Identifying gender...'
   },
   UKR: {
     title: 'PESEL Майстер',
@@ -206,6 +214,7 @@ const TRANSLATIONS = {
     activeIdentity: 'Ваша особа',
     verification: 'Перевірка',
     readOutLoud: 'Читати вголос',
+    dictate: 'Диктувати',
     explainStructure: 'Структура PESEL',
     a11yOptions: 'Доступність',
     textSize: 'Розмір тексту',
@@ -246,7 +255,9 @@ const TRANSLATIONS = {
     processingPayment: 'Обробка платежу...',
     paymentSuccess: 'Оплата прийнята',
     unpaid: 'Неоплачено',
-    paid: 'Оплачено'
+    paid: 'Оплачено',
+    listening: 'Слухаю...',
+    identifyingGender: 'Визначаю стать...'
   }
 };
 
@@ -312,6 +323,7 @@ const App: React.FC = () => {
   const [isVerifying, setIsVerifying] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
   const [audioLoadingId, setAudioLoadingId] = useState<string | null>(null);
+  const [dictatingField, setDictatingField] = useState<string | null>(null);
   const [aiExplanation, setAiExplanation] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -333,6 +345,78 @@ const App: React.FC = () => {
     localStorage.setItem('pesel_font_scale', fontScale.toString());
     localStorage.setItem('pesel_high_contrast', isHighContrast.toString());
   }, [isDarkMode, lang, fontScale, isHighContrast]);
+
+  const handleTTS = async (text: string, id: string = 'tts') => {
+    if (audioLoadingId) return;
+    setAudioLoadingId(id);
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash-preview-tts",
+        contents: [{ parts: [{ text: text }] }],
+        config: {
+          responseModalities: [Modality.AUDIO],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: 'Kore' },
+            },
+          },
+        },
+      });
+
+      const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      if (base64Audio) {
+        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+        const buffer = await decodeAudioData(decode(base64Audio), audioCtx, 24000, 1);
+        const source = audioCtx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioCtx.destination);
+        source.start();
+      }
+    } catch (err) {
+      console.error("TTS Error:", err);
+    } finally {
+      setAudioLoadingId(null);
+    }
+  };
+
+  const handleDictate = (fieldName: keyof typeof formData) => {
+    if (dictatingField) return;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in this browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = lang === 'UKR' ? 'uk-UA' : lang === 'PL' ? 'pl-PL' : 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => setDictatingField(fieldName);
+    recognition.onend = () => setDictatingField(null);
+    recognition.onresult = async (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      
+      if (fieldName === 'gender') {
+        // Smart gender recognition
+        const tLower = transcript.toLowerCase();
+        if (tLower.includes('m') || tLower.includes('ч')) setFormData(prev => ({...prev, gender: 'male'}));
+        else if (tLower.includes('f') || tLower.includes('w') || tLower.includes('ж')) setFormData(prev => ({...prev, gender: 'female'}));
+      } else if (fieldName === 'dob') {
+        // Try to parse date or use AI if it looks messy
+        setFormData(prev => ({ ...prev, [fieldName]: transcript }));
+      } else {
+        setFormData(prev => ({ ...prev, [fieldName]: transcript }));
+      }
+    };
+    recognition.onerror = (event: any) => {
+      console.error("Recognition error:", event.error);
+      setDictatingField(null);
+    };
+
+    recognition.start();
+  };
 
   const handleAddPerson = (e: React.FormEvent) => {
     e.preventDefault();
@@ -361,45 +445,13 @@ const App: React.FC = () => {
     }, 2000);
   };
 
-  const handleReadAloud = async (person: Person) => {
-    if (audioLoadingId) return;
-    setAudioLoadingId('tts');
-    
+  const handleReadAloudIdentity = async (person: Person) => {
     const textToRead = lang === 'PL' 
       ? `Oto tożsamość dla: ${person.firstName} ${person.lastName}. Obywatelstwo: ${person.nationality}. Data urodzenia: ${person.dob}. Numer PESEL to: ${person.pesel}. Status weryfikacji: ${person.verificationStatus === 'verified' ? 'Zweryfikowany' : 'W oczekiwaniu'}.`
       : lang === 'UKR'
       ? `Ось особа для: ${person.firstName} ${person.lastName}. Громадянство: ${person.nationality}. Дата народження: ${person.dob}. Номер ПЕСЕЛЬ: ${person.pesel}. Статус верифікації: ${person.verificationStatus === 'verified' ? 'Підтверджено' : 'Очікується'}.`
       : `Here is the identity for: ${person.firstName} ${person.lastName}. Nationality: ${person.nationality}. Date of birth: ${person.dob}. PESEL number is: ${person.pesel}. Verification status: ${person.verificationStatus === 'verified' ? 'Verified' : 'Pending'}.`;
-
-    try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash-preview-tts",
-        contents: [{ parts: [{ text: textToRead }] }],
-        config: {
-          responseModalities: [Modality.AUDIO],
-          speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: 'Kore' },
-            },
-          },
-        },
-      });
-
-      const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-      if (base64Audio) {
-        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
-        const buffer = await decodeAudioData(decode(base64Audio), audioCtx, 24000, 1);
-        const source = audioCtx.createBufferSource();
-        source.buffer = buffer;
-        source.connect(audioCtx.destination);
-        source.start();
-      }
-    } catch (err) {
-      console.error("TTS Error:", err);
-    } finally {
-      setAudioLoadingId(null);
-    }
+    handleTTS(textToRead, 'identity');
   };
 
   const handleLogin = (e: React.FormEvent) => {
@@ -468,6 +520,53 @@ const App: React.FC = () => {
 
   const dynamicStyles = { fontSize: `${fontScale}rem` };
   const highContrastClasses = isHighContrast ? (isDarkMode ? 'contrast-125 border-white shadow-none' : 'contrast-150 border-black shadow-none') : '';
+
+  /**
+   * Field Helper Component
+   */
+  const FormField = ({ label, name, type, value, required, placeholder }: { label: string, name: keyof typeof formData, type: string, value: string, required?: boolean, placeholder?: string }) => {
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <label className="text-[10px] font-black uppercase opacity-40 block tracking-widest">{label}</label>
+          <div className="flex items-center gap-2">
+             <button 
+              type="button"
+              title={t('readOutLoud')}
+              onClick={() => handleTTS(`${label}: ${value || 'brak danych'}`, name)} 
+              className={`p-1.5 rounded-lg transition-all ${audioLoadingId === name ? 'text-indigo-500 animate-pulse bg-indigo-500/10' : 'hover:bg-slate-500/10 opacity-40 hover:opacity-100'}`}
+             >
+               <Volume2 size={12} />
+             </button>
+             <button 
+              type="button"
+              title={t('dictate')}
+              onClick={() => handleDictate(name)} 
+              className={`p-1.5 rounded-lg transition-all ${dictatingField === name ? 'text-red-500 animate-bounce bg-red-500/10' : 'hover:bg-slate-500/10 opacity-40 hover:opacity-100'}`}
+             >
+               {dictatingField === name ? <MicOff size={12} /> : <Mic size={12} />}
+             </button>
+          </div>
+        </div>
+        <div className="relative">
+          <input 
+            type={type} 
+            required={required} 
+            placeholder={placeholder}
+            value={value} 
+            onChange={e => setFormData({...formData, [name]: e.target.value})} 
+            className={`w-full px-5 py-3.5 rounded-2xl border outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`} 
+          />
+          {dictatingField === name && (
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 px-3 py-1 bg-red-500 text-white rounded-full text-[9px] font-black uppercase tracking-widest animate-in fade-in zoom-in">
+              <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
+              {t('listening')}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   /**
    * ADMIN VIEW
@@ -586,30 +685,45 @@ const App: React.FC = () => {
               <div className="border-b px-10 py-6 flex items-center gap-3 font-black uppercase text-[10px] tracking-[0.2em] opacity-50"><Plus size={16} />{t('manualEntry')}</div>
               <form onSubmit={handleAddPerson} className="p-10 space-y-8">
                 <div className="space-y-6">
-                  <div>
-                    <label className="text-[10px] font-black uppercase opacity-40 block mb-2 tracking-widest">{t('firstName')}</label>
-                    <input type="text" required value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} className={`w-full px-5 py-3.5 rounded-2xl border outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`} />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black uppercase opacity-40 block mb-2 tracking-widest">{t('lastName')}</label>
-                    <input type="text" required value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} className={`w-full px-5 py-3.5 rounded-2xl border outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`} />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black uppercase opacity-40 block mb-2 tracking-widest">{t('nationality')}</label>
-                    <input type="text" required placeholder="e.g. Polish, Ukrainian, American" value={formData.nationality} onChange={e => setFormData({...formData, nationality: e.target.value})} className={`w-full px-5 py-3.5 rounded-2xl border outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`} />
-                  </div>
+                  <FormField label={t('firstName')} name="firstName" type="text" value={formData.firstName} required />
+                  <FormField label={t('lastName')} name="lastName" type="text" value={formData.lastName} required />
+                  <FormField label={t('nationality')} name="nationality" type="text" value={formData.nationality} required placeholder="e.g. Polish, Ukrainian" />
                 </div>
                 <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <label className="text-[10px] font-black uppercase opacity-40 block mb-2 tracking-widest">{t('dob')}</label>
-                    <input type="date" required value={formData.dob} onChange={e => setFormData({...formData, dob: e.target.value})} className={`w-full px-5 py-3.5 rounded-2xl border outline-none transition-all ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`} />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black uppercase opacity-40 block mb-2 tracking-widest">{t('gender')}</label>
-                    <select value={formData.gender} onChange={e => setFormData({...formData, gender: e.target.value as 'male' | 'female'})} className={`w-full px-5 py-3.5 rounded-2xl border outline-none transition-all ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`}>
-                      <option value="male">{t('male')}</option>
-                      <option value="female">{t('female')}</option>
-                    </select>
+                  <FormField label={t('dob')} name="dob" type="date" value={formData.dob} required />
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-black uppercase opacity-40 block tracking-widest">{t('gender')}</label>
+                      <div className="flex items-center gap-2">
+                        <button 
+                          type="button"
+                          title={t('readOutLoud')}
+                          onClick={() => handleTTS(`${t('gender')}: ${formData.gender === 'male' ? t('male') : t('female')}`, 'gender')} 
+                          className={`p-1.5 rounded-lg transition-all ${audioLoadingId === 'gender' ? 'text-indigo-500 animate-pulse bg-indigo-500/10' : 'hover:bg-slate-500/10 opacity-40 hover:opacity-100'}`}
+                        >
+                          <Volume2 size={12} />
+                        </button>
+                        <button 
+                          type="button"
+                          title={t('dictate')}
+                          onClick={() => handleDictate('gender')} 
+                          className={`p-1.5 rounded-lg transition-all ${dictatingField === 'gender' ? 'text-red-500 animate-bounce bg-red-500/10' : 'hover:bg-slate-500/10 opacity-40 hover:opacity-100'}`}
+                        >
+                          {dictatingField === 'gender' ? <MicOff size={12} /> : <Mic size={12} />}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <select value={formData.gender} onChange={e => setFormData({...formData, gender: e.target.value as 'male' | 'female'})} className={`w-full px-5 py-3.5 rounded-2xl border outline-none transition-all ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`}>
+                        <option value="male">{t('male')}</option>
+                        <option value="female">{t('female')}</option>
+                      </select>
+                      {dictatingField === 'gender' && (
+                        <div className="absolute right-10 top-1/2 -translate-y-1/2 px-3 py-1 bg-red-500 text-white rounded-full text-[8px] font-black uppercase tracking-widest animate-pulse">
+                          {t('identifyingGender')}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -647,11 +761,11 @@ const App: React.FC = () => {
                         {activePerson.firstName[0]}{activePerson.lastName[0]}
                       </div>
                       <button 
-                        onClick={() => handleReadAloud(activePerson)}
-                        className={`absolute -bottom-4 -right-4 p-5 rounded-3xl shadow-2xl transition-all active:scale-90 flex items-center justify-center ${audioLoadingId ? 'animate-pulse bg-slate-500 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
+                        onClick={() => handleReadAloudIdentity(activePerson)}
+                        className={`absolute -bottom-4 -right-4 p-5 rounded-3xl shadow-2xl transition-all active:scale-90 flex items-center justify-center ${audioLoadingId === 'identity' ? 'animate-pulse bg-slate-500 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
                         title={t('readOutLoud')}
                       >
-                        {audioLoadingId === 'tts' ? <Loader2 className="animate-spin" size={24} /> : <Volume2 size={24} />}
+                        {audioLoadingId === 'identity' ? <Loader2 className="animate-spin" size={24} /> : <Volume2 size={24} />}
                       </button>
                     </div>
                     <div className="flex-1 space-y-8 w-full">
