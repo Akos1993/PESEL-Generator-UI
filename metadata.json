@@ -3,5 +3,6 @@
   "requestFramePermissions": [
     "microphone"
   ],
-  "name": "App"
+  "name": "App",
+  "majorCapabilities": []
 }
