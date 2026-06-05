@@ -394,6 +394,84 @@ Each digit in the Polish PESEL number carries specific cryptographic and histori
   }
 };
 
+interface FormFieldProps {
+  label: string;
+  name: string;
+  type: string;
+  value: string;
+  required?: boolean;
+  placeholder?: string;
+  onChange: (value: string) => void;
+  onTTS: () => void;
+  isAudioLoading: boolean;
+  onDictate: () => void;
+  isDictating: boolean;
+  isDarkMode: boolean;
+  readOutLoudLabel: string;
+  dictateLabel: string;
+  listeningLabel: string;
+}
+
+const FormField: React.FC<FormFieldProps> = ({
+  label,
+  name,
+  type,
+  value,
+  required,
+  placeholder,
+  onChange,
+  onTTS,
+  isAudioLoading,
+  onDictate,
+  isDictating,
+  isDarkMode,
+  readOutLoudLabel,
+  dictateLabel,
+  listeningLabel
+}) => {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <label className="text-[10px] font-black uppercase opacity-40 block tracking-widest">{label}</label>
+        <div className="flex items-center gap-2">
+           <button 
+            type="button"
+            title={readOutLoudLabel}
+            onClick={onTTS} 
+            className={`p-1.5 rounded-lg transition-all ${isAudioLoading ? 'text-indigo-500 animate-pulse bg-indigo-500/10' : 'hover:bg-slate-500/10 opacity-40 hover:opacity-100'}`}
+           >
+              <Volume2 size={12} />
+           </button>
+           <button 
+            type="button"
+            title={dictateLabel}
+            onClick={onDictate} 
+            className={`p-1.5 rounded-lg transition-all ${isDictating ? 'text-red-500 animate-bounce bg-red-500/10' : 'hover:bg-slate-500/10 opacity-40 hover:opacity-100'}`}
+           >
+             {isDictating ? <MicOff size={12} /> : <Mic size={12} />}
+           </button>
+        </div>
+      </div>
+      <div className="relative">
+        <input 
+          type={type} 
+          required={required} 
+          placeholder={placeholder}
+          value={value} 
+          onChange={e => onChange(e.target.value)} 
+          className={`w-full px-5 py-3.5 rounded-2xl border outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`} 
+        />
+        {isDictating && (
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 px-3 py-1 bg-red-500 text-white rounded-full text-[9px] font-black uppercase tracking-widest animate-in fade-in zoom-in">
+            <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
+            {listeningLabel}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 /**
  * Main App
  */
@@ -421,9 +499,85 @@ const App: React.FC = () => {
 
   const t = (key: keyof typeof TRANSLATIONS['PL']) => (TRANSLATIONS[lang] as any)[key] || (TRANSLATIONS['PL'] as any)[key];
 
+  const [azureStatus, setAzureStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'unconfigured'>('connecting');
+  const [azureMessage, setAzureMessage] = useState<string>('');
+
+  const syncPersonToAzure = async (person: Person) => {
+    try {
+      const res = await fetch('/api/people', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(person)
+      });
+      if (!res.ok) {
+        throw new Error("HTTP " + res.status);
+      }
+      console.log("Successfully synchronized to Azure Cosmos DB:", person.pesel);
+    } catch (err) {
+      console.warn("Could not sync to Azure Cosmos DB:", err);
+    }
+  };
+
+  const handleDeletePerson = async (id: string) => {
+    if (confirm("Permanently delete this record from Azure and local vault?")) {
+      try {
+        await fetch(`/api/people/${id}`, { method: 'DELETE' });
+      } catch (err) {
+        console.error("Failed to delete from Azure:", err);
+      }
+      setPeople(prev => prev.filter(p => p.id !== id));
+    }
+  };
+
+  const handleClearDatabase = async () => {
+    if (confirm("Are you absolutely sure you want to delete ALL records from Azure Cosmos DB database and local cache?")) {
+      try {
+        await fetch("/api/people", { method: 'DELETE' });
+      } catch (err) {
+        console.error("Failed to clear database on Azure:", err);
+      }
+      setPeople([]);
+      localStorage.removeItem('pesel_vault_admin');
+    }
+  };
+
   useEffect(() => {
-    const saved = localStorage.getItem('pesel_vault_admin');
-    if (saved) setPeople(JSON.parse(saved));
+    // Check Azure Cosmos database connectivity
+    fetch('/api/health')
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'connected') {
+          setAzureStatus('connected');
+          setAzureMessage(data.message);
+        } else {
+          setAzureStatus(data.message.includes("Config") || data.message.includes("Missing") ? 'unconfigured' : 'disconnected');
+          setAzureMessage(data.message);
+        }
+      })
+      .catch(err => {
+        setAzureStatus('disconnected');
+        setAzureMessage(err.message || 'Error checking connection.');
+      });
+
+    // Populate identities from Azure Cosmos primary resource list (with localStorage offset)
+    fetch('/api/people')
+      .then(res => {
+        if (!res.ok) throw new Error("Query failure");
+        return res.json();
+      })
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setPeople(data);
+        } else {
+          const saved = localStorage.getItem('pesel_vault_admin');
+          if (saved) setPeople(JSON.parse(saved));
+        }
+      })
+      .catch(err => {
+        console.warn("Using offline localStorage fallback for lists:", err);
+        const saved = localStorage.getItem('pesel_vault_admin');
+        if (saved) setPeople(JSON.parse(saved));
+      });
   }, []);
 
   useEffect(() => {
@@ -585,6 +739,7 @@ const App: React.FC = () => {
             return [updated, ...prev];
           });
           
+          syncPersonToAzure(updated);
           setActivePerson(updated);
         } catch (err) { 
           console.error(err); 
@@ -605,68 +760,33 @@ const App: React.FC = () => {
   const highContrastClasses = isHighContrast ? (isDarkMode ? 'contrast-125 border-white shadow-none' : 'contrast-150 border-black shadow-none') : '';
 
   /**
-   * Field Helper Component
-   */
-  const FormField = ({ label, name, type, value, required, placeholder }: { label: string, name: keyof typeof formData, type: string, value: string, required?: boolean, placeholder?: string }) => {
-    const nameStr = name as string;
-    return (
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <label className="text-[10px] font-black uppercase opacity-40 block tracking-widest">{label}</label>
-          <div className="flex items-center gap-2">
-             <button 
-              type="button"
-              title={t('readOutLoud')}
-              onClick={() => handleTTS(`${label}: ${value || 'brak danych'}`, nameStr)} 
-              className={`p-1.5 rounded-lg transition-all ${audioLoadingId === nameStr ? 'text-indigo-500 animate-pulse bg-indigo-500/10' : 'hover:bg-slate-500/10 opacity-40 hover:opacity-100'}`}
-             >
-               <Volume2 size={12} />
-             </button>
-             <button 
-              type="button"
-              title={t('dictate')}
-              onClick={() => handleDictate(name)} 
-              className={`p-1.5 rounded-lg transition-all ${dictatingField === nameStr ? 'text-red-500 animate-bounce bg-red-500/10' : 'hover:bg-slate-500/10 opacity-40 hover:opacity-100'}`}
-             >
-               {dictatingField === nameStr ? <MicOff size={12} /> : <Mic size={12} />}
-             </button>
-          </div>
-        </div>
-        <div className="relative">
-          <input 
-            type={type} 
-            required={required} 
-            placeholder={placeholder}
-            value={value} 
-            onChange={e => setFormData({...formData, [name]: e.target.value})} 
-            className={`w-full px-5 py-3.5 rounded-2xl border outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`} 
-          />
-          {dictatingField === name && (
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 px-3 py-1 bg-red-500 text-white rounded-full text-[9px] font-black uppercase tracking-widest animate-in fade-in zoom-in">
-              <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
-              {t('listening')}
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  /**
    * ADMIN VIEW
    */
   if (view === 'admin') {
     return (
       <div className={`min-h-screen p-8 animate-in fade-in duration-500 ${isDarkMode ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-900'}`}>
         <div className="max-w-6xl mx-auto">
-          <header className="flex items-center justify-between mb-8">
+          <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
             <div>
               <h1 className="text-3xl font-black flex items-center gap-3"><Database className="text-indigo-500" /> {t('adminPanel')}</h1>
-              <p className="opacity-60">{t('totalRecords')}: {people.length}</p>
+              <div className="flex flex-wrap items-center gap-3 mt-2">
+                <span className="opacity-60 text-sm">{t('totalRecords')}: {people.length}</span>
+                <span className="w-1 h-1 bg-slate-500 rounded-full opacity-40" />
+                <div className="flex items-center gap-1.5 text-xs">
+                  <span className={`w-2 h-2 rounded-full ${azureStatus === 'connected' ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.4)] animate-pulse' : azureStatus === 'connecting' ? 'bg-amber-500 animate-pulse' : 'bg-rose-500'}`} />
+                  <span className="font-bold tracking-tight">
+                    Azure DB: {azureStatus === 'connected' ? 'Connected' : azureStatus === 'connecting' ? 'Connecting...' : azureStatus === 'unconfigured' ? 'Unconfigured' : 'Offline'}
+                  </span>
+                </div>
+              </div>
+              {azureMessage && (
+                <p className="text-[10px] opacity-40 font-mono mt-1.5 max-w-xl truncate" title={azureMessage}>{azureMessage}</p>
+              )}
             </div>
-            <div className="flex gap-4">
-              <button onClick={exportData} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-all"><Download size={18} /> {t('exportDb')}</button>
-              <button onClick={() => setView('user')} className="flex items-center gap-2 px-4 py-2 border rounded-lg font-bold hover:bg-white/10 transition-all"><ArrowLeft size={18} /> {t('backToUser')}</button>
+            <div className="flex flex-wrap gap-3">
+              <button onClick={handleClearDatabase} className="flex items-center gap-2 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold transition-all text-xs uppercase tracking-wider shadow-lg shadow-rose-950/10"><Trash2 size={14} /> Clear DB</button>
+              <button onClick={exportData} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all text-xs uppercase tracking-wider shadow-lg shadow-indigo-950/10"><Download size={14} /> {t('exportDb')}</button>
+              <button onClick={() => setView('user')} className="flex items-center gap-2 px-4 py-2.5 border rounded-xl font-bold hover:bg-white/10 transition-all text-xs uppercase tracking-wider"><ArrowLeft size={14} /> {t('backToUser')}</button>
             </div>
           </header>
           <div className={`rounded-2xl border overflow-hidden shadow-2xl ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
@@ -677,6 +797,7 @@ const App: React.FC = () => {
                   <th className="px-6 py-4">PESEL</th>
                   <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4 text-right">Created At</th>
+                  <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-500/10">
@@ -695,10 +816,19 @@ const App: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right opacity-40 text-xs">{new Date(p.createdAt).toLocaleString()}</td>
+                    <td className="px-6 py-4 text-right">
+                      <button 
+                        onClick={() => handleDeletePerson(p.id)} 
+                        title="Delete identity"
+                        className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </td>
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan={4} className="px-6 py-20 text-center opacity-40 font-bold uppercase tracking-widest italic">Database is empty</td>
+                    <td colSpan={5} className="px-6 py-20 text-center opacity-40 font-bold uppercase tracking-widest italic">Database is empty</td>
                   </tr>
                 )}
               </tbody>
@@ -744,7 +874,14 @@ const App: React.FC = () => {
             <div className="bg-indigo-600 p-4 rounded-3xl text-white shadow-2xl shadow-indigo-500/30"><IdCard size={36} /></div>
             <div>
               <h1 className="text-4xl font-black tracking-tighter">{t('title')}</h1>
-              <p className="opacity-40 text-xs font-black uppercase tracking-[0.3em] mt-1">{t('subtitle')}</p>
+              <div className="flex flex-wrap items-center gap-3 mt-1.5">
+                <p className="opacity-40 text-xs font-black uppercase tracking-[0.3em]">{t('subtitle')}</p>
+                <span className="w-1 h-1 bg-slate-500 rounded-full opacity-40" />
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/15 text-[8px] font-black uppercase tracking-wider">
+                  <span className={`w-1.5 h-1.5 rounded-full ${azureStatus === 'connected' ? 'bg-emerald-500' : azureStatus === 'connecting' ? 'bg-amber-500 animate-pulse' : 'bg-rose-500'}`} />
+                  <span className="opacity-70">Azure {azureStatus === 'connected' ? 'Connected' : azureStatus === 'connecting' ? 'Connecting' : azureStatus === 'unconfigured' ? 'Unconfigured' : 'Offline'}</span>
+                </div>
+              </div>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-4">
@@ -769,12 +906,73 @@ const App: React.FC = () => {
               <div className="border-b px-10 py-6 flex items-center gap-3 font-black uppercase text-[10px] tracking-[0.2em] opacity-50"><Plus size={16} />{t('manualEntry')}</div>
               <form onSubmit={handleAddPerson} className="p-10 space-y-8">
                 <div className="space-y-6">
-                  <FormField label={t('firstName')} name="firstName" type="text" value={formData.firstName} required />
-                  <FormField label={t('lastName')} name="lastName" type="text" value={formData.lastName} required />
-                  <FormField label={t('nationality')} name="nationality" type="text" value={formData.nationality} required placeholder="e.g. Polish, Ukrainian" />
+                  <FormField 
+                    label={t('firstName')} 
+                    name="firstName" 
+                    type="text" 
+                    value={formData.firstName} 
+                    required 
+                    onChange={v => setFormData({ ...formData, firstName: v })}
+                    onTTS={() => handleTTS(`${t('firstName')}: ${formData.firstName || 'brak danych'}`, 'firstName')}
+                    isAudioLoading={audioLoadingId === 'firstName'}
+                    onDictate={() => handleDictate('firstName')}
+                    isDictating={dictatingField === 'firstName'}
+                    isDarkMode={isDarkMode}
+                    readOutLoudLabel={t('readOutLoud')}
+                    dictateLabel={t('dictate')}
+                    listeningLabel={t('listening')}
+                  />
+                  <FormField 
+                    label={t('lastName')} 
+                    name="lastName" 
+                    type="text" 
+                    value={formData.lastName} 
+                    required 
+                    onChange={v => setFormData({ ...formData, lastName: v })}
+                    onTTS={() => handleTTS(`${t('lastName')}: ${formData.lastName || 'brak danych'}`, 'lastName')}
+                    isAudioLoading={audioLoadingId === 'lastName'}
+                    onDictate={() => handleDictate('lastName')}
+                    isDictating={dictatingField === 'lastName'}
+                    isDarkMode={isDarkMode}
+                    readOutLoudLabel={t('readOutLoud')}
+                    dictateLabel={t('dictate')}
+                    listeningLabel={t('listening')}
+                  />
+                  <FormField 
+                    label={t('nationality')} 
+                    name="nationality" 
+                    type="text" 
+                    value={formData.nationality} 
+                    required 
+                    placeholder="e.g. Polish, Ukrainian"
+                    onChange={v => setFormData({ ...formData, nationality: v })}
+                    onTTS={() => handleTTS(`${t('nationality')}: ${formData.nationality || 'brak danych'}`, 'nationality')}
+                    isAudioLoading={audioLoadingId === 'nationality'}
+                    onDictate={() => handleDictate('nationality')}
+                    isDictating={dictatingField === 'nationality'}
+                    isDarkMode={isDarkMode}
+                    readOutLoudLabel={t('readOutLoud')}
+                    dictateLabel={t('dictate')}
+                    listeningLabel={t('listening')}
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-6">
-                  <FormField label={t('dob')} name="dob" type="date" value={formData.dob} required />
+                  <FormField 
+                    label={t('dob')} 
+                    name="dob" 
+                    type="date" 
+                    value={formData.dob} 
+                    required 
+                    onChange={v => setFormData({ ...formData, dob: v })}
+                    onTTS={() => handleTTS(`${t('dob')}: ${formData.dob || 'brak danych'}`, 'dob')}
+                    isAudioLoading={audioLoadingId === 'dob'}
+                    onDictate={() => handleDictate('dob')}
+                    isDictating={dictatingField === 'dob'}
+                    isDarkMode={isDarkMode}
+                    readOutLoudLabel={t('readOutLoud')}
+                    dictateLabel={t('dictate')}
+                    listeningLabel={t('listening')}
+                  />
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <label className="text-[10px] font-black uppercase opacity-40 block tracking-widest">{t('gender')}</label>
