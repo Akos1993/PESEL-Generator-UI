@@ -11,7 +11,7 @@ app.use(express.json({ limit: "15mb" }));
 app.use(express.urlencoded({ extended: true, limit: "15mb" }));
 
 // ─── Supabase config ────────────────────────────────────────────────────────
-const SUPABASE_URL = "https://jxdtfbcyqdcdpgrpzgfh.supabase.co";
+const SUPABASE_URL = "https://jxdtfbcyqdcdpgrpzgfh.supabase.co/rest/v1";
 const TABLE = "people";
 
 /**
