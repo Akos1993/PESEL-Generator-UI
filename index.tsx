@@ -1,31 +1,31 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
-import { 
-  User, 
-  Calendar, 
-  Plus, 
-  Trash2, 
-  Download, 
-  Search, 
-  IdCard, 
-  CheckCircle2, 
-  Sun, 
-  Moon, 
-  Volume2, 
-  Loader2, 
-  HelpCircle, 
-  Accessibility, 
-  X, 
-  Type, 
-  Eye, 
-  ZapOff, 
-  Play, 
-  Upload, 
-  ShieldCheck, 
-  AlertCircle, 
-  FileText, 
-  Clock, 
+import {
+  User,
+  Calendar,
+  Plus,
+  Trash2,
+  Download,
+  Search,
+  IdCard,
+  CheckCircle2,
+  Sun,
+  Moon,
+  Volume2,
+  Loader2,
+  HelpCircle,
+  Accessibility,
+  X,
+  Type,
+  Eye,
+  ZapOff,
+  Play,
+  Upload,
+  ShieldCheck,
+  AlertCircle,
+  FileText,
+  Clock,
   Scan,
   Lock,
   Unlock,
@@ -45,6 +45,14 @@ import {
   Mic,
   MicOff
 } from 'lucide-react';
+
+import { GovContainer } from "./components/gov/gov-container";
+import { GovHeader } from "./components/gov/gov-header";
+import { GovSection } from "./components/gov/gov-select";
+import { GovInput } from "./components/gov/gov-input";
+import { GovButton } from "./components/gov/gov-button";
+import './components/gov/gov-theme.css';
+
 
 /**
  * Types & Constants
@@ -790,14 +798,11 @@ const App: React.FC = () => {
   const dynamicStyles = { fontSize: `${fontScale}rem` };
   const highContrastClasses = isHighContrast ? (isDarkMode ? 'contrast-125 border-white shadow-none' : 'contrast-150 border-black shadow-none') : '';
 
-  /**
-   * ADMIN VIEW
-   */
   if (view === 'admin') {
     return (
       <div className={`min-h-screen p-4 md:p-8 animate-in fade-in duration-500 ${isDarkMode ? 'bg-zinc-950 text-white' : 'bg-zinc-100 text-zinc-950'}`}>
-        <div className="max-w-6xl mx-auto">
-          <header className={`flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8 border-t-4 border-red-700 p-6 ${surfaceClasses(isDarkMode)}`}>
+        <GovContainer className={`space-y-8 ${highContrastClasses}`}>
+          <GovHeader className={`flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b ${surfaceClasses(isDarkMode)}`}>
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-3"><Database className="text-red-700" /> {t('adminPanel')}</h1>
               <div className="flex flex-wrap items-center gap-3 mt-2">
@@ -815,11 +820,11 @@ const App: React.FC = () => {
               )}
             </div>
             <div className="flex flex-wrap gap-3">
-              <button onClick={handleClearDatabase} className={primaryButtonClasses}><Trash2 size={14} /> Clear DB</button>
-              <button onClick={exportData} className={secondaryButtonClasses}><Download size={14} /> {t('exportDb')}</button>
-              <button onClick={() => setView('user')} className={secondaryButtonClasses}><ArrowLeft size={14} /> {t('backToUser')}</button>
+              <GovButton onClick={handleClearDatabase} variant="danger"><Trash2 size={14} /> Clear DB</GovButton>
+              <GovButton onClick={exportData} variant="secondary"><Download size={14} /> {t('exportDb')}</GovButton>
+              <GovButton onClick={() => setView('user')} variant="secondary"><ArrowLeft size={14} /> {t('backToUser')}</GovButton>
             </div>
-          </header>
+          </GovHeader>
           <div className={`border overflow-hidden shadow-sm ${surfaceClasses(isDarkMode)}`}>
             <table className="w-full text-left">
               <thead className="bg-zinc-100 dark:bg-zinc-900 text-xs font-bold uppercase tracking-wide border-b border-zinc-200 dark:border-zinc-800">
@@ -848,8 +853,8 @@ const App: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 text-right text-zinc-500 text-xs">{new Date(p.createdAt).toLocaleString()}</td>
                     <td className="px-6 py-4 text-right">
-                      <button 
-                        onClick={() => handleDeletePerson(p.id)} 
+                      <button
+                        onClick={() => handleDeletePerson(p.id)}
                         title="Delete identity"
                         className="p-2 text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 rounded transition-all"
                       >
@@ -865,14 +870,11 @@ const App: React.FC = () => {
               </tbody>
             </table>
           </div>
-        </div>
+        </GovContainer>
       </div>
     );
   }
 
-  /**
-   * LOGIN VIEW
-   */
   if (view === 'login') {
     return (
       <div className={`min-h-screen flex items-center justify-center p-4 md:p-8 animate-in zoom-in-95 duration-300 ${isDarkMode ? 'bg-zinc-950 text-white' : 'bg-zinc-100 text-zinc-950'}`}>
@@ -882,189 +884,189 @@ const App: React.FC = () => {
             <h2 className="text-2xl font-bold">{t('adminLogin')}</h2>
           </div>
           <form onSubmit={handleLogin} className="space-y-6">
-            <div>
-              <label className={`${labelClasses} mb-2`}>{t('password')}</label>
-              <input type="password" value={adminPass} onChange={e => setAdminPass(e.target.value)} className={inputClasses(isDarkMode)} autoFocus />
-            </div>
-            <button className={`w-full ${primaryButtonClasses}`}>{t('login')}</button>
-            <button type="button" onClick={() => setView('user')} className={`w-full ${secondaryButtonClasses}`}>{t('backToUser')}</button>
+            <GovInput
+              type="password"
+              label={t('password')}
+              value={adminPass}
+              onChange={e => setAdminPass(e.target.value)}
+              autoFocus
+            />
+            <GovButton type="submit" variant="primary" className="w-full">{t('login')}</GovButton>
+            <GovButton type="button" onClick={() => setView('user')} variant="secondary" className="w-full">{t('backToUser')}</GovButton>
           </form>
         </div>
       </div>
     );
   }
 
-  /**
-   * USER VIEW
-   */
   return (
     <div style={dynamicStyles} className={`min-h-screen transition-colors duration-500 ${isDarkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-zinc-100 text-zinc-950'}`}>
-      <div className={`max-w-6xl mx-auto ${highContrastClasses}`}>
-        <header className={`border-t-4 border-red-700 border-b border-zinc-200 dark:border-zinc-800 px-4 md:px-6 py-5 mb-8 ${isDarkMode ? 'bg-zinc-950' : 'bg-white'}`}>
+      <GovContainer className={highContrastClasses}>
+        <GovHeader className={`border-b border-zinc-200 dark:border-zinc-800 mb-8 ${isDarkMode ? 'bg-zinc-950' : 'bg-white'}`}>
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className="bg-red-700 p-3 rounded text-white"><IdCard size={30} /></div>
-            <div>
-              <h1 className="text-3xl font-bold">gov.pl</h1>
-              <div className="flex flex-wrap items-center gap-3 mt-1.5">
-                <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">{t('title')} · {t('subtitle')}</p>
-                <span className="w-1 h-1 bg-zinc-500 rounded-full opacity-40" />
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-zinc-200 dark:border-zinc-800 text-[10px] font-bold uppercase tracking-wide">
-                  <span className={`w-1.5 h-1.5 rounded-full ${azureStatus === 'connected' ? 'bg-emerald-500' : azureStatus === 'connecting' ? 'bg-amber-500 animate-pulse' : 'bg-rose-500'}`} />
-                  <span className="text-zinc-600 dark:text-zinc-400">Azure {azureStatus === 'connected' ? 'Connected' : azureStatus === 'connecting' ? 'Connecting' : azureStatus === 'unconfigured' ? 'Unconfigured' : 'Offline'}</span>
+            <div className="flex items-center gap-4">
+              <div className="bg-red-700 p-3 rounded text-white"><IdCard size={30} /></div>
+              <div>
+                <h1 className="text-3xl font-bold">gov.pl</h1>
+                <div className="flex flex-wrap items-center gap-3 mt-1.5">
+                  <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">{t('title')} · {t('subtitle')}</p>
+                  <span className="w-1 h-1 bg-zinc-500 rounded-full opacity-40" />
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-zinc-200 dark:border-zinc-800 text-[10px] font-bold uppercase tracking-wide">
+                    <span className={`w-1.5 h-1.5 rounded-full ${azureStatus === 'connected' ? 'bg-emerald-500' : azureStatus === 'connecting' ? 'bg-amber-500 animate-pulse' : 'bg-rose-500'}`} />
+                    <span className="text-zinc-600 dark:text-zinc-400">Azure {azureStatus === 'connected' ? 'Connected' : azureStatus === 'connecting' ? 'Connecting' : azureStatus === 'unconfigured' ? 'Unconfigured' : 'Offline'}</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-4">
-            <div className={`flex items-center p-1 rounded border ${isDarkMode ? 'bg-zinc-900 border-zinc-700' : 'bg-zinc-50 border-zinc-200'}`}>
-              {(['PL', 'ENG', 'UKR'] as Language[]).map(l => (
-                <button key={l} onClick={() => setLang(l)} className={`flex items-center gap-2 px-4 py-2 text-xs font-bold transition-all rounded ${lang === l ? 'bg-red-700 text-white' : 'text-zinc-600 dark:text-zinc-300 hover:bg-white dark:hover:bg-zinc-800'}`}>
-                  <span>{LANGUAGE_CONFIG[l].flag}</span> {LANGUAGE_CONFIG[l].label}
-                </button>
-              ))}
+            <div className="flex flex-wrap items-center gap-4">
+              <div className={`flex items-center p-1 rounded border ${isDarkMode ? 'bg-zinc-900 border-zinc-700' : 'bg-zinc-50 border-zinc-200'}`}>
+                {(['PL', 'ENG', 'UKR'] as Language[]).map(l => (
+                  <button key={l} onClick={() => setLang(l)} className={`flex items-center gap-2 px-4 py-2 text-xs font-bold transition-all rounded ${lang === l ? 'bg-red-700 text-white' : 'text-zinc-600 dark:text-zinc-300 hover:bg-white dark:hover:bg-zinc-800'}`}>
+                    <span>{LANGUAGE_CONFIG[l].flag}</span> {LANGUAGE_CONFIG[l].label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => setIsA11yMenuOpen(true)} className={iconButtonClasses} title={t('a11yOptions')}><Accessibility size={22} /></button>
+                <button onClick={() => setIsDarkMode(!isDarkMode)} className={iconButtonClasses}>{isDarkMode ? <Sun size={22} /> : <Moon size={22} />}</button>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <button onClick={() => setIsA11yMenuOpen(true)} className={iconButtonClasses} title={t('a11yOptions')}><Accessibility size={22} /></button>
-              <button onClick={() => setIsDarkMode(!isDarkMode)} className={iconButtonClasses}>{isDarkMode ? <Sun size={22} /> : <Moon size={22} />}</button>
-            </div>
           </div>
-          </div>
-        </header>
+        </GovHeader>
 
-        <main className="px-4 md:px-6 pb-12">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Generator Form */}
-          <div className="lg:col-span-4 space-y-6">
-            <div className={`overflow-hidden ${panelClasses(isDarkMode)}`}>
-              <div className="border-b border-zinc-200 dark:border-zinc-800 px-6 py-4 flex items-center gap-3 font-bold text-sm"><Plus size={16} className="text-red-700" />{t('manualEntry')}</div>
-              <form onSubmit={handleAddPerson} className="p-6 space-y-6">
-                <div className="space-y-6">
-                  <FormField 
-                    label={t('firstName')} 
-                    name="firstName" 
-                    type="text" 
-                    value={formData.firstName} 
-                    required 
-                    onChange={v => setFormData({ ...formData, firstName: v })}
-                    onTTS={() => handleTTS(`${t('firstName')}: ${formData.firstName || 'brak danych'}`, 'firstName')}
-                    isAudioLoading={audioLoadingId === 'firstName'}
-                    onDictate={() => handleDictate('firstName')}
-                    isDictating={dictatingField === 'firstName'}
-                    isDarkMode={isDarkMode}
-                    readOutLoudLabel={t('readOutLoud')}
-                    dictateLabel={t('dictate')}
-                    listeningLabel={t('listening')}
-                  />
-                  <FormField 
-                    label={t('lastName')} 
-                    name="lastName" 
-                    type="text" 
-                    value={formData.lastName} 
-                    required 
-                    onChange={v => setFormData({ ...formData, lastName: v })}
-                    onTTS={() => handleTTS(`${t('lastName')}: ${formData.lastName || 'brak danych'}`, 'lastName')}
-                    isAudioLoading={audioLoadingId === 'lastName'}
-                    onDictate={() => handleDictate('lastName')}
-                    isDictating={dictatingField === 'lastName'}
-                    isDarkMode={isDarkMode}
-                    readOutLoudLabel={t('readOutLoud')}
-                    dictateLabel={t('dictate')}
-                    listeningLabel={t('listening')}
-                  />
-                  <FormField 
-                    label={t('nationality')} 
-                    name="nationality" 
-                    type="text" 
-                    value={formData.nationality} 
-                    required 
-                    placeholder="e.g. Polish, Ukrainian"
-                    onChange={v => setFormData({ ...formData, nationality: v })}
-                    onTTS={() => handleTTS(`${t('nationality')}: ${formData.nationality || 'brak danych'}`, 'nationality')}
-                    isAudioLoading={audioLoadingId === 'nationality'}
-                    onDictate={() => handleDictate('nationality')}
-                    isDictating={dictatingField === 'nationality'}
-                    isDarkMode={isDarkMode}
-                    readOutLoudLabel={t('readOutLoud')}
-                    dictateLabel={t('dictate')}
-                    listeningLabel={t('listening')}
-                  />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <FormField 
-                    label={t('dob')} 
-                    name="dob" 
-                    type="date" 
-                    value={formData.dob} 
-                    required 
-                    onChange={v => setFormData({ ...formData, dob: v })}
-                    onTTS={() => handleTTS(`${t('dob')}: ${formData.dob || 'brak danych'}`, 'dob')}
-                    isAudioLoading={audioLoadingId === 'dob'}
-                    onDictate={() => handleDictate('dob')}
-                    isDictating={dictatingField === 'dob'}
-                    isDarkMode={isDarkMode}
-                    readOutLoudLabel={t('readOutLoud')}
-                    dictateLabel={t('dictate')}
-                    listeningLabel={t('listening')}
-                  />
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className={labelClasses}>{t('gender')}</label>
-                      <div className="flex items-center gap-2">
-                        <button 
-                          type="button"
-                          title={t('readOutLoud')}
-                          onClick={() => handleTTS(`${t('gender')}: ${formData.gender === 'male' ? t('male') : t('female')}`, 'gender')} 
-                          className={`${iconButtonClasses} ${audioLoadingId === 'gender' ? 'text-red-700 animate-pulse bg-red-50 dark:bg-red-950/30' : 'text-zinc-500 hover:text-zinc-950 dark:hover:text-white'}`}
-                        >
-                          <Volume2 size={12} />
-                        </button>
-                        <button 
-                          type="button"
-                          title={t('dictate')}
-                          onClick={() => handleDictate('gender')} 
-                          className={`${iconButtonClasses} ${dictatingField === 'gender' ? 'text-red-700 animate-pulse bg-red-50 dark:bg-red-950/30' : 'text-zinc-500 hover:text-zinc-950 dark:hover:text-white'}`}
-                        >
-                          {dictatingField === 'gender' ? <MicOff size={12} /> : <Mic size={12} />}
-                        </button>
+        <main className="pb-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Generator Form */}
+            <div className="lg:col-span-4 space-y-6">
+              <GovSection className={`overflow-hidden border ${panelClasses(isDarkMode)}`}>
+                <div className="border-b border-zinc-200 dark:border-zinc-800 px-6 py-4 flex items-center gap-3 font-bold text-sm"><Plus size={16} className="text-red-700" />{t('manualEntry')}</div>
+                <form onSubmit={handleAddPerson} className="p-6 space-y-6">
+                  <GovSection>
+                    <FormField
+                      label={t('firstName')}
+                      name="firstName"
+                      type="text"
+                      value={formData.firstName}
+                      required
+                      onChange={v => setFormData({ ...formData, firstName: v })}
+                      onTTS={() => handleTTS(`${t('firstName')}: ${formData.firstName || 'brak danych'}`, 'firstName')}
+                      isAudioLoading={audioLoadingId === 'firstName'}
+                      onDictate={() => handleDictate('firstName')}
+                      isDictating={dictatingField === 'firstName'}
+                      isDarkMode={isDarkMode}
+                      readOutLoudLabel={t('readOutLoud')}
+                      dictateLabel={t('dictate')}
+                      listeningLabel={t('listening')}
+                    />
+                    <FormField
+                      label={t('lastName')}
+                      name="lastName"
+                      type="text"
+                      value={formData.lastName}
+                      required
+                      onChange={v => setFormData({ ...formData, lastName: v })}
+                      onTTS={() => handleTTS(`${t('lastName')}: ${formData.lastName || 'brak danych'}`, 'lastName')}
+                      isAudioLoading={audioLoadingId === 'lastName'}
+                      onDictate={() => handleDictate('lastName')}
+                      isDictating={dictatingField === 'lastName'}
+                      isDarkMode={isDarkMode}
+                      readOutLoudLabel={t('readOutLoud')}
+                      dictateLabel={t('dictate')}
+                      listeningLabel={t('listening')}
+                    />
+                    <FormField
+                      label={t('nationality')}
+                      name="nationality"
+                      type="text"
+                      value={formData.nationality}
+                      required
+                      placeholder="e.g. Polish, Ukrainian"
+                      onChange={v => setFormData({ ...formData, nationality: v })}
+                      onTTS={() => handleTTS(`${t('nationality')}: ${formData.nationality || 'brak danych'}`, 'nationality')}
+                      isAudioLoading={audioLoadingId === 'nationality'}
+                      onDictate={() => handleDictate('nationality')}
+                      isDictating={dictatingField === 'nationality'}
+                      isDarkMode={isDarkMode}
+                      readOutLoudLabel={t('readOutLoud')}
+                      dictateLabel={t('dictate')}
+                      listeningLabel={t('listening')}
+                    />
+                  </GovSection>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <FormField
+                      label={t('dob')}
+                      name="dob"
+                      type="date"
+                      value={formData.dob}
+                      required
+                      onChange={v => setFormData({ ...formData, dob: v })}
+                      onTTS={() => handleTTS(`${t('dob')}: ${formData.dob || 'brak danych'}`, 'dob')}
+                      isAudioLoading={audioLoadingId === 'dob'}
+                      onDictate={() => handleDictate('dob')}
+                      isDictating={dictatingField === 'dob'}
+                      isDarkMode={isDarkMode}
+                      readOutLoudLabel={t('readOutLoud')}
+                      dictateLabel={t('dictate')}
+                      listeningLabel={t('listening')}
+                    />
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className={labelClasses}>{t('gender')}</label>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            title={t('readOutLoud')}
+                            onClick={() => handleTTS(`${t('gender')}: ${formData.gender === 'male' ? t('male') : t('female')}`, 'gender')}
+                            className={`${iconButtonClasses} ${audioLoadingId === 'gender' ? 'text-red-700 animate-pulse bg-red-50 dark:bg-red-950/30' : 'text-zinc-500 hover:text-zinc-950 dark:hover:text-white'}`}
+                          >
+                            <Volume2 size={12} />
+                          </button>
+                          <button
+                            type="button"
+                            title={t('dictate')}
+                            onClick={() => handleDictate('gender')}
+                            className={`${iconButtonClasses} ${dictatingField === 'gender' ? 'text-red-700 animate-pulse bg-red-50 dark:bg-red-950/30' : 'text-zinc-500 hover:text-zinc-950 dark:hover:text-white'}`}
+                          >
+                            {dictatingField === 'gender' ? <MicOff size={12} /> : <Mic size={12} />}
+                          </button>
+                        </div>
+                      </div>
+                      <div className="relative">
+                        <select value={formData.gender} onChange={e => setFormData({...formData, gender: e.target.value as 'male' | 'female'})} className={inputClasses(isDarkMode)}>
+                          <option value="male">{t('male')}</option>
+                          <option value="female">{t('female')}</option>
+                        </select>
+                        {dictatingField === 'gender' && (
+                          <div className="absolute right-10 top-1/2 -translate-y-1/2 px-3 py-1 bg-red-700 text-white rounded text-[10px] font-bold uppercase tracking-wide animate-pulse">
+                            {t('identifyingGender')}
+                          </div>
+                        )}
                       </div>
                     </div>
-                    <div className="relative">
-                      <select value={formData.gender} onChange={e => setFormData({...formData, gender: e.target.value as 'male' | 'female'})} className={inputClasses(isDarkMode)}>
-                        <option value="male">{t('male')}</option>
-                        <option value="female">{t('female')}</option>
-                      </select>
-                      {dictatingField === 'gender' && (
-                        <div className="absolute right-10 top-1/2 -translate-y-1/2 px-3 py-1 bg-red-700 text-white rounded text-[10px] font-bold uppercase tracking-wide animate-pulse">
-                          {t('identifyingGender')}
-                        </div>
-                      )}
-                    </div>
                   </div>
-                </div>
 
-                {/* Requirement Alerts */}
-                <div className="space-y-3">
-                  <div className={`p-4 rounded flex items-start gap-3 text-xs font-bold uppercase tracking-wide ${isDarkMode ? 'bg-amber-950/30 text-amber-300 border border-amber-800' : 'bg-amber-50 text-amber-800 border border-amber-200'}`}>
-                    <CreditCard size={18} className="shrink-0" />
-                    <div>
-                      <p>{t('feeNotice')}</p>
+                  {/* Requirement Alerts */}
+                  <div className="space-y-3">
+                    <div className={`p-4 rounded flex items-start gap-3 text-xs font-bold uppercase tracking-wide ${isDarkMode ? 'bg-amber-950/30 text-amber-300 border border-amber-800' : 'bg-amber-50 text-amber-800 border border-amber-200'}`}>
+                      <CreditCard size={18} className="shrink-0" />
+                      <div>
+                        <p>{t('feeNotice')}</p>
+                      </div>
+                    </div>
+                    <div className={`p-4 rounded flex items-start gap-3 text-xs font-bold uppercase tracking-wide ${isDarkMode ? 'bg-zinc-900 text-zinc-300 border border-zinc-800' : 'bg-zinc-50 text-zinc-700 border border-zinc-200'}`}>
+                      <Home size={18} className="shrink-0" />
+                      <div>
+                        <p>{t('docsRequired')}</p>
+                      </div>
                     </div>
                   </div>
-                  <div className={`p-4 rounded flex items-start gap-3 text-xs font-bold uppercase tracking-wide ${isDarkMode ? 'bg-zinc-900 text-zinc-300 border border-zinc-800' : 'bg-zinc-50 text-zinc-700 border border-zinc-200'}`}>
-                    <Home size={18} className="shrink-0" />
-                    <div>
-                      <p>{t('docsRequired')}</p>
-                    </div>
-                  </div>
-                </div>
 
-                <button type="submit" className={`w-full ${primaryButtonClasses}`}>
-                  {t('generateIdentity')}
-                </button>
-              </form>
+                  <GovButton type="submit" variant="primary" className="w-full">
+                    {t('generateIdentity')}
+                  </GovButton>
+                </form>
+              </GovSection>
             </div>
-          </div>
 
           {/* Result / Active Identity View */}
           <div className="lg:col-span-8">
@@ -1121,9 +1123,9 @@ const App: React.FC = () => {
 
                       <div className="flex flex-wrap gap-3">
                         {activePerson.paymentStatus === 'paid' ? (
-                          <button onClick={() => setVerificationModalPerson(activePerson)} className={`flex-1 min-w-[240px] ${primaryButtonClasses}`}>
+                          <GovButton onClick={() => setVerificationModalPerson(activePerson)} variant="primary" className="flex-1 min-w-[240px]">
                             <Scan size={24} /> {t('verify')}
-                          </button>
+                          </GovButton>
                         ) : (
                           <button onClick={() => setPaymentModalOpen(true)} className="flex-1 min-w-[240px] bg-amber-600 text-white font-bold py-3 px-5 rounded hover:bg-amber-700 transition-colors uppercase tracking-wide text-xs flex items-center justify-center gap-3">
                             <CreditCard size={24} /> {t('payToVerify')}
@@ -1161,7 +1163,7 @@ const App: React.FC = () => {
           </div>
         </footer>
         </main>
-      </div>
+      </GovContainer>
 
       {/* Payment Modal */}
       {paymentModalOpen && (
@@ -1226,7 +1228,7 @@ const App: React.FC = () => {
                 </button>
               </div>
 
-              <button 
+              <button
                 disabled={!selectedPaymentMethod || isPaying}
                 onClick={handleSimulatePayment}
                 className={`w-full mt-8 ${primaryButtonClasses}`}
@@ -1286,7 +1288,7 @@ const App: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="p-6 bg-zinc-50 dark:bg-zinc-900 text-right border-t border-zinc-200 dark:border-zinc-800"><button onClick={() => setVerificationModalPerson(null)} className={secondaryButtonClasses}>{t('close')}</button></div>
+            <div className="p-6 bg-zinc-50 dark:bg-zinc-900 text-right border-t border-zinc-200 dark:border-zinc-800"><GovButton onClick={() => setVerificationModalPerson(null)} variant="secondary">{t('close')}</GovButton></div>
           </div>
         </div>
       )}
@@ -1320,9 +1322,9 @@ const App: React.FC = () => {
                 </button>
               </div>
             </div>
-            <button onClick={() => setIsA11yMenuOpen(false)} className={`w-full mt-8 ${primaryButtonClasses}`}>
+            <GovButton onClick={() => setIsA11yMenuOpen(false)} variant="primary" className="w-full mt-8">
               {t('applyChanges')}
-            </button>
+            </GovButton>
           </div>
         </div>
       )}
