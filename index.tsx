@@ -77,6 +77,25 @@ const LANGUAGE_CONFIG: Record<Language, { label: string; flag: string }> = {
   UKR: { label: 'UA', flag: '🇺🇦' }
 };
 
+const surfaceClasses = (isDarkMode: boolean) =>
+  isDarkMode ? 'bg-zinc-950 border-zinc-800 text-zinc-100' : 'bg-white border-zinc-200 text-zinc-950';
+
+const panelClasses = (isDarkMode: boolean) =>
+  `border shadow-sm ${surfaceClasses(isDarkMode)}`;
+
+const inputClasses = (isDarkMode: boolean) =>
+  `w-full px-4 py-3 rounded border outline-none transition-all focus:ring-2 focus:ring-red-700/20 focus:border-red-700 ${
+    isDarkMode ? 'bg-zinc-900 border-zinc-700 text-white' : 'bg-white border-zinc-300 text-zinc-950'
+  }`;
+
+const labelClasses = 'text-xs font-bold text-zinc-800 dark:text-zinc-200 block';
+
+const iconButtonClasses = 'p-2 rounded border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors';
+
+const primaryButtonClasses = 'bg-red-700 text-white font-bold py-3 px-5 rounded hover:bg-red-800 transition-colors uppercase tracking-wide text-xs flex items-center justify-center gap-3 disabled:opacity-50';
+
+const secondaryButtonClasses = 'border border-zinc-300 dark:border-zinc-700 font-bold py-3 px-5 rounded hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors uppercase tracking-wide text-xs flex items-center justify-center gap-3';
+
 const TRANSLATIONS = {
   PL: {
     title: 'PESEL Master',
@@ -432,13 +451,13 @@ const FormField: React.FC<FormFieldProps> = ({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <label className="text-[10px] font-black uppercase opacity-40 block tracking-widest">{label}</label>
+        <label className={labelClasses}>{label}</label>
         <div className="flex items-center gap-2">
            <button 
             type="button"
             title={readOutLoudLabel}
             onClick={onTTS} 
-            className={`p-1.5 rounded-lg transition-all ${isAudioLoading ? 'text-indigo-500 animate-pulse bg-indigo-500/10' : 'hover:bg-slate-500/10 opacity-40 hover:opacity-100'}`}
+            className={`${iconButtonClasses} ${isAudioLoading ? 'text-red-700 animate-pulse bg-red-50 dark:bg-red-950/30' : 'text-zinc-500 hover:text-zinc-950 dark:hover:text-white'}`}
            >
               <Volume2 size={12} />
            </button>
@@ -446,7 +465,7 @@ const FormField: React.FC<FormFieldProps> = ({
             type="button"
             title={dictateLabel}
             onClick={onDictate} 
-            className={`p-1.5 rounded-lg transition-all ${isDictating ? 'text-red-500 animate-bounce bg-red-500/10' : 'hover:bg-slate-500/10 opacity-40 hover:opacity-100'}`}
+            className={`${iconButtonClasses} ${isDictating ? 'text-red-700 animate-pulse bg-red-50 dark:bg-red-950/30' : 'text-zinc-500 hover:text-zinc-950 dark:hover:text-white'}`}
            >
              {isDictating ? <MicOff size={12} /> : <Mic size={12} />}
            </button>
@@ -459,10 +478,10 @@ const FormField: React.FC<FormFieldProps> = ({
           placeholder={placeholder}
           value={value} 
           onChange={e => onChange(e.target.value)} 
-          className={`w-full px-5 py-3.5 rounded-2xl border outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`} 
+          className={inputClasses(isDarkMode)} 
         />
         {isDictating && (
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 px-3 py-1 bg-red-500 text-white rounded-full text-[9px] font-black uppercase tracking-widest animate-in fade-in zoom-in">
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 px-3 py-1 bg-red-700 text-white rounded text-[10px] font-bold uppercase tracking-wide animate-in fade-in zoom-in">
             <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
             {listeningLabel}
           </div>
@@ -764,34 +783,34 @@ const App: React.FC = () => {
    */
   if (view === 'admin') {
     return (
-      <div className={`min-h-screen p-8 animate-in fade-in duration-500 ${isDarkMode ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-900'}`}>
+      <div className={`min-h-screen p-4 md:p-8 animate-in fade-in duration-500 ${isDarkMode ? 'bg-zinc-950 text-white' : 'bg-zinc-100 text-zinc-950'}`}>
         <div className="max-w-6xl mx-auto">
-          <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
+          <header className={`flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8 border-t-4 border-red-700 p-6 ${surfaceClasses(isDarkMode)}`}>
             <div>
-              <h1 className="text-3xl font-black flex items-center gap-3"><Database className="text-indigo-500" /> {t('adminPanel')}</h1>
+              <h1 className="text-2xl font-bold flex items-center gap-3"><Database className="text-red-700" /> {t('adminPanel')}</h1>
               <div className="flex flex-wrap items-center gap-3 mt-2">
-                <span className="opacity-60 text-sm">{t('totalRecords')}: {people.length}</span>
-                <span className="w-1 h-1 bg-slate-500 rounded-full opacity-40" />
+                <span className="text-zinc-600 dark:text-zinc-400 text-sm">{t('totalRecords')}: {people.length}</span>
+                <span className="w-1 h-1 bg-zinc-500 rounded-full opacity-40" />
                 <div className="flex items-center gap-1.5 text-xs">
                   <span className={`w-2 h-2 rounded-full ${azureStatus === 'connected' ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.4)] animate-pulse' : azureStatus === 'connecting' ? 'bg-amber-500 animate-pulse' : 'bg-rose-500'}`} />
-                  <span className="font-bold tracking-tight">
+                  <span className="font-bold">
                     Azure DB: {azureStatus === 'connected' ? 'Connected' : azureStatus === 'connecting' ? 'Connecting...' : azureStatus === 'unconfigured' ? 'Unconfigured' : 'Offline'}
                   </span>
                 </div>
               </div>
               {azureMessage && (
-                <p className="text-[10px] opacity-40 font-mono mt-1.5 max-w-xl truncate" title={azureMessage}>{azureMessage}</p>
+                <p className="text-xs text-zinc-500 font-mono mt-1.5 max-w-xl truncate" title={azureMessage}>{azureMessage}</p>
               )}
             </div>
             <div className="flex flex-wrap gap-3">
-              <button onClick={handleClearDatabase} className="flex items-center gap-2 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold transition-all text-xs uppercase tracking-wider shadow-lg shadow-rose-950/10"><Trash2 size={14} /> Clear DB</button>
-              <button onClick={exportData} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all text-xs uppercase tracking-wider shadow-lg shadow-indigo-950/10"><Download size={14} /> {t('exportDb')}</button>
-              <button onClick={() => setView('user')} className="flex items-center gap-2 px-4 py-2.5 border rounded-xl font-bold hover:bg-white/10 transition-all text-xs uppercase tracking-wider"><ArrowLeft size={14} /> {t('backToUser')}</button>
+              <button onClick={handleClearDatabase} className={primaryButtonClasses}><Trash2 size={14} /> Clear DB</button>
+              <button onClick={exportData} className={secondaryButtonClasses}><Download size={14} /> {t('exportDb')}</button>
+              <button onClick={() => setView('user')} className={secondaryButtonClasses}><ArrowLeft size={14} /> {t('backToUser')}</button>
             </div>
           </header>
-          <div className={`rounded-2xl border overflow-hidden shadow-2xl ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+          <div className={`border overflow-hidden shadow-sm ${surfaceClasses(isDarkMode)}`}>
             <table className="w-full text-left">
-              <thead className="bg-slate-500/10 text-xs font-bold uppercase tracking-wider">
+              <thead className="bg-zinc-100 dark:bg-zinc-900 text-xs font-bold uppercase tracking-wide border-b border-zinc-200 dark:border-zinc-800">
                 <tr>
                   <th className="px-6 py-4">Identity</th>
                   <th className="px-6 py-4">PESEL</th>
@@ -800,27 +819,27 @@ const App: React.FC = () => {
                   <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-500/10">
+              <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
                 {people.length > 0 ? people.map(p => (
-                  <tr key={p.id} className="hover:bg-indigo-500/5 transition-colors">
+                  <tr key={p.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
                     <td className="px-6 py-4 font-bold">
                       {p.firstName} {p.lastName}
-                      <div className="flex gap-2 text-[10px] opacity-40 font-normal mt-1">
+                      <div className="flex gap-2 text-xs text-zinc-500 font-normal mt-1">
                         <span>{p.dob}</span> • <span>{p.nationality}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4"><code className="bg-indigo-500/10 px-2 py-1 rounded text-indigo-500 font-bold">{p.pesel}</code></td>
+                    <td className="px-6 py-4"><code className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 px-2 py-1 rounded text-zinc-900 dark:text-zinc-100 font-bold">{p.pesel}</code></td>
                     <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${p.verificationStatus === 'verified' ? 'bg-green-500 text-white' : p.verificationStatus === 'rejected' ? 'bg-red-500 text-white' : 'bg-slate-500/10 text-slate-500'}`}>
+                      <span className={`px-3 py-1 rounded text-[10px] font-bold uppercase ${p.verificationStatus === 'verified' ? 'bg-green-700 text-white' : p.verificationStatus === 'rejected' ? 'bg-red-700 text-white' : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800'}`}>
                         {p.verificationStatus}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right opacity-40 text-xs">{new Date(p.createdAt).toLocaleString()}</td>
+                    <td className="px-6 py-4 text-right text-zinc-500 text-xs">{new Date(p.createdAt).toLocaleString()}</td>
                     <td className="px-6 py-4 text-right">
                       <button 
                         onClick={() => handleDeletePerson(p.id)} 
                         title="Delete identity"
-                        className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
+                        className="p-2 text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 rounded transition-all"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -828,7 +847,7 @@ const App: React.FC = () => {
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan={5} className="px-6 py-20 text-center opacity-40 font-bold uppercase tracking-widest italic">Database is empty</td>
+                    <td colSpan={5} className="px-6 py-20 text-center text-zinc-500 font-bold uppercase tracking-wide">Database is empty</td>
                   </tr>
                 )}
               </tbody>
@@ -844,19 +863,19 @@ const App: React.FC = () => {
    */
   if (view === 'login') {
     return (
-      <div className={`min-h-screen flex items-center justify-center p-8 animate-in zoom-in-95 duration-300 ${isDarkMode ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-900'}`}>
-        <div className={`w-full max-w-md p-10 rounded-[2.5rem] border shadow-2xl ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-          <div className="flex flex-col items-center mb-8">
-            <div className="bg-indigo-600 p-5 rounded-[1.5rem] text-white mb-6 shadow-2xl shadow-indigo-500/30 animate-bounce"><Lock size={40} /></div>
-            <h2 className="text-3xl font-black tracking-tighter">{t('adminLogin')}</h2>
+      <div className={`min-h-screen flex items-center justify-center p-4 md:p-8 animate-in zoom-in-95 duration-300 ${isDarkMode ? 'bg-zinc-950 text-white' : 'bg-zinc-100 text-zinc-950'}`}>
+        <div className={`w-full max-w-md border-t-4 border-red-700 p-8 shadow-sm ${surfaceClasses(isDarkMode)}`}>
+          <div className="flex flex-col items-center mb-8 text-center">
+            <div className="bg-red-700 p-4 rounded text-white mb-5"><Lock size={34} /></div>
+            <h2 className="text-2xl font-bold">{t('adminLogin')}</h2>
           </div>
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="text-[10px] font-black uppercase opacity-50 block mb-2 tracking-widest">{t('password')}</label>
-              <input type="password" value={adminPass} onChange={e => setAdminPass(e.target.value)} className={`w-full px-5 py-4 rounded-2xl border outline-none focus:ring-4 focus:ring-indigo-500/20 transition-all ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`} autoFocus />
+              <label className={`${labelClasses} mb-2`}>{t('password')}</label>
+              <input type="password" value={adminPass} onChange={e => setAdminPass(e.target.value)} className={inputClasses(isDarkMode)} autoFocus />
             </div>
-            <button className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-indigo-500/30 hover:bg-indigo-700 transition-all uppercase tracking-widest text-xs">{t('login')}</button>
-            <button type="button" onClick={() => setView('user')} className="w-full text-xs font-bold opacity-40 hover:opacity-100 transition-opacity uppercase tracking-widest">{t('backToUser')}</button>
+            <button className={`w-full ${primaryButtonClasses}`}>{t('login')}</button>
+            <button type="button" onClick={() => setView('user')} className={`w-full ${secondaryButtonClasses}`}>{t('backToUser')}</button>
           </form>
         </div>
       </div>
@@ -867,44 +886,47 @@ const App: React.FC = () => {
    * USER VIEW
    */
   return (
-    <div style={dynamicStyles} className={`min-h-screen transition-colors duration-500 ${isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'} p-4 md:p-8`}>
+    <div style={dynamicStyles} className={`min-h-screen transition-colors duration-500 ${isDarkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-zinc-100 text-zinc-950'}`}>
       <div className={`max-w-6xl mx-auto ${highContrastClasses}`}>
-        <header className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
-          <div className="flex items-center gap-5">
-            <div className="bg-indigo-600 p-4 rounded-3xl text-white shadow-2xl shadow-indigo-500/30"><IdCard size={36} /></div>
+        <header className={`border-t-4 border-red-700 border-b border-zinc-200 dark:border-zinc-800 px-4 md:px-6 py-5 mb-8 ${isDarkMode ? 'bg-zinc-950' : 'bg-white'}`}>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className="bg-red-700 p-3 rounded text-white"><IdCard size={30} /></div>
             <div>
-              <h1 className="text-4xl font-black tracking-tighter">{t('title')}</h1>
+              <h1 className="text-3xl font-bold">gov.pl</h1>
               <div className="flex flex-wrap items-center gap-3 mt-1.5">
-                <p className="opacity-40 text-xs font-black uppercase tracking-[0.3em]">{t('subtitle')}</p>
-                <span className="w-1 h-1 bg-slate-500 rounded-full opacity-40" />
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/15 text-[8px] font-black uppercase tracking-wider">
+                <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">{t('title')} · {t('subtitle')}</p>
+                <span className="w-1 h-1 bg-zinc-500 rounded-full opacity-40" />
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-zinc-200 dark:border-zinc-800 text-[10px] font-bold uppercase tracking-wide">
                   <span className={`w-1.5 h-1.5 rounded-full ${azureStatus === 'connected' ? 'bg-emerald-500' : azureStatus === 'connecting' ? 'bg-amber-500 animate-pulse' : 'bg-rose-500'}`} />
-                  <span className="opacity-70">Azure {azureStatus === 'connected' ? 'Connected' : azureStatus === 'connecting' ? 'Connecting' : azureStatus === 'unconfigured' ? 'Unconfigured' : 'Offline'}</span>
+                  <span className="text-zinc-600 dark:text-zinc-400">Azure {azureStatus === 'connected' ? 'Connected' : azureStatus === 'connecting' ? 'Connecting' : azureStatus === 'unconfigured' ? 'Unconfigured' : 'Offline'}</span>
                 </div>
               </div>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-4">
-            <div className={`flex items-center p-1.5 rounded-2xl border ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'} shadow-inner`}>
+            <div className={`flex items-center p-1 rounded border ${isDarkMode ? 'bg-zinc-900 border-zinc-700' : 'bg-zinc-50 border-zinc-200'}`}>
               {(['PL', 'ENG', 'UKR'] as Language[]).map(l => (
-                <button key={l} onClick={() => setLang(l)} className={`flex items-center gap-2 px-5 py-2 text-xs font-black transition-all rounded-xl ${lang === l ? 'bg-indigo-600 text-white shadow-xl scale-105' : 'opacity-40 hover:opacity-100'}`}>
+                <button key={l} onClick={() => setLang(l)} className={`flex items-center gap-2 px-4 py-2 text-xs font-bold transition-all rounded ${lang === l ? 'bg-red-700 text-white' : 'text-zinc-600 dark:text-zinc-300 hover:bg-white dark:hover:bg-zinc-800'}`}>
                   <span>{LANGUAGE_CONFIG[l].flag}</span> {LANGUAGE_CONFIG[l].label}
                 </button>
               ))}
             </div>
             <div className="flex gap-2">
-              <button onClick={() => setIsA11yMenuOpen(true)} className="p-3.5 rounded-2xl border hover:bg-white/10 transition-colors" title={t('a11yOptions')}><Accessibility size={24} /></button>
-              <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-3.5 rounded-2xl border hover:bg-white/10 transition-colors">{isDarkMode ? <Sun size={24} /> : <Moon size={24} />}</button>
+              <button onClick={() => setIsA11yMenuOpen(true)} className={iconButtonClasses} title={t('a11yOptions')}><Accessibility size={22} /></button>
+              <button onClick={() => setIsDarkMode(!isDarkMode)} className={iconButtonClasses}>{isDarkMode ? <Sun size={22} /> : <Moon size={22} />}</button>
             </div>
+          </div>
           </div>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+        <main className="px-4 md:px-6 pb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Generator Form */}
-          <div className="lg:col-span-4 space-y-8">
-            <div className={`rounded-[2.5rem] shadow-2xl border overflow-hidden ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-              <div className="border-b px-10 py-6 flex items-center gap-3 font-black uppercase text-[10px] tracking-[0.2em] opacity-50"><Plus size={16} />{t('manualEntry')}</div>
-              <form onSubmit={handleAddPerson} className="p-10 space-y-8">
+          <div className="lg:col-span-4 space-y-6">
+            <div className={`overflow-hidden ${panelClasses(isDarkMode)}`}>
+              <div className="border-b border-zinc-200 dark:border-zinc-800 px-6 py-4 flex items-center gap-3 font-bold text-sm"><Plus size={16} className="text-red-700" />{t('manualEntry')}</div>
+              <form onSubmit={handleAddPerson} className="p-6 space-y-6">
                 <div className="space-y-6">
                   <FormField 
                     label={t('firstName')} 
@@ -956,7 +978,7 @@ const App: React.FC = () => {
                     listeningLabel={t('listening')}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <FormField 
                     label={t('dob')} 
                     name="dob" 
@@ -975,13 +997,13 @@ const App: React.FC = () => {
                   />
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <label className="text-[10px] font-black uppercase opacity-40 block tracking-widest">{t('gender')}</label>
+                      <label className={labelClasses}>{t('gender')}</label>
                       <div className="flex items-center gap-2">
                         <button 
                           type="button"
                           title={t('readOutLoud')}
                           onClick={() => handleTTS(`${t('gender')}: ${formData.gender === 'male' ? t('male') : t('female')}`, 'gender')} 
-                          className={`p-1.5 rounded-lg transition-all ${audioLoadingId === 'gender' ? 'text-indigo-500 animate-pulse bg-indigo-500/10' : 'hover:bg-slate-500/10 opacity-40 hover:opacity-100'}`}
+                          className={`${iconButtonClasses} ${audioLoadingId === 'gender' ? 'text-red-700 animate-pulse bg-red-50 dark:bg-red-950/30' : 'text-zinc-500 hover:text-zinc-950 dark:hover:text-white'}`}
                         >
                           <Volume2 size={12} />
                         </button>
@@ -989,19 +1011,19 @@ const App: React.FC = () => {
                           type="button"
                           title={t('dictate')}
                           onClick={() => handleDictate('gender')} 
-                          className={`p-1.5 rounded-lg transition-all ${dictatingField === 'gender' ? 'text-red-500 animate-bounce bg-red-500/10' : 'hover:bg-slate-500/10 opacity-40 hover:opacity-100'}`}
+                          className={`${iconButtonClasses} ${dictatingField === 'gender' ? 'text-red-700 animate-pulse bg-red-50 dark:bg-red-950/30' : 'text-zinc-500 hover:text-zinc-950 dark:hover:text-white'}`}
                         >
                           {dictatingField === 'gender' ? <MicOff size={12} /> : <Mic size={12} />}
                         </button>
                       </div>
                     </div>
                     <div className="relative">
-                      <select value={formData.gender} onChange={e => setFormData({...formData, gender: e.target.value as 'male' | 'female'})} className={`w-full px-5 py-3.5 rounded-2xl border outline-none transition-all ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`}>
+                      <select value={formData.gender} onChange={e => setFormData({...formData, gender: e.target.value as 'male' | 'female'})} className={inputClasses(isDarkMode)}>
                         <option value="male">{t('male')}</option>
                         <option value="female">{t('female')}</option>
                       </select>
                       {dictatingField === 'gender' && (
-                        <div className="absolute right-10 top-1/2 -translate-y-1/2 px-3 py-1 bg-red-500 text-white rounded-full text-[8px] font-black uppercase tracking-widest animate-pulse">
+                        <div className="absolute right-10 top-1/2 -translate-y-1/2 px-3 py-1 bg-red-700 text-white rounded text-[10px] font-bold uppercase tracking-wide animate-pulse">
                           {t('identifyingGender')}
                         </div>
                       )}
@@ -1011,21 +1033,21 @@ const App: React.FC = () => {
 
                 {/* Requirement Alerts */}
                 <div className="space-y-3">
-                  <div className={`p-4 rounded-2xl flex items-start gap-3 text-[10px] font-black uppercase tracking-widest shadow-sm ${isDarkMode ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'bg-amber-50 text-amber-600 border border-amber-100'}`}>
+                  <div className={`p-4 rounded flex items-start gap-3 text-xs font-bold uppercase tracking-wide ${isDarkMode ? 'bg-amber-950/30 text-amber-300 border border-amber-800' : 'bg-amber-50 text-amber-800 border border-amber-200'}`}>
                     <CreditCard size={18} className="shrink-0" />
                     <div>
-                      <p className="opacity-60">{t('feeNotice')}</p>
+                      <p>{t('feeNotice')}</p>
                     </div>
                   </div>
-                  <div className={`p-4 rounded-2xl flex items-start gap-3 text-[10px] font-black uppercase tracking-widest shadow-sm ${isDarkMode ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'bg-indigo-50 text-indigo-600 border border-indigo-100'}`}>
+                  <div className={`p-4 rounded flex items-start gap-3 text-xs font-bold uppercase tracking-wide ${isDarkMode ? 'bg-zinc-900 text-zinc-300 border border-zinc-800' : 'bg-zinc-50 text-zinc-700 border border-zinc-200'}`}>
                     <Home size={18} className="shrink-0" />
                     <div>
-                      <p className="opacity-60">{t('docsRequired')}</p>
+                      <p>{t('docsRequired')}</p>
                     </div>
                   </div>
                 </div>
 
-                <button type="submit" className="w-full bg-indigo-600 text-white font-black py-5 rounded-[1.5rem] hover:bg-indigo-700 transition-all shadow-2xl shadow-indigo-500/30 uppercase tracking-[0.2em] text-[10px]">
+                <button type="submit" className={`w-full ${primaryButtonClasses}`}>
                   {t('generateIdentity')}
                 </button>
               </form>
@@ -1035,73 +1057,74 @@ const App: React.FC = () => {
           {/* Result / Active Identity View */}
           <div className="lg:col-span-8">
             {activePerson ? (
-              <div className={`rounded-[3rem] shadow-2xl border overflow-hidden animate-in zoom-in-95 duration-500 ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-                <div className="p-10 md:p-14">
-                  <div className="flex flex-col md:flex-row gap-14 items-start">
+              <div className={`border-t-4 border-red-700 overflow-hidden animate-in zoom-in-95 duration-500 ${panelClasses(isDarkMode)}`}>
+                <div className="p-6 md:p-8">
+                  <div className="flex flex-col md:flex-row gap-8 items-start">
                     <div className="relative">
-                      <div className={`w-44 h-44 rounded-[3rem] flex items-center justify-center text-6xl font-black shadow-2xl ring-8 ring-offset-4 ${isDarkMode ? 'ring-slate-800 ring-offset-slate-900' : 'ring-slate-100 ring-offset-white'} ${activePerson.gender === 'male' ? 'bg-blue-600 text-white' : 'bg-pink-600 text-white'}`}>
+                      <div className={`w-36 h-36 rounded border flex items-center justify-center text-5xl font-bold ${isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-zinc-100 border-zinc-200 text-zinc-700'}`}>
                         {activePerson.firstName[0]}{activePerson.lastName[0]}
                       </div>
                       <button 
                         onClick={() => handleReadAloudIdentity(activePerson)}
-                        className={`absolute -bottom-4 -right-4 p-5 rounded-3xl shadow-2xl transition-all active:scale-90 flex items-center justify-center ${audioLoadingId === 'identity' ? 'animate-pulse bg-slate-500 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
+                        className={`absolute -bottom-3 -right-3 p-3 rounded border transition-all active:scale-95 flex items-center justify-center ${audioLoadingId === 'identity' ? 'animate-pulse bg-zinc-700 text-white border-zinc-700' : 'bg-red-700 text-white border-red-700 hover:bg-red-800'}`}
                         title={t('readOutLoud')}
                       >
-                        {audioLoadingId === 'identity' ? <Loader2 className="animate-spin" size={24} /> : <Volume2 size={24} />}
+                        {audioLoadingId === 'identity' ? <Loader2 className="animate-spin" size={20} /> : <Volume2 size={20} />}
                       </button>
                     </div>
-                    <div className="flex-1 space-y-8 w-full">
-                      <div className="flex items-center justify-between">
+                    <div className="flex-1 space-y-6 w-full">
+                      <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-4">
                         <div>
-                          <h2 className="text-5xl font-black tracking-tighter leading-tight">{activePerson.firstName} {activePerson.lastName}</h2>
-                          <div className="flex flex-wrap gap-x-6 gap-y-2 mt-3 font-black uppercase text-[11px] tracking-widest opacity-40">
+                          <p className="text-xs font-bold uppercase tracking-wide text-red-700 mb-2">{t('activeIdentity')}</p>
+                          <h2 className="text-3xl md:text-4xl font-bold leading-tight">{activePerson.firstName} {activePerson.lastName}</h2>
+                          <div className="flex flex-wrap gap-x-5 gap-y-2 mt-3 font-semibold text-xs text-zinc-600 dark:text-zinc-400">
                             <span className="flex items-center gap-2"><User size={14} /> {activePerson.gender === 'male' ? t('male') : t('female')}</span>
                             <span className="flex items-center gap-2"><Calendar size={14} /> {activePerson.dob}</span>
                             <span className="flex items-center gap-2"><Globe size={14} /> {activePerson.nationality}</span>
                           </div>
                         </div>
                         <div className="flex flex-col items-end gap-2">
-                          <div className={`px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] flex items-center gap-3 shadow-xl ${
-                            activePerson.verificationStatus === 'verified' ? 'bg-green-500 text-white' :
-                            activePerson.verificationStatus === 'rejected' ? 'bg-red-500 text-white' :
-                            'bg-indigo-500/10 text-indigo-500'
+                          <div className={`px-4 py-2 rounded text-xs font-bold uppercase tracking-wide flex items-center gap-2 ${
+                            activePerson.verificationStatus === 'verified' ? 'bg-green-700 text-white' :
+                            activePerson.verificationStatus === 'rejected' ? 'bg-red-700 text-white' :
+                            'bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800'
                           }`}>
                             {activePerson.verificationStatus === 'verified' ? <ShieldCheck size={18} /> : activePerson.verificationStatus === 'rejected' ? <AlertCircle size={18} /> : <Clock size={18} />}
                             {activePerson.verificationStatus === 'none' ? t('statusPending') : activePerson.verificationStatus === 'verified' ? t('statusVerified') : t('statusRejected')}
                           </div>
-                          <div className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 ${activePerson.paymentStatus === 'paid' ? 'bg-green-500/10 text-green-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                          <div className={`px-4 py-2 rounded text-xs font-bold uppercase tracking-wide flex items-center gap-2 ${activePerson.paymentStatus === 'paid' ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800' : 'bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800'}`}>
                             {activePerson.paymentStatus === 'paid' ? <CheckCircle2 size={12} /> : <CreditCard size={12} />}
                             {activePerson.paymentStatus === 'paid' ? t('paid') : t('unpaid')}
                           </div>
                         </div>
                       </div>
 
-                      <div className={`p-8 rounded-[2rem] border flex items-center justify-between group cursor-help transition-all hover:scale-[1.02] shadow-sm ${isDarkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-100'}`} onClick={() => handleExplain(activePerson)}>
+                      <div className={`p-5 rounded border flex items-center justify-between gap-4 group cursor-help transition-all ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-zinc-50 border-zinc-200'}`} onClick={() => handleExplain(activePerson)}>
                         <div>
-                          <p className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] mb-3">PESEL Identity Number</p>
-                          <code className="text-5xl font-black tracking-tighter text-indigo-600 dark:text-indigo-400">{activePerson.pesel}</code>
+                          <p className="text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide mb-2">PESEL Identity Number</p>
+                          <code className="text-3xl md:text-5xl font-bold text-zinc-950 dark:text-zinc-100">{activePerson.pesel}</code>
                         </div>
-                        <div className="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-2xl ring-1 ring-slate-200 dark:ring-slate-700"><HelpCircle size={40} className="text-indigo-500" /></div>
+                        <div className="bg-white dark:bg-zinc-950 p-3 rounded border border-zinc-200 dark:border-zinc-800"><HelpCircle size={30} className="text-red-700" /></div>
                       </div>
 
-                      <div className="flex flex-wrap gap-5">
+                      <div className="flex flex-wrap gap-3">
                         {activePerson.paymentStatus === 'paid' ? (
-                          <button onClick={() => setVerificationModalPerson(activePerson)} className="flex-1 min-w-[280px] flex items-center justify-center gap-4 py-5 rounded-[1.5rem] bg-indigo-600 text-white font-black hover:bg-indigo-700 transition-all shadow-2xl shadow-indigo-500/40 uppercase text-[11px] tracking-[0.2em]">
+                          <button onClick={() => setVerificationModalPerson(activePerson)} className={`flex-1 min-w-[240px] ${primaryButtonClasses}`}>
                             <Scan size={24} /> {t('verify')}
                           </button>
                         ) : (
-                          <button onClick={() => setPaymentModalOpen(true)} className="flex-1 min-w-[280px] flex items-center justify-center gap-4 py-5 rounded-[1.5rem] bg-amber-500 text-white font-black hover:bg-amber-600 transition-all shadow-2xl shadow-amber-500/40 uppercase text-[11px] tracking-[0.2em]">
+                          <button onClick={() => setPaymentModalOpen(true)} className="flex-1 min-w-[240px] bg-amber-600 text-white font-bold py-3 px-5 rounded hover:bg-amber-700 transition-colors uppercase tracking-wide text-xs flex items-center justify-center gap-3">
                             <CreditCard size={24} /> {t('payToVerify')}
                           </button>
                         )}
-                        <button onClick={() => setActivePerson(null)} className="p-5 rounded-[1.5rem] border hover:bg-red-500/10 hover:text-red-500 transition-all hover:scale-105 active:scale-95"><Trash2 size={28} /></button>
+                        <button onClick={() => setActivePerson(null)} className="p-3 rounded border border-zinc-300 dark:border-zinc-700 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 transition-all"><Trash2 size={24} /></button>
                       </div>
                     </div>
                   </div>
 
                   {aiExplanation && (
-                    <div className="mt-14 p-10 rounded-[2.5rem] bg-indigo-500/5 border border-indigo-500/10 animate-in slide-in-from-bottom-8 duration-700">
-                      <div className="text-base prose dark:prose-invert max-w-none prose-indigo prose-p:leading-relaxed prose-strong:text-indigo-500">
+                    <div className="mt-8 p-6 rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 animate-in slide-in-from-bottom-8 duration-700">
+                      <div className="text-sm prose dark:prose-invert max-w-none prose-p:leading-relaxed prose-strong:text-red-700">
                         {aiExplanation.split('\n').map((line, i) => <p key={i}>{line}</p>)}
                       </div>
                     </div>
@@ -1109,91 +1132,92 @@ const App: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className={`h-full flex flex-col items-center justify-center text-center p-24 rounded-[4rem] border-4 border-dashed animate-in fade-in duration-700 ${isDarkMode ? 'border-slate-800 bg-slate-900/20' : 'border-slate-100 bg-slate-50/50'}`}>
-                <div className="bg-indigo-500/10 p-10 rounded-[2.5rem] mb-10 ring-1 ring-indigo-500/20"><Fingerprint size={100} className="text-indigo-500 opacity-20" strokeWidth={1} /></div>
-                <h3 className="text-3xl font-black mb-4 tracking-tighter">{t('noActiveRecord')}</h3>
-                <p className="max-w-md text-sm opacity-40 leading-relaxed font-bold tracking-tight whitespace-pre-line">{t('searchPrompt')}</p>
+              <div className={`min-h-[520px] flex flex-col items-center justify-center text-center p-8 md:p-16 border border-dashed animate-in fade-in duration-700 ${isDarkMode ? 'border-zinc-800 bg-zinc-950' : 'border-zinc-300 bg-white'}`}>
+                <div className="bg-zinc-100 dark:bg-zinc-900 p-7 rounded border border-zinc-200 dark:border-zinc-800 mb-8"><Fingerprint size={80} className="text-zinc-400" strokeWidth={1} /></div>
+                <h3 className="text-2xl font-bold mb-4">{t('noActiveRecord')}</h3>
+                <p className="max-w-md text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed font-medium whitespace-pre-line">{t('searchPrompt')}</p>
               </div>
             )}
           </div>
         </div>
 
-        <footer className="mt-24 py-16 border-t border-slate-500/10">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-10 opacity-40 text-[10px] font-black uppercase tracking-[0.3em]">
+        <footer className="mt-12 py-8 border-t border-zinc-200 dark:border-zinc-800">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 text-xs font-bold uppercase tracking-wide text-zinc-500">
             <div className="flex gap-10"><span>{t('footerStandard')}</span><span>{t('footerAi')}</span></div>
-            <p className="max-w-lg text-center normal-case font-medium leading-relaxed tracking-normal text-[11px]">{t('footerDesc')}</p>
-            <button onClick={() => setView('login')} className="flex items-center gap-2.5 hover:text-indigo-500 transition-colors py-2 px-4 rounded-xl hover:bg-indigo-500/5"><Lock size={14} /> {t('adminLogin')}</button>
+            <p className="max-w-lg text-center normal-case font-medium leading-relaxed tracking-normal text-xs">{t('footerDesc')}</p>
+            <button onClick={() => setView('login')} className="flex items-center gap-2.5 hover:text-red-700 transition-colors py-2 px-3 rounded hover:bg-zinc-50 dark:hover:bg-zinc-900"><Lock size={14} /> {t('adminLogin')}</button>
           </div>
         </footer>
+        </main>
       </div>
 
       {/* Payment Modal */}
       {paymentModalOpen && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center p-6 bg-black/90 backdrop-blur-2xl animate-in fade-in duration-300">
-          <div className={`w-full max-w-md rounded-[3rem] shadow-2xl border overflow-hidden ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-            <div className="p-8 border-b flex items-center justify-between">
-              <h2 className="text-2xl font-black tracking-tighter flex items-center gap-3"><Wallet className="text-indigo-500" /> {t('payToVerify')}</h2>
-              <button onClick={() => setPaymentModalOpen(false)} className="p-2 hover:bg-slate-500/10 rounded-full"><X size={24} /></button>
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 md:p-6 bg-black/70 animate-in fade-in duration-300">
+          <div className={`w-full max-w-md border-t-4 border-red-700 shadow-xl overflow-hidden ${surfaceClasses(isDarkMode)}`}>
+            <div className="p-6 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+              <h2 className="text-xl font-bold flex items-center gap-3"><Wallet className="text-red-700" /> {t('payToVerify')}</h2>
+              <button onClick={() => setPaymentModalOpen(false)} className={iconButtonClasses}><X size={22} /></button>
             </div>
-            <div className="p-10 space-y-6">
-              <p className="text-xs font-black uppercase tracking-widest opacity-40">{t('paymentMethod')}</p>
+            <div className="p-6 space-y-6">
+              <p className="text-xs font-bold uppercase tracking-wide text-zinc-600 dark:text-zinc-400">{t('paymentMethod')}</p>
               <div className="grid grid-cols-1 gap-4">
                 {/* BLIK */}
                 <button 
                   onClick={() => setSelectedPaymentMethod('blik')}
-                  className={`p-6 rounded-2xl border-2 flex items-center justify-between transition-all ${selectedPaymentMethod === 'blik' ? 'border-pink-600 bg-pink-500/5' : 'border-slate-500/10 hover:border-slate-500/30'}`}
+                  className={`p-5 rounded border-2 flex items-center justify-between transition-all ${selectedPaymentMethod === 'blik' ? 'border-red-700 bg-red-50 dark:bg-red-950/30' : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-400'}`}
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-pink-600 rounded-xl flex items-center justify-center text-white font-black text-xs">BLIK</div>
-                    <span className="font-black uppercase text-xs tracking-widest">BLIK</span>
+                    <div className="w-12 h-12 bg-red-700 rounded flex items-center justify-center text-white font-bold text-xs">BLIK</div>
+                    <span className="font-bold uppercase text-xs tracking-wide">BLIK</span>
                   </div>
-                  {selectedPaymentMethod === 'blik' && <CheckCircle2 className="text-pink-600" size={20} />}
+                  {selectedPaymentMethod === 'blik' && <CheckCircle2 className="text-red-700" size={20} />}
                 </button>
                 {/* GPay */}
                 <button 
                   onClick={() => setSelectedPaymentMethod('gpay')}
-                  className={`p-6 rounded-2xl border-2 flex items-center justify-between transition-all ${selectedPaymentMethod === 'gpay' ? 'border-blue-500 bg-blue-500/5' : 'border-slate-500/10 hover:border-slate-500/30'}`}
+                  className={`p-5 rounded border-2 flex items-center justify-between transition-all ${selectedPaymentMethod === 'gpay' ? 'border-red-700 bg-red-50 dark:bg-red-950/30' : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-400'}`}
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white border border-slate-200 rounded-xl flex items-center justify-center overflow-hidden">
+                    <div className="w-12 h-12 bg-white border border-zinc-200 rounded flex items-center justify-center overflow-hidden">
                        <span className="font-black text-blue-500 text-lg">G</span><span className="font-black text-red-500 text-lg">P</span><span className="font-black text-amber-500 text-lg">a</span><span className="font-black text-green-500 text-lg">y</span>
                     </div>
-                    <span className="font-black uppercase text-xs tracking-widest">Google Pay</span>
+                    <span className="font-bold uppercase text-xs tracking-wide">Google Pay</span>
                   </div>
-                  {selectedPaymentMethod === 'gpay' && <CheckCircle2 className="text-blue-500" size={20} />}
+                  {selectedPaymentMethod === 'gpay' && <CheckCircle2 className="text-red-700" size={20} />}
                 </button>
                 {/* Apple Pay */}
                 <button 
                   onClick={() => setSelectedPaymentMethod('applepay')}
-                  className={`p-6 rounded-2xl border-2 flex items-center justify-between transition-all ${selectedPaymentMethod === 'applepay' ? 'border-black dark:border-white bg-slate-500/5' : 'border-slate-500/10 hover:border-slate-500/30'}`}
+                  className={`p-5 rounded border-2 flex items-center justify-between transition-all ${selectedPaymentMethod === 'applepay' ? 'border-red-700 bg-red-50 dark:bg-red-950/30' : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-400'}`}
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-black text-white rounded-xl flex items-center justify-center">
+                    <div className="w-12 h-12 bg-black text-white rounded flex items-center justify-center">
                        <Smartphone size={24} />
                     </div>
-                    <span className="font-black uppercase text-xs tracking-widest">Apple Pay</span>
+                    <span className="font-bold uppercase text-xs tracking-wide">Apple Pay</span>
                   </div>
                   {selectedPaymentMethod === 'applepay' && <CheckCircle2 size={20} />}
                 </button>
                 {/* Card */}
                 <button 
                   onClick={() => setSelectedPaymentMethod('card')}
-                  className={`p-6 rounded-2xl border-2 flex items-center justify-between transition-all ${selectedPaymentMethod === 'card' ? 'border-indigo-600 bg-indigo-500/5' : 'border-slate-500/10 hover:border-slate-500/30'}`}
+                  className={`p-5 rounded border-2 flex items-center justify-between transition-all ${selectedPaymentMethod === 'card' ? 'border-red-700 bg-red-50 dark:bg-red-950/30' : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-400'}`}
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-indigo-600 text-white rounded-xl flex items-center justify-center">
+                    <div className="w-12 h-12 bg-red-700 text-white rounded flex items-center justify-center">
                        <CreditCard size={24} />
                     </div>
-                    <span className="font-black uppercase text-xs tracking-widest">Credit Card</span>
+                    <span className="font-bold uppercase text-xs tracking-wide">Credit Card</span>
                   </div>
-                  {selectedPaymentMethod === 'card' && <CheckCircle2 className="text-indigo-600" size={20} />}
+                  {selectedPaymentMethod === 'card' && <CheckCircle2 className="text-red-700" size={20} />}
                 </button>
               </div>
 
               <button 
                 disabled={!selectedPaymentMethod || isPaying}
                 onClick={handleSimulatePayment}
-                className="w-full mt-8 bg-indigo-600 text-white font-black py-5 rounded-[1.5rem] shadow-2xl shadow-indigo-500/30 uppercase tracking-[0.2em] text-xs flex items-center justify-center gap-3 disabled:opacity-50 transition-all hover:bg-indigo-700 active:scale-95"
+                className={`w-full mt-8 ${primaryButtonClasses}`}
               >
                 {isPaying ? <Loader2 className="animate-spin" size={20} /> : <><ArrowRight size={20} /> {t('payToVerify')}</>}
               </button>
@@ -1204,87 +1228,87 @@ const App: React.FC = () => {
 
       {/* Verification Modal */}
       {verificationModalPerson && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/95 backdrop-blur-2xl animate-in fade-in duration-300">
-          <div className={`w-full max-w-3xl rounded-[3rem] shadow-2xl border overflow-hidden ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-            <div className="p-10 border-b flex items-center justify-between bg-slate-500/5">
-              <h2 className="text-3xl font-black flex items-center gap-4 tracking-tighter"><ShieldCheck className="text-indigo-500" /> {t('docVerification')}</h2>
-              <button onClick={() => setVerificationModalPerson(null)} className="p-4 hover:bg-slate-500/10 rounded-full transition-all"><X size={28} /></button>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 md:p-6 bg-black/70 animate-in fade-in duration-300">
+          <div className={`w-full max-w-3xl border-t-4 border-red-700 shadow-xl overflow-hidden ${surfaceClasses(isDarkMode)}`}>
+            <div className="p-6 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-900">
+              <h2 className="text-2xl font-bold flex items-center gap-4"><ShieldCheck className="text-red-700" /> {t('docVerification')}</h2>
+              <button onClick={() => setVerificationModalPerson(null)} className={iconButtonClasses}><X size={24} /></button>
             </div>
-            <div className="p-12 grid grid-cols-1 md:grid-cols-2 gap-16">
-              <div className="space-y-8">
-                <div className={`relative h-64 rounded-[2rem] border-4 border-dashed flex flex-col items-center justify-center overflow-hidden transition-all group ${isDarkMode ? 'border-slate-700 bg-slate-800 hover:border-indigo-500/40' : 'border-slate-200 bg-slate-50 hover:border-indigo-500/40'}`}>
-                  {activePerson?.idPhoto ? <img src={activePerson.idPhoto} className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-110" /> : <div className="text-center"><FileText size={64} className="mx-auto mb-6 opacity-10" /><p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30">{t('uploadId')}</p></div>}
+            <div className="p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-6">
+                <div className={`relative h-64 rounded border-2 border-dashed flex flex-col items-center justify-center overflow-hidden transition-all group ${isDarkMode ? 'border-zinc-700 bg-zinc-900 hover:border-red-700' : 'border-zinc-300 bg-zinc-50 hover:border-red-700'}`}>
+                  {activePerson?.idPhoto ? <img src={activePerson.idPhoto} className="absolute inset-0 w-full h-full object-cover" /> : <div className="text-center"><FileText size={58} className="mx-auto mb-5 text-zinc-400" /><p className="text-xs font-bold uppercase tracking-wide text-zinc-500">{t('uploadId')}</p></div>}
                   {!activePerson?.idPhoto && <input type="file" ref={fileInputRef} onChange={handleVerifyDocument} accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" />}
                 </div>
-                <button onClick={() => fileInputRef.current?.click()} disabled={isVerifying} className="w-full py-5 rounded-2xl bg-indigo-600 text-white font-black uppercase text-[11px] tracking-[0.3em] shadow-2xl shadow-indigo-500/40 disabled:opacity-50 hover:bg-indigo-700 active:scale-95 transition-all">
+                <button onClick={() => fileInputRef.current?.click()} disabled={isVerifying} className={`w-full ${primaryButtonClasses}`}>
                   {isVerifying ? <Loader2 className="animate-spin mx-auto" size={24} /> : t('uploadId')}
                 </button>
               </div>
-              <div className="flex flex-col justify-center space-y-8">
-                <div className={`p-8 rounded-[2rem] border flex flex-col items-center justify-center min-h-[220px] transition-all shadow-sm ${activePerson?.verificationStatus === 'verified' ? 'bg-green-500/10 border-green-500/40 text-green-600' : activePerson?.verificationStatus === 'rejected' ? 'bg-red-500/10 border-red-500/40 text-red-600' : 'bg-slate-500/5 opacity-40'}`}>
+              <div className="flex flex-col justify-center space-y-6">
+                <div className={`p-8 rounded border flex flex-col items-center justify-center min-h-[220px] transition-all ${activePerson?.verificationStatus === 'verified' ? 'bg-green-50 dark:bg-green-950/30 border-green-300 dark:border-green-800 text-green-700 dark:text-green-300' : activePerson?.verificationStatus === 'rejected' ? 'bg-red-50 dark:bg-red-950/30 border-red-300 dark:border-red-800 text-red-700 dark:text-red-300' : 'bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-500'}`}>
                   {isVerifying ? (
                     <div className="text-center">
-                      <Loader2 size={48} className="animate-spin mx-auto mb-6 text-indigo-500" />
-                      <p className="text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">{t('aiChecking')}</p>
+                      <Loader2 size={48} className="animate-spin mx-auto mb-6 text-red-700" />
+                      <p className="text-xs font-bold uppercase tracking-wide animate-pulse">{t('aiChecking')}</p>
                     </div>
                   ) : (
                     <>
                       {activePerson?.verificationStatus === 'none' && <Clock size={64} className="mb-6" />}
                       {activePerson?.verificationStatus === 'verified' && <ShieldCheck size={80} className="mb-6" />}
                       {activePerson?.verificationStatus === 'rejected' && <AlertCircle size={80} className="mb-6" />}
-                      <p className="font-black uppercase text-base tracking-[0.3em]">{activePerson?.verificationStatus === 'none' ? t('statusPending') : activePerson?.verificationStatus === 'verified' ? t('statusVerified') : t('statusRejected')}</p>
+                      <p className="font-bold uppercase text-sm tracking-wide">{activePerson?.verificationStatus === 'none' ? t('statusPending') : activePerson?.verificationStatus === 'verified' ? t('statusVerified') : t('statusRejected')}</p>
                     </>
                   )}
                 </div>
-                {activePerson?.verificationDetails && <div className="text-xs text-center opacity-70 leading-relaxed font-black italic p-4 rounded-2xl bg-slate-500/5 ring-1 ring-slate-500/5">{activePerson.verificationDetails}</div>}
+                {activePerson?.verificationDetails && <div className="text-xs text-center text-zinc-600 dark:text-zinc-400 leading-relaxed font-semibold p-4 rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">{activePerson.verificationDetails}</div>}
                 
                 {/* Secondary Requirement Notice */}
-                <div className="bg-amber-500/5 p-4 rounded-2xl border border-amber-500/10">
-                   <p className="text-[10px] font-black uppercase tracking-widest text-amber-500 flex items-center gap-2">
+                <div className="bg-amber-50 dark:bg-amber-950/30 p-4 rounded border border-amber-200 dark:border-amber-800">
+                   <p className="text-xs font-bold uppercase tracking-wide text-amber-800 dark:text-amber-300 flex items-center gap-2">
                      <AlertCircle size={14} /> {t('idDesc')}
                    </p>
                 </div>
-                <div className="p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 flex items-center gap-3">
-                   <Shield size={16} className="text-indigo-500" />
-                   <p className="text-[10px] font-black uppercase tracking-widest text-indigo-500">{t('paymentSuccess')}</p>
+                <div className="p-4 rounded bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center gap-3">
+                   <Shield size={16} className="text-red-700" />
+                   <p className="text-xs font-bold uppercase tracking-wide text-zinc-700 dark:text-zinc-300">{t('paymentSuccess')}</p>
                 </div>
               </div>
             </div>
-            <div className="p-10 bg-slate-500/5 text-right"><button onClick={() => setVerificationModalPerson(null)} className="px-14 py-4 rounded-2xl font-black border uppercase text-[11px] tracking-[0.3em] hover:bg-white/10 transition-all">{t('close')}</button></div>
+            <div className="p-6 bg-zinc-50 dark:bg-zinc-900 text-right border-t border-zinc-200 dark:border-zinc-800"><button onClick={() => setVerificationModalPerson(null)} className={secondaryButtonClasses}>{t('close')}</button></div>
           </div>
         </div>
       )}
 
       {/* A11y Modal */}
       {isA11yMenuOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl animate-in zoom-in-95 duration-200">
-          <div className={`w-full max-w-lg p-12 rounded-[3.5rem] border shadow-2xl ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-            <div className="flex items-center justify-between mb-12">
-              <h2 className="text-3xl font-black flex items-center gap-4 tracking-tighter"><Accessibility className="text-indigo-500" /> {t('a11yOptions')}</h2>
-              <button onClick={() => setIsA11yMenuOpen(false)} className="p-3 hover:bg-slate-500/10 rounded-full"><X size={24} /></button>
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 md:p-6 bg-black/70 animate-in zoom-in-95 duration-200">
+          <div className={`w-full max-w-lg p-8 border-t-4 border-red-700 shadow-xl ${surfaceClasses(isDarkMode)}`}>
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-bold flex items-center gap-4"><Accessibility className="text-red-700" /> {t('a11yOptions')}</h2>
+              <button onClick={() => setIsA11yMenuOpen(false)} className={iconButtonClasses}><X size={22} /></button>
             </div>
-            <div className="space-y-10">
+            <div className="space-y-8">
               <div>
-                <label className="text-[11px] font-black uppercase opacity-40 mb-5 block tracking-[0.2em]">{t('textSize')}</label>
+                <label className={`${labelClasses} mb-4`}>{t('textSize')}</label>
                 <div className="flex gap-4">
                   {[1, 1.15, 1.3].map(s => (
-                    <button key={s} onClick={() => setFontScale(s)} className={`flex-1 py-5 rounded-[1.5rem] border-2 font-black transition-all ${fontScale === s ? 'border-indigo-600 bg-indigo-500/10 text-indigo-600 scale-105 shadow-xl' : 'border-slate-500/10 hover:border-slate-500/30'}`}>
+                    <button key={s} onClick={() => setFontScale(s)} className={`flex-1 py-4 rounded border-2 font-bold transition-all ${fontScale === s ? 'border-red-700 bg-red-50 dark:bg-red-950/30 text-red-700' : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-400'}`}>
                       {s === 1 ? 'A' : s === 1.15 ? 'A+' : 'A++'}
                     </button>
                   ))}
                 </div>
               </div>
-              <div className="flex items-center justify-between p-7 rounded-[2.5rem] border border-slate-500/10 bg-slate-500/5">
+              <div className="flex items-center justify-between p-5 rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
                 <div>
-                  <p className="font-black uppercase text-xs tracking-[0.2em]">{t('highContrast')}</p>
-                  <p className="text-[10px] opacity-40 font-bold mt-1 tracking-tight">{t('highContrastDesc')}</p>
+                  <p className="font-bold uppercase text-xs tracking-wide">{t('highContrast')}</p>
+                  <p className="text-xs text-zinc-500 font-medium mt-1">{t('highContrastDesc')}</p>
                 </div>
-                <button onClick={() => setIsHighContrast(!isHighContrast)} className={`w-16 h-9 rounded-full relative transition-all duration-300 ring-4 ring-white/10 ${isHighContrast ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'}`}>
+                <button onClick={() => setIsHighContrast(!isHighContrast)} className={`w-16 h-9 rounded-full relative transition-all duration-300 ${isHighContrast ? 'bg-red-700' : 'bg-zinc-300 dark:bg-zinc-700'}`}>
                   <div className={`absolute top-1 w-7 h-7 bg-white rounded-full transition-all duration-300 shadow-xl ${isHighContrast ? 'left-8' : 'left-1'}`} />
                 </button>
               </div>
             </div>
-            <button onClick={() => setIsA11yMenuOpen(false)} className="w-full mt-12 bg-indigo-600 text-white font-black py-6 rounded-[2rem] shadow-2xl shadow-indigo-500/40 uppercase tracking-[0.4em] text-xs hover:bg-indigo-700 active:scale-[0.98] transition-all">
+            <button onClick={() => setIsA11yMenuOpen(false)} className={`w-full mt-8 ${primaryButtonClasses}`}>
               {t('applyChanges')}
             </button>
           </div>

@@ -154,6 +154,123 @@ async function serveApp() {
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Supabase proxy server listening on http://0.0.0.0:${PORT}`);
   });
+  app.post("/api/people", async (req, res) => {
+  try {
+    const person = req.body;
+    if (!person?.id) {
+      return res.status(400).json({ error: "Missing person data or id field." });
+    }
+
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from(TABLE)
+      .upsert(person, { onConflict: "id" })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // ─── Auto‑archive to history ────────────────────────────────────────────
+    try {
+      if (data.verificationStatus === "approved") {
+        console.log(`Archiving ${data.id} to history…`);
+
+        const { error: insertErr } = await supabase
+          .from("history")
+          .insert({
+            pesel: data.pesel,
+            created_at: new Date().toISOString()
+          });
+
+        if (insertErr) throw insertErr;
+
+        const { error: deleteErr } = await supabase
+          .from("people")
+          .delete()
+          .eq("id", data.id);
+
+        if (deleteErr) throw deleteErr;
+
+        console.log(`Archived ${data.id} successfully.`);
+      }
+    } catch (archiveErr: any) {
+      console.error("Archive error:", archiveErr.message);
+    }
+
+    res.json(data);
+  } catch (err: any) {
+    console.error("Supabase upsert error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+app.post("/api/people", async (req, res) => {
+  try {
+    const person = req.body;
+    if (!person?.id) {
+      return res.status(400).json({ error: "Missing person data or id field." });
+    }
+
+    const supabase = getSupabase();
+
+    // ─── Check if this person already exists ────────────────────────────────
+    const { data: existing } = await supabase
+      .from("people")
+      .select("*")
+      .eq("id", person.id)
+      .single();
+
+    // ─── If new entry → force verificationStatus = "pending" ───────────────
+    const payload = {
+      ...person,
+      verificationStatus: existing
+        ? person.verificationStatus ?? existing.verificationStatus
+        : "pending",
+      createdAt: existing ? existing.createdAt : Date.now()
+    };
+
+    // ─── Upsert the person ─────────────────────────────────────────────────
+    const { data, error } = await supabase
+      .from("people")
+      .upsert(payload, { onConflict: "id" })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // ─── Auto‑archive to history when approved ─────────────────────────────
+    try {
+      if (data.verificationStatus === "approved") {
+        console.log(`Archiving ${data.id} to history…`);
+
+        const { error: insertErr } = await supabase
+          .from("history")
+          .insert({
+            pesel: data.pesel,
+            created_at: new Date().toISOString()
+          });
+
+        if (insertErr) throw insertErr;
+
+        const { error: deleteErr } = await supabase
+          .from("people")
+          .delete()
+          .eq("id", data.id);
+
+        if (deleteErr) throw deleteErr;
+
+        console.log(`Archived ${data.id} successfully.`);
+      }
+    } catch (archiveErr: any) {
+      console.error("Archive error:", archiveErr.message);
+    }
+
+    res.json(data);
+  } catch (err: any) {
+    console.error("Supabase upsert error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 }
 
 serveApp();
