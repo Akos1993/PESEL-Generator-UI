@@ -688,6 +688,12 @@ const App: React.FC = () => {
       verificationStatus: 'none',
       paymentStatus: 'unpaid'
     };
+    setPeople(prev => {
+      const exists = prev.some(p => p.id === newPerson.id);
+      if (exists) return prev.map(p => p.id === newPerson.id ? newPerson : p);
+      return [newPerson, ...prev];
+    });
+    syncPersonToAzure(newPerson);
     setActivePerson(newPerson);
     setFormData({ firstName: '', lastName: '', dob: '', gender: 'male', nationality: '' });
   };
@@ -698,6 +704,12 @@ const App: React.FC = () => {
     setTimeout(() => {
       const updated = { ...activePerson, paymentStatus: 'paid' as PaymentStatus };
       setActivePerson(updated);
+      setPeople(prev => {
+        const exists = prev.some(p => p.id === updated.id);
+        if (exists) return prev.map(p => p.id === updated.id ? updated : p);
+        return [updated, ...prev];
+      });
+      syncPersonToAzure(updated);
       setIsPaying(false);
       setPaymentModalOpen(false);
       setSelectedPaymentMethod(null);
