@@ -1,20 +1,10 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+## 🚀 Deployment
 
-# Run and deploy your AI Studio app
+This project is deployed on **Azure Static Web Apps** with a fully automated **GitHub Actions CI/CD** pipeline.
 
-This contains everything you need to run your app locally.
+- 🔗 **Live App:** https://purple-pond-09d0dc403.7.azurestaticapps.net
+- 📦 **Repository:** https://github.com/Akos1993/PESEL-Generator-UI  
+- ⚙️ **CI/CD Workflow:** https://github.com/Akos1993/PESEL-Generator-UI/blob/main/.github/workflows/azure-static-web-apps-purple-pond-09d0dc403.yml
 
-View your app in AI Studio: https://ai.studio/apps/720b52bd-fdf3-4017-891f-541cae4e9a04
-
-## Run Locally
-
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### CI/CD Status
+![Build Status](https://github.com/Akos1993/PESEL-Generator-UI/actions/workflows/azure-static-web-apps.yml/badge.svg)
