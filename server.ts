@@ -1,112 +1,141 @@
 import express from "express";
 import path from "path";
-import { CosmosClient } from "@azure/cosmos";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { createServer as createViteServer } from "vite";
 
 const app = express();
 const PORT = 3000;
 
-// Set limits high to support base64 encoded image uploads
-app.use(express.json({ limit: '15mb' }));
-app.use(express.urlencoded({ extended: true, limit: '15mb' }));
+// Support large base64-encoded ID photo uploads
+app.use(express.json({ limit: "15mb" }));
+app.use(express.urlencoded({ extended: true, limit: "15mb" }));
 
-let container: any = null;
+// ─── Supabase config ────────────────────────────────────────────────────────
+const SUPABASE_URL = "https://jxdtfbcyqdcdpgrpzgfh.supabase.co";
+const TABLE = "people";
 
-async function getCosmosContainer() {
-  if (container) return container;
+/**
+ * Returns an authenticated Supabase client.
+ * Throws a clear error when the key env-var is missing so the health
+ * endpoint can surface a useful message to the admin panel.
+ *
+ * Set ONE of the following env-vars before starting the server:
+ *   SUPABASE_KEY            – recommended; accepts both anon and service_role keys
+ *   SUPABASE_SERVICE_ROLE_KEY – alias accepted for convenience
+ *   SUPABASE_ANON_KEY         – alias accepted for convenience
+ */
+function getSupabase(): SupabaseClient {
+  const key =
+    process.env.SUPABASE_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_ANON_KEY;
 
-  const endpoint = process.env.AZURE_COSMOS_ENDPOINT;
-  const key = process.env.AZURE_COSMOS_KEY;
-  const connectionString = process.env.AZURE_COSMOS_CONNECTION_STRING;
-
-  if (!connectionString && (!endpoint || !key)) {
+  if (!key) {
     throw new Error(
-      "Missing Azure Cosmos DB Configuration. Set AZURE_COSMOS_CONNECTION_STRING or both AZURE_COSMOS_ENDPOINT and AZURE_COSMOS_KEY in your settings."
+      "Missing Supabase key. Set SUPABASE_KEY (service_role or anon key) in your environment variables."
     );
   }
 
-  let client: CosmosClient;
-  if (connectionString) {
-    client = new CosmosClient(connectionString);
-  } else {
-    client = new CosmosClient({ endpoint: endpoint!, key: key! });
-  }
-
-  const databaseId = process.env.AZURE_COSMOS_DATABASE || "PeselMasterDb";
-  const containerId = process.env.AZURE_COSMOS_CONTAINER || "Identities";
-
-  const { database } = await client.databases.createIfNotExists({ id: databaseId });
-  const { container: newContainer } = await database.containers.createIfNotExists({
-    id: containerId,
-    partitionKey: { paths: ["/id"] }
-  });
-
-  container = newContainer;
-  return container;
+  return createClient(SUPABASE_URL, key);
 }
 
-// Check database configuration and health
-app.get("/api/health", async (req, res) => {
+// ─── Health check ────────────────────────────────────────────────────────────
+app.get("/api/health", async (_req, res) => {
   try {
-    const c = await getCosmosContainer();
-    res.json({ 
-      status: "connected", 
-      message: "Successfully connected to Azure Cosmos DB database." 
+    const supabase = getSupabase(); // throws if key missing
+    const { error } = await supabase.from(TABLE).select("id").limit(1);
+    if (error) throw error;
+    res.json({
+      status: "connected",
+      message: `Successfully connected to Supabase (${SUPABASE_URL}).`,
     });
   } catch (err: any) {
-    res.json({ 
-      status: "disconnected", 
-      message: err.message 
+    const unconfigured =
+      err.message.includes("Missing Supabase") ||
+      err.message.includes("Invalid API key");
+    res.json({
+      status: unconfigured ? "unconfigured" : "disconnected",
+      message: err.message,
     });
   }
 });
 
-// Fetch all database identities
-app.get("/api/people", async (req, res) => {
+// ─── GET all people ──────────────────────────────────────────────────────────
+app.get("/api/people", async (_req, res) => {
   try {
-    const c = await getCosmosContainer();
-    const { resources } = await c.items.readAll().fetchAll();
-    
-    // Cosmos DB responds with specific metadata properties (e.g. _rid, _self, _etag, _attachments, _ts)
-    // We filter them or keep them, standard sorting of records by creation is done below
-    const sorted = (resources || []).sort((a: any, b: any) => (b.createdAt || 0) - (a.createdAt || 0));
-    res.json(sorted);
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select("*")
+      .order("createdAt", { ascending: false });
+
+    if (error) throw error;
+    res.json(data ?? []);
   } catch (err: any) {
-    console.warn("Cosmos DB Fetch Warning:", err.message);
-    res.status(200).json([]); // Fallback to empty array to ensure client doesn't break
+    console.warn("Supabase fetch warning:", err.message);
+    // Return empty array so the client falls back to localStorage gracefully
+    res.status(200).json([]);
   }
 });
 
-// Create/Upsert database identity
+// ─── CREATE / UPSERT a person ────────────────────────────────────────────────
 app.post("/api/people", async (req, res) => {
   try {
     const person = req.body;
-    if (!person || !person.id) {
-      return res.status(400).json({ error: "Missing model information or primary key" });
+    if (!person?.id) {
+      return res.status(400).json({ error: "Missing person data or id field." });
     }
-    const c = await getCosmosContainer();
-    const { resource } = await c.items.upsert(person);
-    res.json(resource);
+
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from(TABLE)
+      .upsert(person, { onConflict: "id" })
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
   } catch (err: any) {
-    console.error("Cosmos DB Upsert error:", err.message);
+    console.error("Supabase upsert error:", err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-// Delete individual identity
+// ─── DELETE one person ────────────────────────────────────────────────────────
 app.delete("/api/people/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const c = await getCosmosContainer();
-    await c.item(id, id).delete();
-    res.json({ success: true, message: `Successfully deleted identity ${id}` });
+    const supabase = getSupabase();
+    const { error } = await supabase.from(TABLE).delete().eq("id", id);
+
+    if (error) throw error;
+    res.json({ success: true, message: `Deleted identity ${id}.` });
   } catch (err: any) {
-    console.error("Cosmos DB Delete Item error:", err.message);
+    console.error("Supabase delete error:", err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-// Build Vite middleware and listen
+// ─── DELETE all people (admin "Clear DB") ────────────────────────────────────
+// Uses .not("id", "is", null) to match every row without a literal filter value.
+// Note: this requires either RLS to be disabled on the table, or a service_role key.
+app.delete("/api/people", async (_req, res) => {
+  try {
+    const supabase = getSupabase();
+    const { error } = await supabase
+      .from(TABLE)
+      .delete()
+      .not("id", "is", null); // matches all rows
+
+    if (error) throw error;
+    res.json({ success: true, message: "All records deleted from Supabase." });
+  } catch (err: any) {
+    console.error("Supabase clear-db error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Vite dev / production static serving ────────────────────────────────────
 async function serveApp() {
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
@@ -117,13 +146,13 @@ async function serveApp() {
   } else {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
-    app.get("*", (req, res) => {
+    app.get("*", (_req, res) => {
       res.sendFile(path.join(distPath, "index.html"));
     });
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Express Azure DB proxy server listenting on http://0.0.0.0:${PORT}`);
+    console.log(`Supabase proxy server listening on http://0.0.0.0:${PORT}`);
   });
 }
 
