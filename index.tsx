@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   User,
@@ -53,11 +53,16 @@ import { GovInput } from "./components/gov/gov-input";
 import { GovButton } from "./components/gov/gov-button";
 import './components/gov/gov-theme.css';
 
+import { generatePESEL, getPeselExplanation } from './utils/pesel';
+import { TRANSLATIONS } from './locales/translations';
+import {
+  LANGUAGES, LANGUAGE_CONFIG, FONT_SCALES, surfaceClasses, panelClasses,
+  inputClasses, labelClasses, iconButtonClasses, primaryButtonClasses,
+  secondaryButtonClasses, ADMIN_PASS, Language
+} from './utils/constants';
+import { useAudio } from './hooks/useAudio';
 
-/**
- * Types & Constants
- */
-type Language = 'PL' | 'ENG' | 'UKR';
+
 type VerificationStatus = 'none' | 'pending' | 'verified' | 'rejected';
 type PaymentStatus = 'unpaid' | 'processing' | 'paid';
 type PaymentMethod = 'card' | 'gpay' | 'applepay' | 'blik' | null;
@@ -78,348 +83,11 @@ interface Person {
   idPhoto?: string;
 }
 
-const ADMIN_PASS = "admin123";
-const LANGUAGE_CONFIG: Record<Language, { label: string; flag: string }> = {
-  PL: { label: 'PL', flag: '🇵🇱' },
-  ENG: { label: 'EN', flag: '🇬🇧' },
-  UKR: { label: 'UA', flag: '🇺🇦' }
-};
-
-const surfaceClasses = (isDarkMode: boolean) =>
-  isDarkMode ? 'bg-zinc-950 border-zinc-800 text-zinc-100' : 'bg-white border-zinc-200 text-zinc-950';
-
-const panelClasses = (isDarkMode: boolean) =>
-  `border shadow-sm ${surfaceClasses(isDarkMode)}`;
-
-const inputClasses = (isDarkMode: boolean) =>
-  `w-full px-4 py-3 rounded border outline-none transition-all focus:ring-2 focus:ring-red-700/20 focus:border-red-700 ${
-    isDarkMode ? 'bg-zinc-900 border-zinc-700 text-white' : 'bg-white border-zinc-300 text-zinc-950'
-  }`;
-
-const labelClasses = 'text-xs font-bold text-zinc-800 dark:text-zinc-200 block';
-
-const iconButtonClasses = 'p-2 rounded border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors';
-
-const primaryButtonClasses = 'bg-red-700 text-white font-bold py-3 px-5 rounded hover:bg-red-800 transition-colors uppercase tracking-wide text-xs flex items-center justify-center gap-3 disabled:opacity-50';
-
-const secondaryButtonClasses = 'border border-zinc-300 dark:border-zinc-700 font-bold py-3 px-5 rounded hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors uppercase tracking-wide text-xs flex items-center justify-center gap-3';
-
-const TRANSLATIONS = {
-  PL: {
-    title: 'PESEL Master',
-    subtitle: 'Generator Tożsamości i Weryfikacja',
-    manualEntry: 'Nowy Wniosek',
-    firstName: 'Imię',
-    lastName: 'Nazwisko',
-    dob: 'Data Urodzenia',
-    gender: 'Płeć',
-    nationality: 'Obywatelstwo',
-    male: 'Mężczyzna',
-    female: 'Kobieta',
-    generateIdentity: 'Generuj Tożsamość',
-    activeIdentity: 'Twoja Tożsamość',
-    verification: 'Weryfikacja',
-    readOutLoud: 'Czytaj na głos',
-    dictate: 'Dyktuj',
-    explainStructure: 'Struktura PESEL',
-    a11yOptions: 'Dostępność',
-    textSize: 'Rozmiar Tekstu',
-    highContrast: 'Wysoki Kontrast',
-    highContrastDesc: 'Ostrzejsze kolory',
-    voiceAssistant: 'Asystent Głosowy',
-    readSummary: 'Czytaj Podsumowanie',
-    analyzing: 'Analizowanie...',
-    applyChanges: 'Zastosuj',
-    noActiveRecord: 'Brak danych',
-    searchPrompt: 'Wypełnij formularz obok, aby wygenerować PESEL. Wymagane: ID/Paszport, potwierdzenie zameldowania (>6 m-cy) oraz opłata 17 PLN.',
-    footerStandard: 'Standard 1-3-7-9',
-    footerAi: 'System Weryfikacji',
-    footerDesc: 'Generator jest zgodny ze standardem PESEL. Dane są przetwarzane lokalnie w celu bezpiecznej weryfikacji dokumentów.',
-    verify: 'Wgraj i Sprawdź Dokumenty',
-    docVerification: 'Weryfikacja Tożsamości',
-    uploadId: 'Wybierz Pliki',
-    idDesc: 'Wgraj dowód, paszport lub potwierdzenie zameldowania (>6 m-cy).',
-    statusPending: 'Oczekiwanie',
-    statusVerified: 'Zweryfikowany',
-    statusRejected: 'Odrzucony',
-    aiChecking: 'Weryfikacja dokumentów...',
-    aiMatch: 'Dane zgodne',
-    aiMismatch: 'Błąd! Wykryto: {name}',
-    close: 'Zamknij',
-    adminLogin: 'Panel Administratora',
-    password: 'Hasło',
-    login: 'Zaloguj',
-    adminPanel: 'Baza Danych (Admin)',
-    backToUser: 'Powrót do Generatora',
-    exportDb: 'Eksportuj (.json)',
-    totalRecords: 'Wszystkich rekordów',
-    invalidPass: 'Błędne hasło',
-    feeNotice: 'Opłata skarbowa: 17 PLN',
-    docsRequired: 'Wymagane dokumenty',
-    payToVerify: 'Opłać wniosek (17 PLN)',
-    paymentMethod: 'Wybierz metodę płatności',
-    processingPayment: 'Przetwarzanie płatności...',
-    paymentSuccess: 'Płatność zaakceptowana',
-    unpaid: 'Nieopłacony',
-    paid: 'Opłacony',
-    listening: 'Słucham...',
-    identifyingGender: 'Rozpoznaję płeć...'
-  },
-  ENG: {
-    title: 'PESEL Master',
-    subtitle: 'Identity Generator & Verification',
-    manualEntry: 'New Application',
-    firstName: 'First Name',
-    lastName: 'Last Name',
-    dob: 'Birth Date',
-    gender: 'Gender',
-    nationality: 'Nationality',
-    male: 'Male',
-    female: 'Female',
-    generateIdentity: 'Generate Identity',
-    activeIdentity: 'Your Identity',
-    verification: 'Verification',
-    readOutLoud: 'Read aloud',
-    dictate: 'Dictate',
-    explainStructure: 'PESEL Structure',
-    a11yOptions: 'Accessibility',
-    textSize: 'Text Size',
-    highContrast: 'High Contrast',
-    highContrastDesc: 'Sharper colors',
-    voiceAssistant: 'Voice Assistant',
-    readSummary: 'Read Summary',
-    analyzing: 'Analyzing...',
-    applyChanges: 'Apply',
-    noActiveRecord: 'No data',
-    searchPrompt: 'Fill the form on the left to generate a PESEL. Required: ID/Passport, proof of residence (>6 months), and a 17 PLN fee.',
-    footerStandard: '1-3-7-9 Standard',
-    footerAi: 'Validation System',
-    footerDesc: 'Generator follows the PESEL standard. Data is processed locally for secure document verification.',
-    verify: 'Upload & Verify Docs',
-    docVerification: 'Identity Verification',
-    uploadId: 'Select Files',
-    idDesc: 'Upload ID, passport, or proof of residence (>6 months).',
-    statusPending: 'Pending',
-    statusVerified: 'Verified',
-    statusRejected: 'Rejected',
-    aiChecking: 'Verifying docs...',
-    aiMatch: 'Data matches',
-    aiMismatch: 'Mismatch! Detected: {name}',
-    close: 'Close',
-    adminLogin: 'Admin Panel',
-    password: 'Password',
-    login: 'Login',
-    adminPanel: 'Hidden Database (Admin)',
-    backToUser: 'Back to Generator',
-    exportDb: 'Export (.json)',
-    totalRecords: 'Total Records',
-    invalidPass: 'Invalid password',
-    feeNotice: 'Service Fee: 17 PLN',
-    docsRequired: 'Documents required',
-    payToVerify: 'Pay Application Fee (17 PLN)',
-    paymentMethod: 'Select Payment Method',
-    processingPayment: 'Processing payment...',
-    paymentSuccess: 'Payment successful',
-    unpaid: 'Unpaid',
-    paid: 'Paid',
-    listening: 'Listening...',
-    identifyingGender: 'Identifying gender...'
-  },
-  UKR: {
-    title: 'PESEL Майстер',
-    subtitle: 'Генератор ідентифікації та перевірка',
-    manualEntry: 'Нова заявка',
-    firstName: "Ім'я",
-    lastName: 'Прізвище',
-    dob: 'Дата народження',
-    gender: 'Стать',
-    nationality: 'Громадянство',
-    male: 'Чоловік',
-    female: 'Жінка',
-    generateIdentity: 'Створити особу',
-    activeIdentity: 'Ваша особа',
-    verification: 'Перевірка',
-    readOutLoud: 'Читати вголос',
-    dictate: 'Диктувати',
-    explainStructure: 'Структура PESEL',
-    a11yOptions: 'Доступність',
-    textSize: 'Розмір тексту',
-    highContrast: 'Високий контраст',
-    highContrastDesc: 'Чіткіші кольори',
-    voiceAssistant: 'Голосовий помічник',
-    readSummary: 'Прочитати огляд',
-    analyzing: 'Аналіз...',
-    applyChanges: 'Застосувати',
-    noActiveRecord: 'Немає даних',
-    searchPrompt: 'Заповніть форму зліва, щоб згенерувати PESEL. Необхідно: ID/Паспорт, підтвердження проживання (>6 місяців) та збір 17 PLN.',
-    footerStandard: 'Стандарт 1-3-7-9',
-    footerAi: 'Система верифікації',
-    footerDesc: 'Генератор відповідає стандарту PESEL. Дані обробляються локально для автоматичної перевірки документів.',
-    verify: 'Завантажити та перевірити',
-    docVerification: 'Перевірка особи',
-    uploadId: 'Обрати файли',
-    idDesc: 'Завантажте ID, паспорт або підтвердження проживання (>6 міс).',
-    statusPending: 'Очікується',
-    statusVerified: 'Підтверджено',
-    statusRejected: 'Відхилено',
-    aiChecking: 'Система перевіряє...',
-    aiMatch: 'Дані збігаються',
-    aiMismatch: 'Помилка! Виявлено: {name}',
-    close: 'Закрити',
-    adminLogin: 'Панель адміністратора',
-    password: 'Пароль',
-    login: 'Увійти',
-    adminPanel: 'Приховата база (Admin)',
-    backToUser: 'Назад до генератора',
-    exportDb: 'Експорт (.json)',
-    totalRecords: 'Всього записів',
-    invalidPass: 'Невірний пароль',
-    feeNotice: 'Збір: 17 PLN',
-    docsRequired: 'Необхідні документи',
-    payToVerify: 'Сплатити збір (17 PLN)',
-    paymentMethod: 'Оберіть метод оплати',
-    processingPayment: 'Обробка платежу...',
-    paymentSuccess: 'Оплата прийнята',
-    unpaid: 'Неоплачено',
-    paid: 'Оплачено',
-    listening: 'Слухаю...',
-    identifyingGender: 'Визначаю стать...'
-  }
-};
-
-/**
- * Helpers
- */
-const decode = (base64: string) => {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return bytes;
-};
-
-async function decodeAudioData(data: Uint8Array, ctx: AudioContext, sampleRate: number, numChannels: number): Promise<AudioBuffer> {
-  const dataInt16 = new Int16Array(data.buffer);
-  const frameCount = dataInt16.length / numChannels;
-  const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
-  for (let channel = 0; channel < numChannels; channel++) {
-    const channelData = buffer.getChannelData(channel);
-    for (let i = 0; i < frameCount; i++) channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
-  }
-  return buffer;
-}
-
-const generatePESEL = (dobDate: Date, gender: 'male' | 'female'): string => {
-  const year = dobDate.getFullYear();
-  let month = dobDate.getMonth() + 1;
-  if (year >= 1800 && year < 1900) month += 80;
-  else if (year >= 2000 && year < 2100) month += 20;
-  else if (year >= 2100 && year < 2200) month += 40;
-  else if (year >= 2200 && year < 2300) month += 60;
-  const yearPart = (year % 100).toString().padStart(2, '0');
-  const monthPart = month.toString().padStart(2, '0');
-  const dayPartStr = dobDate.getDate().toString().padStart(2, '0');
-  const zzz = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  const sexDigit = gender === 'male' ? [1, 3, 5, 7, 9][Math.floor(Math.random() * 5)] : [0, 2, 4, 6, 8][Math.floor(Math.random() * 5)];
-  const base = `${yearPart}${monthPart}${dayPartStr}${zzz}${sexDigit}`;
-  const weights = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3];
-  let sum = 0;
-  for (let i = 0; i < 10; i++) sum += parseInt(base[i]) * weights[i];
-  const checkDigit = (10 - (sum % 10)) % 10;
-  return base + checkDigit.toString();
-};
-
-const getPeselExplanation = (pesel: string, firstName: string, dob: string, gender: 'male' | 'female', lang: Language): string => {
-  const parts = {
-    yy: pesel.substring(0, 2),
-    mm: pesel.substring(2, 4),
-    dd: pesel.substring(4, 6),
-    zzz: pesel.substring(6, 9),
-    genderDigit: pesel.substring(9, 10),
-    controlDigit: pesel.substring(10, 11)
-  };
-
-  const isMale = gender === 'male';
-
-  if (lang === 'PL') {
-    return `### Szczegółowa Analiza Twojego Numeru PESEL
-
-**Wygenerowany numer:** \`${pesel}\`
-
-Każda cyfra w polskim numerze PESEL niesie ze sobą określone informacje o Twojej tożsamości:
-
-1. **Rocznik urodzenia (\`${parts.yy}\`):** 
-   Dwie pierwsze cyfry oznaczają końcówkę roku urodzenia (z daty: **${dob}**).
-
-2. **Miesiąc urodzenia (\`${parts.mm}\`):** 
-   Cyfry trzecia i czwarta kodują miesiąc urodzenia. Ze względu na rozróżnienie stuleci, dla osób urodzonych po roku 1999 dodaje się wartość **20** do właściwego miesiąca (stąd wartość: **${parts.mm}**).
-
-3. **Dzień urodzenia (\`${parts.dd}\`):** 
-   Cyfry piąta i szósta to dzień Twoich urodzin.
-
-4. **Seria porządkowa (\`${parts.zzz}\`):** 
-   Trzy kolejne cyfry stanowią unikalną serię rejestracyjną generatora.
-
-5. **Płeć (\`${parts.genderDigit}\`):** 
-   Dziesiąta cyfra wskazuje płeć. Cyfry nieparzyste oznaczają mężczyznę, a parzyste kobietę. Twoja cyfra to **${parts.genderDigit}**, co oznacza płatnika płci: **${isMale ? 'Męskiej' : 'Żeńskiej'}**.
-
-6. **Cyfra kontrolna (\`${parts.controlDigit}\`):** 
-   Ostatnia cyfra służy do weryfikacji poprawności całego numeru matematyczną metodą wag (wagi: 1-3-7-9-1-3-7-9-1-3). Suma kontrolna potwierdza autentyczność zapisu.
-
-*Wszystkie obliczenia zostały wykonane w 100% lokalnie i bezpiecznie na Twoim urządzeniu.*`;
-  } else if (lang === 'UKR') {
-    return `### Детальний аналіз вашого номера PESEL
-
-**Згенерований номер:** \`${pesel}\`
-
-Кожна цифра в польському номері PESEL містить конкретну інформацію про вашу особу:
-
-1. **Рік народження (\`${parts.yy}\`):** 
-   Перші дві цифри означають кінець року народження (з дати: **${dob}**).
-
-2. **Місяць народження (\`${parts.mm}\`):** 
-   Третя і четверта цифри кодують місяць народження. Щоб відрізнити століття, для людей, народжених після 1999 року, до місяця додається значення **20** (тому значення: **${parts.mm}**).
-
-3. **День народження (\`${parts.dd}\`):** 
-   П'ята і шоста цифри — це день вашого народження.
-
-4. **Порядковий номер (\`${parts.zzz}\`):** 
-   Наступні три цифри є унікальною реєстраційною серією генератора.
-
-5. **Стать (\`${parts.genderDigit}\`):** 
-   Десята цифра вказує на стать. Непарні цифри означають чоловіка, парні — жінку. Ваша цифра — **${parts.genderDigit}**, що вказує на стать: **${isMale ? 'Чоловіча' : 'Жіноча'}**.
-
-6. **Контрольна цифра (\`${parts.controlDigit}\`):** 
-   Остання цифра використовується для математичної перевірки правильності всього номера за методом ваг (ваги: 1-3-7-9-1-3-7-9-1-3). Контрольна сума підтверджує правильність структури.
-
-*Усі розрахунки виконано на 100% локально та безпечно на вашому пристрої.*`;
-  } else {
-    return `### Detailed Analysis of Your PESEL Number
-
-**Generated Number:** \`${pesel}\`
-
-Each digit in the Polish PESEL number carries specific cryptographic and historical identity details:
-
-1. **Birth Year (\`${parts.yy}\`):** 
-   The first two digits represent the last two digits of your birth year (from your DOB: **${dob}**).
-
-2. **Birth Month (\`${parts.mm}\`):** 
-   The third and fourth digits encode your birth month. To distinguish birth centuries, people born after 1999 have **20** added to their actual birth month (hence the value: **${parts.mm}**).
-
-3. **Birth Day (\`${parts.dd}\`):** 
-   The fifth and sixth digits indicate the day of your birth.
-
-4. **Ordinal Series (\`${parts.zzz}\`):** 
-   The next three digits represent a unique ordinal sequence generated for your registration.
-
-5. **Gender (\`${parts.genderDigit}\`):** 
-   The tenth digit represents gender. Odd numbers denote Male, and even numbers denote Female. Your digit is **${parts.genderDigit}**, identifying you as: **${isMale ? 'Male' : 'Female'}**.
-
-6. **Control Check digit (\`${parts.controlDigit}\`):** 
-   The last digit handles mechanical and mathematical verification of the string using a weighted average schema (weights: 1-3-7-9-1-3-7-9-1-3). Correct checksum ensures integrity.
-
-*All structural analytics were processed 100% locally and securely on your device.*`;
-  }
-};
+const updatePersonInList = (people: Person[], updated: Person): Person[] => {
+  const exists = people.some(p => p.id === updated.id);
+  if (exists) return people.map(p => p.id === updated.id ? updated : p);
+  return [updated, ...people];
+};;
 
 interface FormFieldProps {
   label: string;
@@ -439,65 +107,34 @@ interface FormFieldProps {
   listeningLabel: string;
 }
 
-const FormField: React.FC<FormFieldProps> = ({
-  label,
-  name,
-  type,
-  value,
-  required,
-  placeholder,
-  onChange,
-  onTTS,
-  isAudioLoading,
-  onDictate,
-  isDictating,
-  isDarkMode,
-  readOutLoudLabel,
-  dictateLabel,
-  listeningLabel
-}) => {
+const FormFieldMemo = React.memo((props: FormFieldProps) => {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <label className={labelClasses}>{label}</label>
+        <label className={labelClasses}>{props.label}</label>
         <div className="flex items-center gap-2">
-           <button 
-            type="button"
-            title={readOutLoudLabel}
-            onClick={onTTS} 
-            className={`${iconButtonClasses} ${isAudioLoading ? 'text-red-700 animate-pulse bg-red-50 dark:bg-red-950/30' : 'text-zinc-500 hover:text-zinc-950 dark:hover:text-white'}`}
-           >
-              <Volume2 size={12} />
-           </button>
-           <button 
-            type="button"
-            title={dictateLabel}
-            onClick={onDictate} 
-            className={`${iconButtonClasses} ${isDictating ? 'text-red-700 animate-pulse bg-red-50 dark:bg-red-950/30' : 'text-zinc-500 hover:text-zinc-950 dark:hover:text-white'}`}
-           >
-             {isDictating ? <MicOff size={12} /> : <Mic size={12} />}
-           </button>
+          <button type="button" title={props.readOutLoudLabel} onClick={props.onTTS} className={`${iconButtonClasses} ${props.isAudioLoading ? 'text-red-700 animate-pulse bg-red-50 dark:bg-red-950/30' : 'text-zinc-500 hover:text-zinc-950 dark:hover:text-white'}`}>
+            <Volume2 size={12} />
+          </button>
+          <button type="button" title={props.dictateLabel} onClick={props.onDictate} className={`${iconButtonClasses} ${props.isDictating ? 'text-red-700 animate-pulse bg-red-50 dark:bg-red-950/30' : 'text-zinc-500 hover:text-zinc-950 dark:hover:text-white'}`}>
+            {props.isDictating ? <MicOff size={12} /> : <Mic size={12} />}
+          </button>
         </div>
       </div>
       <div className="relative">
-        <input 
-          type={type} 
-          required={required} 
-          placeholder={placeholder}
-          value={value} 
-          onChange={e => onChange(e.target.value)} 
-          className={inputClasses(isDarkMode)} 
-        />
-        {isDictating && (
+        <input type={props.type} required={props.required} placeholder={props.placeholder} value={props.value} onChange={e => props.onChange(e.target.value)} className={inputClasses(props.isDarkMode)} />
+        {props.isDictating && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 px-3 py-1 bg-red-700 text-white rounded text-[10px] font-bold uppercase tracking-wide animate-in fade-in zoom-in">
             <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
-            {listeningLabel}
+            {props.listeningLabel}
           </div>
         )}
       </div>
     </div>
   );
-};
+});
+
+const FormField: React.FC<FormFieldProps> = (props) => <FormFieldMemo {...props} />;
 
 /**
  * Main App
@@ -519,15 +156,14 @@ const App: React.FC = () => {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
-  const [audioLoadingId, setAudioLoadingId] = useState<string | null>(null);
-  const [dictatingField, setDictatingField] = useState<string | null>(null);
   const [aiExplanation, setAiExplanation] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const t = (key: keyof typeof TRANSLATIONS['PL']) => (TRANSLATIONS[lang] as any)[key] || (TRANSLATIONS['PL'] as any)[key];
+  const { audioLoadingId, dictatingField, handleTTS: hookHandleTTS, handleDictate: hookHandleDictate } = useAudio(lang);
 
   const [azureStatus, setAzureStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'unconfigured'>('connecting');
   const [azureMessage, setAzureMessage] = useState<string>('');
+
+  const t = (key: keyof typeof TRANSLATIONS['PL']) => (TRANSLATIONS[lang] as any)[key] || (TRANSLATIONS['PL'] as any)[key];
 
   const syncPersonToAzure = async (person: Person) => {
     try {
@@ -569,8 +205,9 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    // Check Azure Cosmos database connectivity
-    fetch('/api/health')
+    const controller = new AbortController();
+
+    fetch('/api/health', { signal: controller.signal })
       .then(res => res.json())
       .then(data => {
         if (data.status === 'connected') {
@@ -582,12 +219,13 @@ const App: React.FC = () => {
         }
       })
       .catch(err => {
-        setAzureStatus('disconnected');
-        setAzureMessage(err.message || 'Error checking connection.');
+        if (err.name !== 'AbortError') {
+          setAzureStatus('disconnected');
+          setAzureMessage(err.message || 'Error checking connection.');
+        }
       });
 
-    // Populate identities from Azure Cosmos primary resource list (with localStorage offset)
-    fetch('/api/people')
+    fetch('/api/people', { signal: controller.signal })
       .then(res => {
         if (!res.ok) throw new Error("Query failure");
         return res.json();
@@ -601,10 +239,14 @@ const App: React.FC = () => {
         }
       })
       .catch(err => {
-        console.warn("Using offline localStorage fallback for lists:", err);
-        const saved = localStorage.getItem('pesel_vault_admin');
-        if (saved) setPeople(JSON.parse(saved));
+        if (err.name !== 'AbortError') {
+          console.warn("Using offline localStorage fallback for lists:", err);
+          const saved = localStorage.getItem('pesel_vault_admin');
+          if (saved) setPeople(JSON.parse(saved));
+        }
       });
+
+    return () => controller.abort();
   }, []);
 
   useEffect(() => {
@@ -619,56 +261,10 @@ const App: React.FC = () => {
     localStorage.setItem('pesel_high_contrast', isHighContrast.toString());
   }, [isDarkMode, lang, fontScale, isHighContrast]);
 
-  const handleTTS = (text: string, id: string = 'tts') => {
-    if ('speechSynthesis' in window) {
-      if (audioLoadingId === id) {
-        window.speechSynthesis.cancel();
-        setAudioLoadingId(null);
-        return;
-      }
-      setAudioLoadingId(id);
-      
-      const utterance = new SpeechSynthesisUtterance(text);
-      if (lang === 'PL') {
-         utterance.lang = 'pl-PL';
-      } else if (lang === 'UKR') {
-         utterance.lang = 'uk-UA';
-      } else {
-         utterance.lang = 'en-US';
-      }
-      
-      utterance.onend = () => {
-        setAudioLoadingId(null);
-      };
-      
-      utterance.onerror = () => {
-        setAudioLoadingId(null);
-      };
-      
-      window.speechSynthesis.speak(utterance);
-    } else {
-      console.warn("Speech synthesis not supported in this browser.");
-    }
-  };
+  const handleTTS = useCallback((text: string, id: string = 'tts') => hookHandleTTS(text, id), [hookHandleTTS]);
 
-  const handleDictate = (fieldName: keyof typeof formData) => {
-    if (dictatingField) return;
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert("Speech recognition is not supported in this browser.");
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = lang === 'UKR' ? 'uk-UA' : lang === 'PL' ? 'pl-PL' : 'en-US';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
-    recognition.onstart = () => setDictatingField(fieldName);
-    recognition.onend = () => setDictatingField(null);
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      
+  const handleDictate = useCallback((fieldName: keyof typeof formData) => {
+    hookHandleDictate(fieldName, (transcript) => {
       if (fieldName === 'gender') {
         const tLower = transcript.toLowerCase();
         if (tLower.includes('m') || tLower.includes('ч')) setFormData(prev => ({...prev, gender: 'male'}));
@@ -676,14 +272,8 @@ const App: React.FC = () => {
       } else {
         setFormData(prev => ({ ...prev, [fieldName]: transcript }));
       }
-    };
-    recognition.onerror = (event: any) => {
-      console.error("Recognition error:", event.error);
-      setDictatingField(null);
-    };
-
-    recognition.start();
-  };
+    });
+  }, [hookHandleDictate]);
 
   const handleAddPerson = (e: React.FormEvent) => {
     e.preventDefault();
@@ -795,8 +385,8 @@ const App: React.FC = () => {
     setAiExplanation(explanation);
   };
 
-  const dynamicStyles = { fontSize: `${fontScale}rem` };
-  const highContrastClasses = isHighContrast ? (isDarkMode ? 'contrast-125 border-white shadow-none' : 'contrast-150 border-black shadow-none') : '';
+  const dynamicStyles = useMemo(() => ({ fontSize: `${fontScale}rem` }), [fontScale]);
+  const highContrastClasses = useMemo(() => isHighContrast ? (isDarkMode ? 'contrast-125 border-white shadow-none' : 'contrast-150 border-black shadow-none') : '', [isHighContrast, isDarkMode]);
 
   if (view === 'admin') {
     return (
