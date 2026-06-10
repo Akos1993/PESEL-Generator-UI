@@ -1255,6 +1255,6 @@ if (view === "admin") {
     {/* ...modal content... */}
   </div>
 )}
-
+};
 
 createRoot(document.getElementById('root')!).render(<App />);
