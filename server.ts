@@ -4,6 +4,7 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { createServer as createViteServer } from "vite";
 import multer from "multer";
 
+
 const app = express();
 const PORT = 3000;
 const upload = multer({ storage: multer.memoryStorage() });
@@ -26,20 +27,21 @@ const TABLE = "people";
  *   SUPABASE_SERVICE_ROLE_KEY – alias accepted for convenience
  *   SUPABASE_ANON_KEY         – alias accepted for convenience
  */
-function getSupabase(): SupabaseClient {
+export function getSupabase(): SupabaseClient {
   const key =
-    process.env.SUPABASE_KEY || 
-    process.env.SUPABASE_SERVICE_ROLE_KEY || 
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_KEY ||
     process.env.SUPABASE_ANON_KEY;
 
   if (!key) {
     throw new Error(
-      "Missing Supabase key. Set SUPABASE_KEY (service_role or anon key) in your environment variables."
+      "Missing Supabase key. Set SUPABASE_SERVICE_ROLE_KEY in your environment variables."
     );
   }
 
   return createClient(SUPABASE_URL, key);
 }
+
 
 // ─── Health check ────────────────────────────────────────────────────────────
 app.get("/api/health", async (_req, res) => {
