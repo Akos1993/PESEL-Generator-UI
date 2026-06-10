@@ -1179,16 +1179,33 @@ if (view === "admin") {
               </div>
             )}
 
-            {/* ACTION BUTTONS */}
-            <div className="flex flex-wrap gap-3">
-              {activePerson.paymentStatus === "paid" ? (
-                <GovButton ...>{t("verify")}</GovButton>
-              ) : (
-                <button ...>{t("payToVerify")}</button>
-              )}
+           {/* ACTION BUTTONS */}
+<div className="flex flex-wrap gap-3">
+  {activePerson.paymentStatus === "paid" ? (
+    <GovButton
+      onClick={() => setVerificationModalPerson(activePerson)}
+      variant="primary"
+      className="flex-1 min-w-[240px]"
+    >
+      <Scan size={24} /> {t("verify")}
+    </GovButton>
+  ) : (
+    <button
+      onClick={() => setPaymentModalOpen(true)}
+      className="flex-1 min-w-[240px] bg-amber-600 text-white font-bold py-3 px-5 rounded hover:bg-amber-700 transition-colors uppercase tracking-wide text-xs flex items-center justify-center gap-3"
+    >
+      <CreditCard size={24} /> {t("payToVerify")}
+    </button>
+  )}
 
-              <button ...><Trash2 /></button>
-            </div>
+  <button
+    onClick={() => setActivePerson(null)}
+    className="p-3 rounded border border-zinc-300 dark:border-zinc-700 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 transition-all"
+  >
+    <Trash2 size={24} />
+  </button>
+</div>
+
 
             {/* AI EXPLANATION */}
             {aiExplanation && (
