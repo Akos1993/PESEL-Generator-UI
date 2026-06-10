@@ -1275,130 +1275,51 @@ if (view === "admin") {
 </main>
 </GovContainer>
 
-      {/* Body */}
-      <div className="p-6 space-y-6">
-        <p className="text-xs font-bold uppercase tracking-wide text-zinc-600 dark:text-zinc-400">
-          {t("paymentMethod")}
+      {activePerson.paymentStatus === "paid" && (
+  <>
+    {/* PESEL Panel */}
+    <div
+      className={`p-5 rounded border flex items-center justify-between gap-4 group cursor-help transition-all ${
+        isDarkMode
+          ? "bg-zinc-900 border-zinc-800"
+          : "bg-zinc-50 border-zinc-200"
+      }`}
+      onClick={() => handleExplain(activePerson)}
+    >
+      <div>
+        <p className="text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide mb-2">
+          PESEL Identity Number
         </p>
+        <code className="text-3xl md:text-5xl font-bold text-zinc-950 dark:text-zinc-100">
+          {activePerson.pesel}
+        </code>
+      </div>
 
-        <div className="grid grid-cols-1 gap-4">
-          {/* BLIK */}
-          <button
-            onClick={() => setSelectedPaymentMethod("blik")}
-            className={`p-5 rounded border-2 flex items-center justify-between transition-all ${
-              selectedPaymentMethod === "blik"
-                ? "border-red-700 bg-red-50 dark:bg-red-950/30"
-                : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-400"
-            }`}
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-red-700 rounded flex items-center justify-center text-white font-bold text-xs">
-                BLIK
-              </div>
-              <span className="font-bold uppercase text-xs tracking-wide">
-                BLIK
-              </span>
-            </div>
-
-            {selectedPaymentMethod === "blik" && (
-              <CheckCircle2 className="text-red-700" size={20} />
-            )}
-          </button>
-
-          {/* Google Pay */}
-          <button
-            onClick={() => setSelectedPaymentMethod("gpay")}
-            className={`p-5 rounded border-2 flex items-center justify-between transition-all ${
-              selectedPaymentMethod === "gpay"
-                ? "border-red-700 bg-red-50 dark:bg-red-950/30"
-                : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-400"
-            }`}
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white border border-zinc-200 rounded flex items-center justify-center overflow-hidden">
-                <span className="font-black text-blue-500 text-lg">G</span>
-                <span className="font-black text-red-500 text-lg">P</span>
-                <span className="font-black text-amber-500 text-lg">a</span>
-                <span className="font-black text-green-500 text-lg">y</span>
-              </div>
-
-              <span className="font-bold uppercase text-xs tracking-wide">
-                Google Pay
-              </span>
-            </div>
-
-            {selectedPaymentMethod === "gpay" && (
-              <CheckCircle2 className="text-red-700" size={20} />
-            )}
-          </button>
-
-          {/* Apple Pay */}
-          <button
-            onClick={() => setSelectedPaymentMethod("applepay")}
-            className={`p-5 rounded border-2 flex items-center justify-between transition-all ${
-              selectedPaymentMethod === "applepay"
-                ? "border-red-700 bg-red-50 dark:bg-red-950/30"
-                : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-400"
-            }`}
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-black text-white rounded flex items-center justify-center">
-                <Smartphone size={24} />
-              </div>
-
-              <span className="font-bold uppercase text-xs tracking-wide">
-                Apple Pay
-              </span>
-            </div>
-
-            {selectedPaymentMethod === "applepay" && (
-              <CheckCircle2 size={20} />
-            )}
-          </button>
-
-          {/* Credit Card */}
-          <button
-            onClick={() => setSelectedPaymentMethod("card")}
-            className={`p-5 rounded border-2 flex items-center justify-between transition-all ${
-              selectedPaymentMethod === "card"
-                ? "border-red-700 bg-red-50 dark:bg-red-950/30"
-                : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-400"
-            }`}
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-red-700 text-white rounded flex items-center justify-center">
-                <CreditCard size={24} />
-              </div>
-
-              <span className="font-bold uppercase text-xs tracking-wide">
-                Credit Card
-              </span>
-            </div>
-
-            {selectedPaymentMethod === "card" && (
-              <CheckCircle2 className="text-red-700" size={20} />
-            )}
-          </button>
-        </div>
-
-        {/* Confirm Button */}
-        <button
-          disabled={!selectedPaymentMethod || isPaying}
-          onClick={handleSimulatePayment}
-          className={`w-full mt-8 ${primaryButtonClasses}`}
-        >
-          {isPaying ? (
-            <Loader2 className="animate-spin" size={20} />
-          ) : (
-            <>
-              <ArrowRight size={20} /> {t("payToVerify")}
-            </>
-          )}
-        </button>
+      <div className="bg-white dark:bg-zinc-950 p-3 rounded border border-zinc-200 dark:border-zinc-800">
+        <HelpCircle size={30} className="text-red-700" />
       </div>
     </div>
-  </div>
+
+    {/* Action Buttons */}
+    <div className="flex flex-wrap gap-3">
+      <GovButton
+        onClick={() => setVerificationModalPerson(activePerson)}
+        variant="primary"
+        className="flex-1 min-w-[240px]"
+      >
+        <Scan size={24} /> {t("verify")}
+      </GovButton>
+
+      <button
+        onClick={() => setActivePerson(null)}
+        className="p-3 rounded border border-zinc-300 dark:border-zinc-700 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 transition-all"
+      >
+        <Trash2 size={24} />
+      </button>
+    </div>
+  </>
 )}
+
 
 
      {/* Verification Modal */}
