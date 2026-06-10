@@ -1223,10 +1223,12 @@ if (view === "admin") {
     </div>
   </div>
 )}
-</div>
-</div>
+
+{/* CLOSE ONLY ONE WRAPPER — NOT TWO */}
+</div> {/* closes the inner content wrapper */}
+
+{/* Conditional: Empty State */}
 ) : (
-  /* Empty State */
   <div
     className={`min-h-[520px] flex flex-col items-center justify-center text-center p-8 md:p-16 border border-dashed animate-in fade-in duration-700 ${
       isDarkMode
@@ -1235,11 +1237,7 @@ if (view === "admin") {
     }`}
   >
     <div className="bg-zinc-100 dark:bg-zinc-900 p-7 rounded border border-zinc-200 dark:border-zinc-800 mb-8">
-      <Fingerprint
-        size={80}
-        className="text-zinc-400"
-        strokeWidth={1}
-      />
+      <Fingerprint size={80} className="text-zinc-400" strokeWidth={1} />
     </div>
 
     <h3 className="text-2xl font-bold mb-4">{t("noActiveRecord")}</h3>
@@ -1249,8 +1247,9 @@ if (view === "admin") {
     </p>
   </div>
 )}
-</div>
-</div>
+
+</div> {/* closes lg:col-span-8 */}
+</div> {/* closes grid wrapper */}
 
 {/* Footer */}
 <footer className="mt-12 py-8 border-t border-zinc-200 dark:border-zinc-800">
@@ -1272,31 +1271,9 @@ if (view === "admin") {
     </button>
   </div>
 </footer>
+
 </main>
-
-      </GovContainer>
-
-{/* Payment Modal */}
-{paymentModalOpen && (
-  <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 md:p-6 bg-black/70 animate-in fade-in duration-300">
-    <div
-      className={`w-full max-w-md border-t-4 border-red-700 shadow-xl overflow-hidden ${surfaceClasses(
-        isDarkMode
-      )}`}
-    >
-      {/* Header */}
-      <div className="p-6 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
-        <h2 className="text-xl font-bold flex items-center gap-3">
-          <Wallet className="text-red-700" /> {t("payToVerify")}
-        </h2>
-
-        <button
-          onClick={() => setPaymentModalOpen(false)}
-          className={iconButtonClasses}
-        >
-          <X size={22} />
-        </button>
-      </div>
+</GovContainer>
 
       {/* Body */}
       <div className="p-6 space-y-6">
