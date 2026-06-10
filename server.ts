@@ -2,9 +2,11 @@ import express from "express";
 import path from "path";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { createServer as createViteServer } from "vite";
+import multer from "multer";
 
 const app = express();
 const PORT = 3000;
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Support large base64-encoded ID photo uploads
 app.use(express.json({ limit: "15mb" }));
@@ -87,130 +89,6 @@ app.post("/api/people", async (req, res) => {
     }
 
     const supabase = getSupabase();
-    const { data, error } = await supabase
-      .from(TABLE)
-      .upsert(person, { onConflict: "id" })
-      .select()
-      .single();
-
-    if (error) throw error;
-    res.json(data);
-  } catch (err: any) {
-    console.error("Supabase upsert error:", err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ─── DELETE one person ────────────────────────────────────────────────────────
-app.delete("/api/people/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const supabase = getSupabase();
-    const { error } = await supabase.from(TABLE).delete().eq("id", id);
-
-    if (error) throw error;
-    res.json({ success: true, message: `Deleted identity ${id}.` });
-  } catch (err: any) {
-    console.error("Supabase delete error:", err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ─── DELETE all people (admin "Clear DB") ────────────────────────────────────
-// Uses .not("id", "is", null) to match every row without a literal filter value.
-// Note: this requires either RLS to be disabled on the table, or a service_role key.
-app.delete("/api/people", async (_req, res) => {
-  try {
-    const supabase = getSupabase();
-    const { error } = await supabase
-      .from(TABLE)
-      .delete()
-      .not("id", "is", null); // matches all rows
-
-    if (error) throw error;
-    res.json({ success: true, message: "All records deleted from Supabase." });
-  } catch (err: any) {
-    console.error("Supabase clear-db error:", err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ─── Vite dev / production static serving ────────────────────────────────────
-async function serveApp() {
-  if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
-    app.get("*", (_req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
-  }
-
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Supabase proxy server listening on http://0.0.0.0:${PORT}`);
-  });
-  app.post("/api/people", async (req, res) => {
-  try {
-    const person = req.body;
-    if (!person?.id) {
-      return res.status(400).json({ error: "Missing person data or id field." });
-    }
-
-    const supabase = getSupabase();
-    const { data, error } = await supabase
-      .from(TABLE)
-      .upsert(person, { onConflict: "id" })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    // ─── Auto‑archive to history ────────────────────────────────────────────
-    try {
-      if (data.verificationStatus === "approved") {
-        console.log(`Archiving ${data.id} to history…`);
-
-        const { error: insertErr } = await supabase
-          .from("history")
-          .insert({
-            pesel: data.pesel,
-            created_at: new Date().toISOString()
-          });
-
-        if (insertErr) throw insertErr;
-
-        const { error: deleteErr } = await supabase
-          .from("people")
-          .delete()
-          .eq("id", data.id);
-
-        if (deleteErr) throw deleteErr;
-
-        console.log(`Archived ${data.id} successfully.`);
-      }
-    } catch (archiveErr: any) {
-      console.error("Archive error:", archiveErr.message);
-    }
-
-    res.json(data);
-  } catch (err: any) {
-    console.error("Supabase upsert error:", err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
-app.post("/api/people", async (req, res) => {
-  try {
-    const person = req.body;
-    if (!person?.id) {
-      return res.status(400).json({ error: "Missing person data or id field." });
-    }
-
-    const supabase = getSupabase();
 
     // ─── Check if this person already exists ────────────────────────────────
     const { data: existing } = await supabase
@@ -271,6 +149,89 @@ app.post("/api/people", async (req, res) => {
   }
 });
 
+// ─── DELETE one person ────────────────────────────────────────────────────────
+app.delete("/api/people/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const supabase = getSupabase();
+    const { error } = await supabase.from(TABLE).delete().eq("id", id);
+
+    if (error) throw error;
+    res.json({ success: true, message: `Deleted identity ${id}.` });
+  } catch (err: any) {
+    console.error("Supabase delete error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── UPLOAD document to Supabase Storage ──────────────────────────────────────
+app.post("/api/upload-document", upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file provided" });
+    }
+
+    const fileName = req.body.fileName || `document_${Date.now()}`;
+    const supabase = getSupabase();
+
+    const { data, error } = await supabase.storage
+      .from("documents")
+      .upload(`pending-review/${fileName}`, req.file.buffer, {
+        contentType: req.file.mimetype,
+        upsert: false
+      });
+
+    if (error) throw error;
+
+    res.json({
+      path: data.path,
+      fullPath: `https://jxdtfbcyqdcdpgrpzgfh.storage.supabase.co/storage/v1/object/public/${data.path}`,
+      message: "Document uploaded to pending review bucket"
+    });
+  } catch (err: any) {
+    console.error("Document upload error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── DELETE all people (admin "Clear DB") ────────────────────────────────────
+// Uses .not("id", "is", null) to match every row without a literal filter value.
+// Note: this requires either RLS to be disabled on the table, or a service_role key.
+app.delete("/api/people", async (_req, res) => {
+  try {
+    const supabase = getSupabase();
+    const { error } = await supabase
+      .from(TABLE)
+      .delete()
+      .not("id", "is", null); // matches all rows
+
+    if (error) throw error;
+    res.json({ success: true, message: "All records deleted from Supabase." });
+  } catch (err: any) {
+    console.error("Supabase clear-db error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Vite dev / production static serving ────────────────────────────────────
+async function serveApp() {
+  if (process.env.NODE_ENV !== "production") {
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: "spa",
+    });
+    app.use(vite.middlewares);
+  } else {
+    const distPath = path.join(process.cwd(), "dist");
+    app.use(express.static(distPath));
+    app.get("*", (_req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
+    });
+  }
+
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Supabase proxy server listening on http://0.0.0.0:${PORT}`);
+  });
 }
 
 serveApp();

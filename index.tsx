@@ -165,6 +165,32 @@ const App: React.FC = () => {
 
   const t = (key: keyof typeof TRANSLATIONS['PL']) => (TRANSLATIONS[lang] as any)[key] || (TRANSLATIONS['PL'] as any)[key];
 
+  const uploadDocumentToSupabase = async (file: File, personId: string): Promise<string | null> => {
+    try {
+      const fileExtension = file.name.split('.').pop();
+      const fileName = `${personId}_${Date.now()}.${fileExtension}`;
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('fileName', fileName);
+
+      const res = await fetch('/api/upload-document', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!res.ok) {
+        throw new Error("HTTP " + res.status);
+      }
+
+      const { path } = await res.json();
+      console.log("Document uploaded to Supabase Storage:", path);
+      return path;
+    } catch (err) {
+      console.error("Failed to upload document to Supabase Storage:", err);
+      return null;
+    }
+  };
+
   const syncPersonToAzure = async (person: Person) => {
     try {
       const res = await fetch('/api/people', {
@@ -340,44 +366,41 @@ const App: React.FC = () => {
     a.click();
   };
 
-  const handleVerifyDocument = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVerifyDocument = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !activePerson) return;
     setIsVerifying(true);
-    const reader = new FileReader();
-    reader.onload = () => {
-      setTimeout(() => {
-        try {
-          const status: VerificationStatus = 'verified';
-          const feedback = lang === 'PL' 
-            ? `Dokument lokalny zweryfikowany pomyślnie. Podpis cyfrowy SHA-256 i kontrola danych są w pełni kompletne dla: ${activePerson.firstName} ${activePerson.lastName}.`
-            : lang === 'UKR'
-            ? `Документ успішно верифіковано локально. Контроль та цифровий підпис SHA-256 повністю збігаються для: ${activePerson.firstName} ${activePerson.lastName}.`
-            : `Document verified successfully locally. SHA-256 digital signature and data controls are fully complete for: ${activePerson.firstName} ${activePerson.lastName}.`;
-          
-          const updated = { 
-            ...activePerson, 
-            verificationStatus: status, 
-            verificationDetails: feedback, 
-            idPhoto: reader.result as string 
-          };
-          
-          setPeople(prev => {
-            const exists = prev.some(p => p.pesel === updated.pesel);
-            if (exists) return prev;
-            return [updated, ...prev];
-          });
-          
-          syncPersonToAzure(updated);
-          setActivePerson(updated);
-        } catch (err) { 
-          console.error(err); 
-        } finally { 
-          setIsVerifying(false); 
-        }
-      }, 1500);
-    };
-    reader.readAsDataURL(file);
+
+    try {
+      const documentPath = await uploadDocumentToSupabase(file, activePerson.id);
+
+      const status: VerificationStatus = 'pending';
+      const feedback = lang === 'PL'
+        ? `Dokument wgrany i oczekuje na ręczną weryfikację dla: ${activePerson.firstName} ${activePerson.lastName}.`
+        : lang === 'UKR'
+        ? `Документ завантажено і очікує ручної верифікації для: ${activePerson.firstName} ${activePerson.lastName}.`
+        : `Document uploaded and pending manual verification for: ${activePerson.firstName} ${activePerson.lastName}.`;
+
+      const updated = {
+        ...activePerson,
+        verificationStatus: status,
+        verificationDetails: feedback,
+        idPhoto: documentPath || ''
+      };
+
+      setPeople(prev => {
+        const exists = prev.some(p => p.pesel === updated.pesel);
+        if (exists) return prev;
+        return [updated, ...prev];
+      });
+
+      await syncPersonToAzure(updated);
+      setActivePerson(updated);
+    } catch (err) {
+      console.error("Document upload error:", err);
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   const handleExplain = (person: Person) => {
