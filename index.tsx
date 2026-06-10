@@ -1149,168 +1149,69 @@ if (view === "admin") {
     </div>
 
                      {/* Requirement Alerts */}
-<div className="space-y-3">
-  {/* Fee Notice */}
-  <div
-    className={`p-4 rounded flex items-start gap-3 text-xs font-bold uppercase tracking-wide ${
-      isDarkMode
-        ? "bg-amber-950/30 text-amber-300 border border-amber-800"
-        : "bg-amber-50 text-amber-800 border-amber-200"
-    }`}
-  >
-    <CreditCard size={18} className="shrink-0" />
-    <div>
-      <p>{t("feeNotice")}</p>
-    </div>
-  </div>
-
-  {/* Document Requirement */}
-  <div
-    className={`p-4 rounded flex items-start gap-3 text-xs font-bold uppercase tracking-wide ${
-      isDarkMode
-        ? "bg-zinc-900 text-zinc-300 border border-zinc-800"
-        : "bg-zinc-50 text-zinc-700 border border-zinc-200"
-    }`}
-  >
-    <Home size={18} className="shrink-0" />
-    <div>
-      <p>{t("docsRequired")}</p>
-    </div>
-  </div>
-</div>
-
-<GovButton type="submit" variant="primary" className="w-full">
-  {t("generateIdentity")}
-</GovButton>
-
-</form>
-</GovSection>
-
-
-          {/* Identity Details */}
-          <div className="flex-1 space-y-6 w-full">
-            <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-red-700 mb-2">
-                  {t("activeIdentity")}
-                </p>
-
-                <h2 className="text-3xl md:text-4xl font-bold leading-tight">
-                  {activePerson.firstName} {activePerson.lastName}
-                </h2>
-
-                <div className="flex flex-wrap gap-x-5 gap-y-2 mt-3 font-semibold text-xs text-zinc-600 dark:text-zinc-400">
-                  <span className="flex items-center gap-2">
-                    <User size={14} />
-                    {activePerson.gender === "male"
-                      ? t("male")
-                      : t("female")}
-                  </span>
-
-                  <span className="flex items-center gap-2">
-                    <Calendar size={14} />
-                    {activePerson.dob}
-                  </span>
-
-                  <span className="flex items-center gap-2">
-                    <Globe size={14} />
-                    {activePerson.nationality}
-                  </span>
-                </div>
-              </div>
-
-              {/* Status Badges */}
-              <div className="flex flex-col items-end gap-2">
-                {/* Verification Status */}
-                <div
-                  className={`px-4 py-2 rounded text-xs font-bold uppercase tracking-wide flex items-center gap-2 ${
-                    activePerson.verificationStatus === "verified"
-                      ? "bg-green-700 text-white"
-                      : activePerson.verificationStatus === "rejected"
-                      ? "bg-red-700 text-white"
-                      : "bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800"
-                  }`}
-                >
-                  {activePerson.verificationStatus === "verified" ? (
-                    <ShieldCheck size={18} />
-                  ) : activePerson.verificationStatus === "rejected" ? (
-                    <AlertCircle size={18} />
-                  ) : (
-                    <Clock size={18} />
-                  )}
-
-                  {activePerson.verificationStatus === "none"
-                    ? t("statusPending")
-                    : activePerson.verificationStatus === "verified"
-                    ? t("statusVerified")
-                    : t("statusRejected")}
-                </div>
-
-                {/* Payment Status */}
-                <div
-                  className={`px-4 py-2 rounded text-xs font-bold uppercase tracking-wide flex items-center gap-2 ${
-                    activePerson.paymentStatus === "paid"
-                      ? "bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800"
-                      : "bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
-                  }`}
-                >
-                  {activePerson.paymentStatus === "paid" ? (
-                    <CheckCircle2 size={12} />
-                  ) : (
-                    <CreditCard size={12} />
-                  )}
-
-                  {activePerson.paymentStatus === "paid"
-
-                      {/* PESEL Panel */}
-<div
-  className={`p-5 rounded border flex items-center justify-between gap-4 group cursor-help transition-all ${
-    isDarkMode
-      ? "bg-zinc-900 border-zinc-800"
-      : "bg-zinc-50 border-zinc-200"
-  }`}
-  onClick={() => handleExplain(activePerson)}
->
-  <div>
-    <p className="text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide mb-2">
-      PESEL Identity Number
-    </p>
-    <code className="text-3xl md:text-5xl font-bold text-zinc-950 dark:text-zinc-100">
-      {activePerson.pesel}
-    </code>
-  </div>
-
-  <div className="bg-white dark:bg-zinc-950 p-3 rounded border border-zinc-200 dark:border-zinc-800">
-    <HelpCircle size={30} className="text-red-700" />
-  </div>
-</div>
-
-{/* Action Buttons */}
-<div className="flex flex-wrap gap-3">
-  {activePerson.paymentStatus === "paid" ? (
-    <GovButton
-      onClick={() => setVerificationModalPerson(activePerson)}
-      variant="primary"
-      className="flex-1 min-w-[240px]"
+{activePerson.paymentStatus === "paid" && (
+  <>
+    {/* PESEL Panel */}
+    <div
+      className={`p-5 rounded border flex items-center justify-between gap-4 group cursor-help transition-all ${
+        isDarkMode
+          ? "bg-zinc-900 border-zinc-800"
+          : "bg-zinc-50 border-zinc-200"
+      }`}
+      onClick={() => handleExplain(activePerson)}
     >
-      <Scan size={24} /> {t("verify")}
-    </GovButton>
-  ) : (
+      <div>
+        <p className="text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide mb-2">
+          PESEL Identity Number
+        </p>
+        <code className="text-3xl md:text-5xl font-bold text-zinc-950 dark:text-zinc-100">
+          {activePerson.pesel}
+        </code>
+      </div>
+
+      <div className="bg-white dark:bg-zinc-950 p-3 rounded border border-zinc-200 dark:border-zinc-800">
+        <HelpCircle size={30} className="text-red-700" />
+      </div>
+    </div>
+
+    {/* Action Buttons */}
+    <div className="flex flex-wrap gap-3">
+      <GovButton
+        onClick={() => setVerificationModalPerson(activePerson)}
+        variant="primary"
+        className="flex-1 min-w-[240px]"
+      >
+        <Scan size={24} /> {t("verify")}
+      </GovButton>
+
+      <button
+        onClick={() => setActivePerson(null)}
+        className="p-3 rounded border border-zinc-300 dark:border-zinc-700 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 transition-all"
+      >
+        <Trash2 size={24} />
+      </button>
+    </div>
+  </>
+)}
+
+{activePerson.paymentStatus !== "paid" && (
+  <div className="flex flex-wrap gap-3">
     <button
       onClick={() => setPaymentModalOpen(true)}
       className="flex-1 min-w-[240px] bg-amber-600 text-white font-bold py-3 px-5 rounded hover:bg-amber-700 transition-colors uppercase tracking-wide text-xs flex items-center justify-center gap-3"
     >
       <CreditCard size={24} /> {t("payToVerify")}
     </button>
-  )}
 
-  <button
-    onClick={() => setActivePerson(null)}
-    className="p-3 rounded border border-zinc-300 dark:border-zinc-700 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 transition-all"
-  >
-    <Trash2 size={24} />
-  </button>
-</div>
+    <button
+      onClick={() => setActivePerson(null)}
+      className="p-3 rounded border border-zinc-300 dark:border-zinc-700 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 transition-all"
+    >
+      <Trash2 size={24} />
+    </button>
+  </div>
+)}
+
 
 {/* AI Explanation */}
 {aiExplanation && (
