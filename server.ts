@@ -13,7 +13,7 @@ app.use(express.json({ limit: "15mb" }));
 app.use(express.urlencoded({ extended: true, limit: "15mb" }));
 
 // ─── Supabase config ────────────────────────────────────────────────────────
-const SUPABASE_URL = "https://jxdtfbcyqdcdpgrpzgfh.supabase.co/rest/v1";
+const SUPABASE_URL = "https://jxdtfbcyqdcdpgrpzgfh.supabase.co";
 const TABLE = "people";
 
 /**
@@ -178,7 +178,7 @@ app.post("/api/upload-document", upload.single("file"), async (req, res) => {
       .from("documents")
       .upload(`pending-review/${fileName}`, req.file.buffer, {
         contentType: req.file.mimetype,
-        upsert: false
+        upsert: true
       });
 
     if (error) throw error;
