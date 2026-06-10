@@ -1227,7 +1227,21 @@ if (view === "admin") {
 {/* CLOSE ONLY ONE WRAPPER — NOT TWO */}
 </div> {/* closes the inner content wrapper */}
 
-{/* Conditional: Empty State */}
+{/* AI Explanation */}
+{aiExplanation && (
+  <div className="mt-8 p-6 rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 animate-in slide-in-from-bottom-8 duration-700">
+    <div className="text-sm prose dark:prose-invert max-w-none prose-p:leading-relaxed prose-strong:text-red-700">
+      {aiExplanation.split("\n").map((line, i) => (
+        <p key={i}>{line}</p>
+      ))}
+    </div>
+  </div>
+)}
+
+{/* CLOSE ONLY ONE WRAPPER — NOT TWO */}
+</div> {/* closes the inner content wrapper */}
+
+{/* Correct conditional structure */}
 ) : (
   <div
     className={`min-h-[520px] flex flex-col items-center justify-center text-center p-8 md:p-16 border border-dashed animate-in fade-in duration-700 ${
@@ -1250,6 +1264,7 @@ if (view === "admin") {
 
 </div> {/* closes lg:col-span-8 */}
 </div> {/* closes grid wrapper */}
+
 
 {/* Footer */}
 <footer className="mt-12 py-8 border-t border-zinc-200 dark:border-zinc-800">
