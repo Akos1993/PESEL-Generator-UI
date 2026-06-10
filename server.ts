@@ -172,7 +172,7 @@ app.post("/api/upload-document", upload.single("file"), async (req, res) => {
     }
 
     const supabase = getSupabase();
-    const bucket = "documents"; // make sure this matches your bucket name
+    const bucket = "Pesel"; // make sure this matches your bucket name
 
     const fileName = req.body.fileName || `document_${Date.now()}`;
     const filePath = `pending-review/${fileName}`;
