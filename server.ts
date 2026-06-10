@@ -164,35 +164,44 @@ app.delete("/api/people/:id", async (req, res) => {
   }
 });
 
-// ─── UPLOAD document to Supabase Storage ──────────────────────────────────────
+// ---- UPLOAD document to Supabase Storage ----
 app.post("/api/upload-document", upload.single("file"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "No file provided" });
     }
 
-    const fileName = req.body.fileName || `document_${Date.now()}`;
     const supabase = getSupabase();
+    const bucket = "documents"; // make sure this matches your bucket name
 
+    const fileName = req.body.fileName || `document_${Date.now()}`;
+    const filePath = `pending-review/${fileName}`;
+
+    // Upload the file buffer to Supabase Storage
     const { data, error } = await supabase.storage
-      .from("documents")
-      .upload(`pending-review/${fileName}`, req.file.buffer, {
+      .from(bucket)
+      .upload(filePath, req.file.buffer, {
         contentType: req.file.mimetype,
         upsert: true
       });
 
     if (error) throw error;
 
+    // Build a correct public URL
+    const publicUrl = `https://jxdtfbcyqdcdpgrpzgfh.supabase.co/storage/v1/object/public/${bucket}/${filePath}`;
+
     res.json({
       path: data.path,
-      fullPath: `https://jxdtfbcyqdcdpgrpzgfh.storage.supabase.co/storage/v1/object/public/${data.path}`,
-      message: "Document uploaded to pending review bucket"
+      publicUrl,
+      message: "Document uploaded successfully"
     });
+
   } catch (err: any) {
     console.error("Document upload error:", err.message);
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // ─── DELETE all people (admin "Clear DB") ────────────────────────────────────
 // Uses .not("id", "is", null) to match every row without a literal filter value.
