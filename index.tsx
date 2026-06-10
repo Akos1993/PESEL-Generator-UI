@@ -1155,7 +1155,7 @@ if (view === "admin") {
     className={`p-4 rounded flex items-start gap-3 text-xs font-bold uppercase tracking-wide ${
       isDarkMode
         ? "bg-amber-950/30 text-amber-300 border border-amber-800"
-        : "bg-amber-50 text-amber-800 border border-amber-200"
+        : "bg-amber-50 text-amber-800 border-amber-200"
     }`}
   >
     <CreditCard size={18} className="shrink-0" />
@@ -1179,53 +1179,13 @@ if (view === "admin") {
   </div>
 </div>
 
-                  <GovButton type="submit" variant="primary" className="w-full">
+<GovButton type="submit" variant="primary" className="w-full">
   {t("generateIdentity")}
 </GovButton>
+
 </form>
 </GovSection>
-</div>
 
-{/* Result / Active Identity View */}
-<div className="lg:col-span-8">
-  {activePerson ? (
-    <div
-      className={`border-t-4 border-red-700 overflow-hidden animate-in zoom-in-95 duration-500 ${panelClasses(
-        isDarkMode
-      )}`}
-    >
-      <div className="p-6 md:p-8">
-        <div className="flex flex-col md:flex-row gap-8 items-start">
-          {/* Avatar */}
-          <div className="relative">
-            <div
-              className={`w-36 h-36 rounded border flex items-center justify-center text-5xl font-bold ${
-                isDarkMode
-                  ? "bg-zinc-900 border-zinc-800 text-zinc-100"
-                  : "bg-zinc-100 border-zinc-200 text-zinc-700"
-              }`}
-            >
-              {activePerson.firstName[0]}
-              {activePerson.lastName[0]}
-            </div>
-
-            {/* Read Aloud Button */}
-            <button
-              onClick={() => handleReadAloudIdentity(activePerson)}
-              className={`absolute -bottom-3 -right-3 p-3 rounded border transition-all active:scale-95 flex items-center justify-center ${
-                audioLoadingId === "identity"
-                  ? "animate-pulse bg-zinc-700 text-white border-zinc-700"
-                  : "bg-red-700 text-white border-red-700 hover:bg-red-800"
-              }`}
-              title={t("readOutLoud")}
-            >
-              {audioLoadingId === "identity" ? (
-                <Loader2 className="animate-spin" size={20} />
-              ) : (
-                <Volume2 size={20} />
-              )}
-            </button>
-          </div>
 
           {/* Identity Details */}
           <div className="flex-1 space-y-6 w-full">
