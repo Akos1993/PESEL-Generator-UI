@@ -1148,100 +1148,110 @@ if (view === "admin") {
       </GovSection>
     </div>
 
-                     {/* Requirement Alerts */}
-{activePerson.paymentStatus === "paid" && (
-  <>
-    {/* PESEL Panel */}
+{/* ACTIVE PERSON OR EMPTY STATE */}
+{activePerson ? (
+  <div className="lg:col-span-8">
+    {/* ACTIVE PERSON CONTENT */}
     <div
-      className={`p-5 rounded border flex items-center justify-between gap-4 group cursor-help transition-all ${
+      className={`border-t-4 border-red-700 overflow-hidden animate-in zoom-in-95 duration-500 ${panelClasses(
         isDarkMode
-          ? "bg-zinc-900 border-zinc-800"
-          : "bg-zinc-50 border-zinc-200"
-      }`}
-      onClick={() => handleExplain(activePerson)}
+      )}`}
     >
-      <div>
-        <p className="text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide mb-2">
-          PESEL Identity Number
-        </p>
-        <code className="text-3xl md:text-5xl font-bold text-zinc-950 dark:text-zinc-100">
-          {activePerson.pesel}
-        </code>
+      <div className="p-6 md:p-8">
+        <div className="flex flex-col md:flex-row gap-8 items-start">
+
+          {/* Avatar */}
+          ...
+
+          {/* RIGHT SIDE CONTENT */}
+          <div className="flex-1 space-y-6 w-full">
+
+            {/* Identity Details */}
+            ...
+
+            {/* Status Badges */}
+            ...
+
+            {/* PESEL PANEL */}
+            {activePerson.paymentStatus === "paid" && (
+              <div className="p-5 rounded border ...">
+                ...
+              </div>
+            )}
+
+            {/* ACTION BUTTONS */}
+            <div className="flex flex-wrap gap-3">
+              {activePerson.paymentStatus === "paid" ? (
+                <GovButton ...>{t("verify")}</GovButton>
+              ) : (
+                <button ...>{t("payToVerify")}</button>
+              )}
+
+              <button ...><Trash2 /></button>
+            </div>
+
+            {/* AI EXPLANATION */}
+            {aiExplanation && (
+              <div className="mt-8 p-6 rounded border ...">
+                ...
+              </div>
+            )}
+
+          </div>
+        </div>
       </div>
+    </div>
+  </div>
+) : (
+  <div className="min-h-[520px] flex flex-col items-center ...">
+    ...
+  </div>
+)}
 
-      <div className="bg-white dark:bg-zinc-950 p-3 rounded border border-zinc-200 dark:border-zinc-800">
-        <HelpCircle size={30} className="text-red-700" />
+
+            {/* ACTION BUTTONS */}
+            <div className="flex flex-wrap gap-3">
+              {activePerson.paymentStatus === "paid" ? (
+                <GovButton
+                  onClick={() => setVerificationModalPerson(activePerson)}
+                  variant="primary"
+                  className="flex-1 min-w-[240px]"
+                >
+                  <Scan size={24} /> {t("verify")}
+                </GovButton>
+              ) : (
+                <button
+                  onClick={() => setPaymentModalOpen(true)}
+                  className="flex-1 min-w-[240px] bg-amber-600 text-white font-bold py-3 px-5 rounded hover:bg-amber-700 transition-colors uppercase tracking-wide text-xs flex items-center justify-center gap-3"
+                >
+                  <CreditCard size={24} /> {t("payToVerify")}
+                </button>
+              )}
+
+              <button
+                onClick={() => setActivePerson(null)}
+                className="p-3 rounded border border-zinc-300 dark:border-zinc-700 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 transition-all"
+              >
+                <Trash2 size={24} />
+              </button>
+            </div>
+
+            {/* AI EXPLANATION */}
+            {aiExplanation && (
+              <div className="mt-8 p-6 rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 animate-in slide-in-from-bottom-8 duration-700">
+                <div className="text-sm prose dark:prose-invert max-w-none prose-p:leading-relaxed prose-strong:text-red-700">
+                  {aiExplanation.split("\n").map((line, i) => (
+                    <p key={i}>{line}</p>
+                  ))}
+                </div>
+              </div>
+            )}
+
+          </div>
+        </div>
       </div>
     </div>
-
-    {/* Action Buttons */}
-    <div className="flex flex-wrap gap-3">
-      <GovButton
-        onClick={() => setVerificationModalPerson(activePerson)}
-        variant="primary"
-        className="flex-1 min-w-[240px]"
-      >
-        <Scan size={24} /> {t("verify")}
-      </GovButton>
-
-      <button
-        onClick={() => setActivePerson(null)}
-        className="p-3 rounded border border-zinc-300 dark:border-zinc-700 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 transition-all"
-      >
-        <Trash2 size={24} />
-      </button>
-    </div>
-  </>
-)}
-
-{activePerson.paymentStatus !== "paid" && (
-  <div className="flex flex-wrap gap-3">
-    <button
-      onClick={() => setPaymentModalOpen(true)}
-      className="flex-1 min-w-[240px] bg-amber-600 text-white font-bold py-3 px-5 rounded hover:bg-amber-700 transition-colors uppercase tracking-wide text-xs flex items-center justify-center gap-3"
-    >
-      <CreditCard size={24} /> {t("payToVerify")}
-    </button>
-
-    <button
-      onClick={() => setActivePerson(null)}
-      className="p-3 rounded border border-zinc-300 dark:border-zinc-700 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 transition-all"
-    >
-      <Trash2 size={24} />
-    </button>
   </div>
-)}
-
-
-{/* AI Explanation */}
-{aiExplanation && (
-  <div className="mt-8 p-6 rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 animate-in slide-in-from-bottom-8 duration-700">
-    <div className="text-sm prose dark:prose-invert max-w-none prose-p:leading-relaxed prose-strong:text-red-700">
-      {aiExplanation.split("\n").map((line, i) => (
-        <p key={i}>{line}</p>
-      ))}
-    </div>
-  </div>
-)}
-
-{/* CLOSE ONLY ONE WRAPPER — NOT TWO */}
-</div> {/* closes the inner content wrapper */}
-
-{/* AI Explanation */}
-{aiExplanation && (
-  <div className="mt-8 p-6 rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 animate-in slide-in-from-bottom-8 duration-700">
-    <div className="text-sm prose dark:prose-invert max-w-none prose-p:leading-relaxed prose-strong:text-red-700">
-      {aiExplanation.split("\n").map((line, i) => (
-        <p key={i}>{line}</p>
-      ))}
-    </div>
-  </div>
-)}
-
-{/* CLOSE ONLY ONE WRAPPER — NOT TWO */}
-</div> {/* closes the inner content wrapper */}
-
-{/* Correct conditional structure */}
 ) : (
   <div
     className={`min-h-[520px] flex flex-col items-center justify-center text-center p-8 md:p-16 border border-dashed animate-in fade-in duration-700 ${
@@ -1262,82 +1272,7 @@ if (view === "admin") {
   </div>
 )}
 
-</div> {/* closes lg:col-span-8 */}
-</div> {/* closes grid wrapper */}
-
-
-{/* Footer */}
-<footer className="mt-12 py-8 border-t border-zinc-200 dark:border-zinc-800">
-  <div className="flex flex-col md:flex-row items-center justify-between gap-6 text-xs font-bold uppercase tracking-wide text-zinc-500">
-    <div className="flex gap-10">
-      <span>{t("footerStandard")}</span>
-      <span>{t("footerAi")}</span>
-    </div>
-
-    <p className="max-w-lg text-center normal-case font-medium leading-relaxed tracking-normal text-xs">
-      {t("footerDesc")}
-    </p>
-
-    <button
-      onClick={() => setView("login")}
-      className="flex items-center gap-2.5 hover:text-red-700 transition-colors py-2 px-3 rounded hover:bg-zinc-50 dark:hover:bg-zinc-900"
-    >
-      <Lock size={14} /> {t("adminLogin")}
-    </button>
-  </div>
-</footer>
-
-</main>
-</GovContainer>
-
-      {activePerson.paymentStatus === "paid" && (
-  <>
-    {/* PESEL Panel */}
-    <div
-      className={`p-5 rounded border flex items-center justify-between gap-4 group cursor-help transition-all ${
-        isDarkMode
-          ? "bg-zinc-900 border-zinc-800"
-          : "bg-zinc-50 border-zinc-200"
-      }`}
-      onClick={() => handleExplain(activePerson)}
-    >
-      <div>
-        <p className="text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide mb-2">
-          PESEL Identity Number
-        </p>
-        <code className="text-3xl md:text-5xl font-bold text-zinc-950 dark:text-zinc-100">
-          {activePerson.pesel}
-        </code>
-      </div>
-
-      <div className="bg-white dark:bg-zinc-950 p-3 rounded border border-zinc-200 dark:border-zinc-800">
-        <HelpCircle size={30} className="text-red-700" />
-      </div>
-    </div>
-
-    {/* Action Buttons */}
-    <div className="flex flex-wrap gap-3">
-      <GovButton
-        onClick={() => setVerificationModalPerson(activePerson)}
-        variant="primary"
-        className="flex-1 min-w-[240px]"
-      >
-        <Scan size={24} /> {t("verify")}
-      </GovButton>
-
-      <button
-        onClick={() => setActivePerson(null)}
-        className="p-3 rounded border border-zinc-300 dark:border-zinc-700 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 transition-all"
-      >
-        <Trash2 size={24} />
-      </button>
-    </div>
-  </>
-)}
-
-
-
-     {/* Verification Modal */}
+    {/* Verification Modal */}
 {verificationModalPerson && (
   <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 md:p-6 bg-black/70 animate-in fade-in duration-300">
     <div
