@@ -1804,5 +1804,4 @@ if (view === "admin") {
 );
 };
 
-
 createRoot(document.getElementById('root')!).render(<App />);
