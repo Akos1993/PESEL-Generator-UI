@@ -594,15 +594,19 @@ const handleVerifyDocument = async (
 });
 
 // Supabase sync (replaces Azure)
-await syncPersonToSupabase(updated);
+try {
+  const run = async () => {
+    await syncPersonToSupabase(updated);
+    setActivePerson(updated);
+  };
 
-setActivePerson(updated);
+  run();
 } catch (err) {
   console.error("Document upload error:", err);
 } finally {
   setIsVerifying(false);
 }
-};
+
 
 const handleExplain = (person: Person) => {
   const explanation = getPeselExplanation(
