@@ -1246,267 +1246,29 @@ if (view === "admin") {
   )}
 
   <button
-    onClick={() => setActivePerson(null)}
-    className="p-3 rounded border border-zinc-300 dark:border-zinc-700 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 transition-all"
-  >
-    <Trash2 size={24} />
-  </button>
+  onClick={() => setActivePerson(null)}
+  className="p-3 rounded border border-zinc-300 dark:border-zinc-700 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 transition-all"
+>
+  <Trash2 size={24} />
+</button>
+
+  <div className="bg-zinc-100 dark:bg-zinc-900 p-7 rounded border border-zinc-200 dark:border-zinc-800 mb-8">
+    ...
+  </div>
+
+  <h3 className="text-2xl font-bold mb-4">{t("noActiveRecord")}</h3>
+  ...
 </div>
-
-  >
-    <div className="bg-zinc-100 dark:bg-zinc-900 p-7 rounded border border-zinc-200 dark:border-zinc-800 mb-8">
-      <Fingerprint size={80} className="text-zinc-400" strokeWidth={1} />
-    </div>
-
-    <h3 className="text-2xl font-bold mb-4">{t("noActiveRecord")}</h3>
-
-    <p className="max-w-md text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed font-medium whitespace-pre-line">
-      {t("searchPrompt")}
-    </p>
-  </div>
 )}
 
-    {/* Verification Modal */}
-{verificationModalPerson && (
-  <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 md:p-6 bg-black/70 animate-in fade-in duration-300">
-    <div
-      className={`w-full max-w-3xl border-t-4 border-red-700 shadow-xl overflow-hidden ${surfaceClasses(
-        isDarkMode
-      )}`}
-    >
-      {/* Header */}
-      <div className="p-6 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-900">
-        <h2 className="text-2xl font-bold flex items-center gap-4">
-          <ShieldCheck className="text-red-700" /> {t("docVerification")}
-        </h2>
+{/* Verification Modal */}
+{verificationModalPerson && ( ... )}
 
-        <button
-          onClick={() => setVerificationModalPerson(null)}
-          className={iconButtonClasses}
-        >
-          <X size={24} />
-        </button>
-      </div>
-
-      {/* Body */}
-      <div className="p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Upload Section */}
-        <div className="space-y-6">
-          <div
-            className={`relative h-64 rounded border-2 border-dashed flex flex-col items-center justify-center overflow-hidden transition-all group ${
-              isDarkMode
-                ? "border-zinc-700 bg-zinc-900 hover:border-red-700"
-                : "border-zinc-300 bg-zinc-50 hover:border-red-700"
-            }`}
-          >
-            {activePerson?.idPhoto ? (
-              <img
-                src={activePerson.idPhoto}
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-            ) : (
-              <div className="text-center">
-                <FileText
-                  size={58}
-                  className="mx-auto mb-5 text-zinc-400"
-                />
-                <p className="text-xs font-bold uppercase tracking-wide text-zinc-500">
-                  {t("uploadId")}
-                </p>
-              </div>
-            )}
-
-            {!activePerson?.idPhoto && (
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleVerifyDocument}
-                accept="image/*"
-                className="absolute inset-0 opacity-0 cursor-pointer"
-              />
-            )}
-          </div>
-
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isVerifying}
-            className={`w-full ${primaryButtonClasses}`}
-          >
-            {isVerifying ? (
-              <Loader2 className="animate-spin mx-auto" size={24} />
-            ) : (
-              t("uploadId")
-            )}
-          </button>
-        </div>
-
-        {/* Status Section */}
-        <div className="flex flex-col justify-center space-y-6">
-          <div
-            className={`p-8 rounded border flex flex-col items-center justify-center min-h-[220px] transition-all ${
-              activePerson?.verificationStatus === "verified"
-                ? "bg-green-50 dark:bg-green-950/30 border-green-300 dark:border-green-800 text-green-700 dark:text-green-300"
-                : activePerson?.verificationStatus === "rejected"
-                ? "bg-red-50 dark:bg-red-950/30 border-red-300 dark:border-red-800 text-red-700 dark:text-red-300"
-                : "bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-500"
-            }`}
-          >
-            {isVerifying ? (
-              <div className="text-center">
-                <Loader2
-                  size={48}
-                  className="animate-spin mx-auto mb-6 text-red-700"
-                />
-                <p className="text-xs font-bold uppercase tracking-wide animate-pulse">
-                  {t("aiChecking")}
-                </p>
-              </div>
-            ) : (
-              <>
-                {activePerson?.verificationStatus === "none" && (
-                  <Clock size={64} className="mb-6" />
-                )}
-                {activePerson?.verificationStatus === "verified" && (
-                  <ShieldCheck size={80} className="mb-6" />
-                )}
-                {activePerson?.verificationStatus === "rejected" && (
-                  <AlertCircle size={80} className="mb-6" />
-                )}
-
-                <p className="font-bold uppercase text-sm tracking-wide">
-                  {activePerson?.verificationStatus === "none"
-                    ? t("statusPending")
-                    : activePerson?.verificationStatus === "verified"
-                    ? t("statusVerified")
-                    : t("statusRejected")}
-                </p>
-              </>
-            )}
-          </div>
-
-          {/* Verification Details */}
-          {activePerson?.verificationDetails && (
-            <div className="text-xs text-center text-zinc-600 dark:text-zinc-400 leading-relaxed font-semibold p-4 rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
-              {activePerson.verificationDetails}
-            </div>
-          )}
-
-          {/* Notices */}
-          <div className="bg-amber-50 dark:bg-amber-950/30 p-4 rounded border border-amber-200 dark:border-amber-800">
-            <p className="text-xs font-bold uppercase tracking-wide text-amber-800 dark:text-amber-300 flex items-center gap-2">
-              <AlertCircle size={14} /> {t("idDesc")}
-            </p>
-          </div>
-
-          <div className="p-4 rounded bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center gap-3">
-            <Shield size={16} className="text-red-700" />
-            <p className="text-xs font-bold uppercase tracking-wide text-zinc-700 dark:text-zinc-300">
-              {t("paymentSuccess")}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className="p-6 bg-zinc-50 dark:bg-zinc-900 text-right border-t border-zinc-200 dark:border-zinc-800">
-        <GovButton
-          onClick={() => setVerificationModalPerson(null)}
-          variant="secondary"
-        >
-          {t("close")}
-        </GovButton>
-      </div>
-    </div>
-  </div>
-)}
-
-
-     {/* A11y Modal */}
-{isA11yMenuOpen && (
-  <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 md:p-6 bg-black/70 animate-in zoom-in-95 duration-200">
-    <div
-      className={`w-full max-w-lg p-8 border-t-4 border-red-700 shadow-xl ${surfaceClasses(
-        isDarkMode
-      )}`}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <h2 className="text-2xl font-bold flex items-center gap-4">
-          <Accessibility className="text-red-700" /> {t("a11yOptions")}
-        </h2>
-
-        <button
-          onClick={() => setIsA11yMenuOpen(false)}
-          className={iconButtonClasses}
-        >
-          <X size={22} />
-        </button>
-      </div>
-
-      {/* Body */}
-      <div className="space-y-8">
-        {/* Text Size */}
-        <div>
-          <label className={`${labelClasses} mb-4`}>{t("textSize")}</label>
-
-          <div className="flex gap-4">
-            {[1, 1.15, 1.3].map(scale => (
-              <button
-                key={scale}
-                onClick={() => setFontScale(scale)}
-                className={`flex-1 py-4 rounded border-2 font-bold transition-all ${
-                  fontScale === scale
-                    ? "border-red-700 bg-red-50 dark:bg-red-950/30 text-red-700"
-                    : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-400"
-                }`}
-              >
-                {scale === 1 ? "A" : scale === 1.15 ? "A+" : "A++"}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* High Contrast Toggle */}
-        <div className="flex items-center justify-between p-5 rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
-          <div>
-            <p className="font-bold uppercase text-xs tracking-wide">
-              {t("highContrast")}
-            </p>
-            <p className="text-xs text-zinc-500 font-medium mt-1">
-              {t("highContrastDesc")}
-            </p>
-          </div>
-
-          <button
-            onClick={() => setIsHighContrast(!isHighContrast)}
-            className={`w-16 h-9 rounded-full relative transition-all duration-300 ${
-              isHighContrast
-                ? "bg-red-700"
-                : "bg-zinc-300 dark:bg-zinc-700"
-            }`}
-          >
-            <div
-              className={`absolute top-1 w-7 h-7 bg-white rounded-full transition-all duration-300 shadow-xl ${
-                isHighContrast ? "left-8" : "left-1"
-              }`}
-            />
-          </button>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <GovButton
-        onClick={() => setIsA11yMenuOpen(false)}
-        variant="primary"
-        className="w-full mt-8"
-      >
-        {t("applyChanges")}
-      </GovButton>
-    </div>
-  </div>
-)}
+{/* A11y Modal */}
+{isA11yMenuOpen && ( ... )}
 </div>
 );
 };
+
 
 createRoot(document.getElementById('root')!).render(<App />);
