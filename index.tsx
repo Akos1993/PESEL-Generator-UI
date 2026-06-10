@@ -909,35 +909,32 @@ if (view === "admin") {
             </div>
           </div>
 
-          {/* Right side: Language selector */}
-          <div className="flex flex-wrap items-center gap-4">
-            <div
-              className={`flex items-center p-1 rounded border ${
-                isDarkMode
-                  ? "bg-zinc-900 border-zinc-700"
-                  : "bg-zinc-50 border-zinc-200"
-              }`}
-            >
-              {(["PL", "ENG", "UKR"] as Language[]).map(l => (
-                <button
-                  key={l}
-                  onClick={() => setLang(l)}
-                  className={`flex items-center gap-2 px-4 py-2 text-xs font-bold transition-all rounded ${
-                    lang === l
-                      ? "bg-red-700 text-white"
-                      : "text-zinc-600 dark:text-zinc-300 hover:bg-white dark:hover:bg-zinc-800"
-                  }`}
-                >
-                  <span>{LANGUAGE_CONFIG[l].flag}</span>
-                  {LANGUAGE_CONFIG[l].label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </GovHeader>
-
-              </div>
+{/* Right side: Language selector */}
+<div className="flex flex-wrap items-center gap-4">
+  <div
+    className={`flex items-center p-1 rounded border ${
+      isDarkMode
+        ? "bg-zinc-900 border-zinc-700"
+        : "bg-zinc-50 border-zinc-200"
+    }`}
+  >
+    {(["PL", "ENG", "UKR"] as Language[]).map(l => (
+      <button
+        key={l}
+        onClick={() => setLang(l)}
+        className={`flex items-center gap-2 px-4 py-2 text-xs font-bold transition-all rounded ${
+          lang === l
+            ? "bg-red-700 text-white"
+            : "text-zinc-600 dark:text-zinc-300 hover:bg-white dark:hover:bg-zinc-800"
+        }`}
+      >
+        <span>{LANGUAGE_CONFIG[l].flag}</span>
+        {LANGUAGE_CONFIG[l].label}
+      </button>
+    ))}
+  </div>
+</div>
+</GovHeader>
 
 {/* A11y + Theme Controls */}
 <div className="flex gap-2">
@@ -956,9 +953,6 @@ if (view === "admin") {
     {isDarkMode ? <Sun size={22} /> : <Moon size={22} />}
   </button>
 </div>
-</div>
-</div>
-</GovHeader>
 
 <main className="pb-12">
   <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
