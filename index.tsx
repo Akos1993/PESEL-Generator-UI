@@ -1226,56 +1226,33 @@ if (view === "admin") {
 )}
 
 
-            {/* ACTION BUTTONS */}
-            <div className="flex flex-wrap gap-3">
-              {activePerson.paymentStatus === "paid" ? (
-                <GovButton
-                  onClick={() => setVerificationModalPerson(activePerson)}
-                  variant="primary"
-                  className="flex-1 min-w-[240px]"
-                >
-                  <Scan size={24} /> {t("verify")}
-                </GovButton>
-              ) : (
-                <button
-                  onClick={() => setPaymentModalOpen(true)}
-                  className="flex-1 min-w-[240px] bg-amber-600 text-white font-bold py-3 px-5 rounded hover:bg-amber-700 transition-colors uppercase tracking-wide text-xs flex items-center justify-center gap-3"
-                >
-                  <CreditCard size={24} /> {t("payToVerify")}
-                </button>
-              )}
+           {/* ACTION BUTTONS */}
+<div className="flex flex-wrap gap-3">
+  {activePerson.paymentStatus === "paid" ? (
+    <GovButton
+      onClick={() => setVerificationModalPerson(activePerson)}
+      variant="primary"
+      className="flex-1 min-w-[240px]"
+    >
+      <Scan size={24} /> {t("verify")}
+    </GovButton>
+  ) : (
+    <button
+      onClick={() => setPaymentModalOpen(true)}
+      className="flex-1 min-w-[240px] bg-amber-600 text-white font-bold py-3 px-5 rounded hover:bg-amber-700 transition-colors uppercase tracking-wide text-xs flex items-center justify-center gap-3"
+    >
+      <CreditCard size={24} /> {t("payToVerify")}
+    </button>
+  )}
 
-              <button
-                onClick={() => setActivePerson(null)}
-                className="p-3 rounded border border-zinc-300 dark:border-zinc-700 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 transition-all"
-              >
-                <Trash2 size={24} />
-              </button>
-            </div>
+  <button
+    onClick={() => setActivePerson(null)}
+    className="p-3 rounded border border-zinc-300 dark:border-zinc-700 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 transition-all"
+  >
+    <Trash2 size={24} />
+  </button>
+</div>
 
-            {/* AI EXPLANATION */}
-            {aiExplanation && (
-              <div className="mt-8 p-6 rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 animate-in slide-in-from-bottom-8 duration-700">
-                <div className="text-sm prose dark:prose-invert max-w-none prose-p:leading-relaxed prose-strong:text-red-700">
-                  {aiExplanation.split("\n").map((line, i) => (
-                    <p key={i}>{line}</p>
-                  ))}
-                </div>
-              </div>
-            )}
-
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-) : (
-  <div
-    className={`min-h-[520px] flex flex-col items-center justify-center text-center p-8 md:p-16 border border-dashed animate-in fade-in duration-700 ${
-      isDarkMode
-        ? "border-zinc-800 bg-zinc-950"
-        : "border-zinc-300 bg-white"
-    }`}
   >
     <div className="bg-zinc-100 dark:bg-zinc-900 p-7 rounded border border-zinc-200 dark:border-zinc-800 mb-8">
       <Fingerprint size={80} className="text-zinc-400" strokeWidth={1} />
