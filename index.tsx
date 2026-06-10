@@ -857,84 +857,88 @@ if (view === "admin") {
         : "bg-zinc-100 text-zinc-950"
     }`}
   >
-    <GovContainer className={highContrastClasses}>
-      <GovHeader
-        className={`border-b border-zinc-200 dark:border-zinc-800 mb-8 ${
-          isDarkMode ? "bg-zinc-950" : "bg-white"
-        }`}
-      >
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          {/* Left side: Logo + Title */}
-          <div className="flex items-center gap-4">
-            <div className="bg-red-700 p-3 rounded text-white">
-              <IdCard size={30} />
-            </div>
-
-            <div>
-              <h1 className="text-3xl font-bold">gov.pl</h1>
-
-              <div className="flex flex-wrap items-center gap-3 mt-1.5">
-                <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
-                  {t("title")} · {t("subtitle")}
-                </p>
-
-                <span className="w-1 h-1 bg-zinc-500 rounded-full opacity-40" />
-
-                {/* Supabase DB Status */}
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-zinc-200 dark:border-zinc-800 text-[10px] font-bold uppercase tracking-wide">
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full ${
-                      azureStatus === "connected"
-                        ? "bg-emerald-500"
-                        : azureStatus === "connecting"
-                        ? "bg-amber-500 animate-pulse"
-                        : azureStatus === "unconfigured"
-                        ? "bg-zinc-500"
-                        : "bg-rose-500"
-                    }`}
-                  />
-
-                  <span className="text-zinc-600 dark:text-zinc-400">
-                    Supabase{" "}
-                    {azureStatus === "connected"
-                      ? "Connected"
-                      : azureStatus === "connecting"
-                      ? "Connecting"
-                      : azureStatus === "unconfigured"
-                      ? "Unconfigured"
-                      : "Offline"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-{/* Right side: Language selector */}
-<div className="flex flex-wrap items-center gap-4">
-  <div
-    className={`flex items-center p-1 rounded border ${
-      isDarkMode
-        ? "bg-zinc-900 border-zinc-700"
-        : "bg-zinc-50 border-zinc-200"
+   <GovContainer className={highContrastClasses}>
+  <GovHeader
+    className={`border-b border-zinc-200 dark:border-zinc-800 mb-8 ${
+      isDarkMode ? "bg-zinc-950" : "bg-white"
     }`}
   >
-    {(["PL", "ENG", "UKR"] as Language[]).map(l => (
-      <button
-        key={l}
-        onClick={() => setLang(l)}
-        className={`flex items-center gap-2 px-4 py-2 text-xs font-bold transition-all rounded ${
-          lang === l
-            ? "bg-red-700 text-white"
-            : "text-zinc-600 dark:text-zinc-300 hover:bg-white dark:hover:bg-zinc-800"
-        }`}
-      >
-        <span>{LANGUAGE_CONFIG[l].flag}</span>
-        {LANGUAGE_CONFIG[l].label}
-      </button>
-    ))}
-  </div>
-</div>
-</GovHeader>
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      
+      {/* Left side: Logo + Title */}
+      <div className="flex items-center gap-4">
+        <div className="bg-red-700 p-3 rounded text-white">
+          <IdCard size={30} />
+        </div>
+
+        <div>
+          <h1 className="text-3xl font-bold">gov.pl</h1>
+
+          <div className="flex flex-wrap items-center gap-3 mt-1.5">
+            <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+              {t("title")} · {t("subtitle")}
+            </p>
+
+            <span className="w-1 h-1 bg-zinc-500 rounded-full opacity-40" />
+
+            {/* Supabase DB Status */}
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-zinc-200 dark:border-zinc-800 text-[10px] font-bold uppercase tracking-wide">
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  azureStatus === "connected"
+                    ? "bg-emerald-500"
+                    : azureStatus === "connecting"
+                    ? "bg-amber-500 animate-pulse"
+                    : azureStatus === "unconfigured"
+                    ? "bg-zinc-500"
+                    : "bg-rose-500"
+                }`}
+              />
+
+              <span className="text-zinc-600 dark:text-zinc-400">
+                Supabase{" "}
+                {azureStatus === "connected"
+                  ? "Connected"
+                  : azureStatus === "connecting"
+                  ? "Connecting"
+                  : azureStatus === "unconfigured"
+                  ? "Unconfigured"
+                  : "Offline"}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right side: Language selector */}
+      <div className="flex flex-wrap items-center gap-4">
+        <div
+          className={`flex items-center p-1 rounded border ${
+            isDarkMode
+              ? "bg-zinc-900 border-zinc-700"
+              : "bg-zinc-50 border-zinc-200"
+          }`}
+        >
+          {(["PL", "ENG", "UKR"] as Language[]).map(l => (
+            <button
+              key={l}
+              onClick={() => setLang(l)}
+              className={`flex items-center gap-2 px-4 py-2 text-xs font-bold transition-all rounded ${
+                lang === l
+                  ? "bg-red-700 text-white"
+                  : "text-zinc-600 dark:text-zinc-300 hover:bg-white dark:hover:bg-zinc-800"
+              }`}
+            >
+              <span>{LANGUAGE_CONFIG[l].flag}</span>
+              {LANGUAGE_CONFIG[l].label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+    </div> {/* ← THIS was missing */}
+  </GovHeader>
+
 
 {/* A11y + Theme Controls */}
 <div className="flex gap-2">
