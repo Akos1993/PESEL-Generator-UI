@@ -57,7 +57,18 @@ export const TRANSLATIONS = {
     unpaid: 'Nieopłacony',
     paid: 'Opłacony',
     listening: 'Słucham...',
-    identifyingGender: 'Rozpoznaję płeć...'
+    identifyingGender: 'Rozpoznaję płeć...',
+    reviewDocuments: 'Przejrzyj Dokumenty',
+    pendingReview: 'Do Przeglądu',
+    pendingReviewCount: 'Dokumentów do przeglądu',
+    noReviewPending: 'Brak dokumentów do przeglądu',
+    viewDocument: 'Wyświetl Dokument',
+    rejectionReason: 'Powód odrzucenia (opcjonalnie)',
+    approveDocument: 'Zatwierdź',
+    rejectDocument: 'Odrzuć',
+    approvalSuccess: 'Dokument zatwierdzony',
+    rejectionSuccess: 'Dokument odrzucony',
+    uploadedAt: 'Wgrano:'
   },
   ENG: {
     title: 'PESEL Master',
@@ -117,7 +128,18 @@ export const TRANSLATIONS = {
     unpaid: 'Unpaid',
     paid: 'Paid',
     listening: 'Listening...',
-    identifyingGender: 'Identifying gender...'
+    identifyingGender: 'Identifying gender...',
+    reviewDocuments: 'Review Documents',
+    pendingReview: 'For Review',
+    pendingReviewCount: 'Documents pending review',
+    noReviewPending: 'No documents pending review',
+    viewDocument: 'View Document',
+    rejectionReason: 'Rejection Reason (optional)',
+    approveDocument: 'Approve',
+    rejectDocument: 'Reject',
+    approvalSuccess: 'Document approved',
+    rejectionSuccess: 'Document rejected',
+    uploadedAt: 'Uploaded:'
   },
   UKR: {
     title: 'PESEL Майстер',
@@ -177,6 +199,17 @@ export const TRANSLATIONS = {
     unpaid: 'Неоплачено',
     paid: 'Оплачено',
     listening: 'Слухаю...',
-    identifyingGender: 'Визначаю стать...'
+    identifyingGender: 'Визначаю стать...',
+    reviewDocuments: 'Перегляд документів',
+    pendingReview: 'На розгляді',
+    pendingReviewCount: 'Документи на розгляді',
+    noReviewPending: 'Немає документів на розгляді',
+    viewDocument: 'Переглянути документ',
+    rejectionReason: 'Причина відхилення (опціонально)',
+    approveDocument: 'Затвердити',
+    rejectDocument: 'Відхилити',
+    approvalSuccess: 'Документ затверджено',
+    rejectionSuccess: 'Документ відхилено',
+    uploadedAt: 'Завантажено:'
   }
 } as const;
