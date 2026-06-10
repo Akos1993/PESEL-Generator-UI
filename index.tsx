@@ -1161,7 +1161,7 @@ if (view === "admin") {
         <div className="flex flex-col md:flex-row gap-8 items-start">
 
           {/* Avatar */}
-          {/* ... your avatar block here ... */}
+          {/* ... */}
 
           {/* RIGHT SIDE CONTENT */}
           <div className="flex-1 space-y-6 w-full">
@@ -1239,6 +1239,20 @@ if (view === "admin") {
     <p className="max-w-md text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed font-medium whitespace-pre-line">
       {t("searchPrompt")}
     </p>
+  </div>
+)}
+
+{/* Verification Modal */}
+{verificationModalPerson && (
+  <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 md:p-6 bg-black/70 animate-in fade-in duration-300">
+    {/* ...modal content... */}
+  </div>
+)}
+
+{/* A11y Modal */}
+{isA11yMenuOpen && (
+  <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 md:p-6 bg-black/70 animate-in zoom-in-95 duration-200">
+    {/* ...modal content... */}
   </div>
 )}
 
