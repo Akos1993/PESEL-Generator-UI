@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Plus, IdCard, CheckCircle2, Sun, Moon, Volume2,
   Loader2, HelpCircle, Accessibility, Upload, ShieldCheck,
-  Clock, Lock, Database, Shield, Mic, MicOff,
+  Clock, Lock, Database, Shield, Wallet,
 } from 'lucide-react';
 
 import { Language, Person, View, DbStatus } from './types';
