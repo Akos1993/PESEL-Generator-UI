@@ -8,7 +8,7 @@ import {
 import { Language, Person, View, DbStatus } from './types';
 import { ADMIN_PASS, LANGUAGE_CONFIG, TRANSLATIONS, TranslationKey } from './constants';
 import { generatePESEL, getPeselExplanation } from './utils';
-import { dbHealth, dbFetchPeople, dbSyncPerson, dbDeletePerson, dbClearAll } from './db';
+import { dbHealth, dbFetchPeople, dbSyncPerson, dbDeletePerson, dbClearAll, dbUploadDocument } from './db';
 
 import FormField      from './FormField';
 import PaymentModal   from './PaymentModal';
@@ -207,6 +207,8 @@ const App: React.FC = () => {
     setActivePerson(newPerson);
     setSubmittedApplication(null);
     setFormData({ firstName: '', lastName: '', dob: '', gender: 'male', nationality: '' });
+    // Stage 1 — persist the record immediately so it appears in the admin DB
+    void syncPerson(newPerson);
   };
 
   // ── Document verification (upload → pending → under review) ───────────────
@@ -215,46 +217,58 @@ const App: React.FC = () => {
     if (!file || !activePerson) return;
     setIsVerifying(true);
 
-    const reader = new FileReader();
-    reader.onload = (): void => {
-      setTimeout(() => {
-        const feedback =
-          lang === 'PL'
-            ? `Dokumenty przesłane pomyślnie. Wniosek weryfikowany dla: ${activePerson.firstName} ${activePerson.lastName}.`
-            : lang === 'UKR'
-              ? `Документи завантажені. Заявку верифікується для: ${activePerson.firstName} ${activePerson.lastName}.`
-              : `Documents uploaded. Application under review for: ${activePerson.firstName} ${activePerson.lastName}.`;
+    const feedback =
+      lang === 'PL'
+        ? `Dokumenty przesłane pomyślnie. Wniosek weryfikowany dla: ${activePerson.firstName} ${activePerson.lastName}.`
+        : lang === 'UKR'
+          ? `Документи завантажені. Заявку верифікується для: ${activePerson.firstName} ${activePerson.lastName}.`
+          : `Documents uploaded. Application under review for: ${activePerson.firstName} ${activePerson.lastName}.`;
+
+    // Stage 3 — upload file to Supabase Storage bucket, then persist the record
+    void (async () => {
+      try {
+        const photoUrl = await dbUploadDocument(file, activePerson.pesel);
 
         const updated: Person = {
           ...activePerson,
           verificationStatus: 'pending',
           verificationDetails: feedback,
-          idPhoto: reader.result as string,
+          idPhoto: photoUrl,   // public URL, not base64
         };
 
         setPeople((prev) => {
           const idx = prev.findIndex((p) => p.pesel === updated.pesel);
-          if (idx >= 0) {
-            const arr = [...prev];
-            arr[idx] = updated;
-            return arr;
-          }
+          if (idx >= 0) { const arr = [...prev]; arr[idx] = updated; return arr; }
           return [updated, ...prev];
         });
 
-        void syncPerson(updated);
+        await dbSyncPerson(updated);
         setSubmittedApplication(updated);
         setActivePerson(null);
+      } catch (err: unknown) {
+        console.error('Document upload failed:', err);
+        // Show error in UI so the user knows something went wrong
+        alert(
+          err instanceof Error
+            ? `Upload failed: ${err.message}`
+            : 'Upload failed — check the browser console for details.',
+        );
+      } finally {
         setIsVerifying(false);
         if (fileInputRef.current) fileInputRef.current.value = '';
-      }, 1600);
-    };
-    reader.readAsDataURL(file);
+      }
+    })();
   };
 
   // ── Payment callback ──────────────────────────────────────────────────────
   const handlePaymentComplete = (_txId: string): void => {
-    setActivePerson((prev) => (prev ? { ...prev, paymentStatus: 'paid' } : null));
+    setActivePerson((prev) => {
+      if (!prev) return null;
+      const updated: Person = { ...prev, paymentStatus: 'paid' };
+      // Stage 2 — persist payment status
+      void syncPerson(updated);
+      return updated;
+    });
   };
 
   // ── Admin actions ─────────────────────────────────────────────────────────
