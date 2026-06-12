@@ -8,6 +8,7 @@ import {
 import { Language, Person, View, DbStatus } from './types';
 import { ADMIN_PASS, LANGUAGE_CONFIG, TRANSLATIONS, TranslationKey } from './constants';
 import { generatePESEL, getPeselExplanation } from './utils';
+import { dbHealth, dbFetchPeople, dbSyncPerson, dbDeletePerson, dbClearAll } from './db';
 
 import FormField      from './FormField';
 import PaymentModal   from './PaymentModal';
@@ -82,27 +83,21 @@ const App: React.FC = () => {
 
   // ── DB initialisation ─────────────────────────────────────────────────────
   useEffect(() => {
-    fetch('/api/health')
-      .then((r) => r.json())
-      .then((data: { status: string; message?: string }) => {
-        if (data.status === 'connected') {
-          setDbStatus('connected');
-        } else if (data.message?.includes('Missing')) {
-          setDbStatus('unconfigured');
-        } else {
-          setDbStatus('disconnected');
-        }
-        setDbMessage(data.message ?? '');
+    // Health check
+    dbHealth()
+      .then(({ status, message }) => {
+        setDbStatus(status);
+        setDbMessage(message);
       })
       .catch((_e: unknown) => {
         setDbStatus('disconnected');
-        setDbMessage('Could not reach server.');
+        setDbMessage('Could not reach Supabase.');
       });
 
-    fetch('/api/people')
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('not ok'))))
-      .then((data: Person[]) => {
-        if (Array.isArray(data) && data.length > 0) {
+    // Fetch initial data
+    dbFetchPeople()
+      .then((data) => {
+        if (data.length > 0) {
           setPeople(data);
         } else {
           const cached = localStorage.getItem('pesel_vault_admin');
@@ -123,12 +118,7 @@ const App: React.FC = () => {
   // ── API helpers ───────────────────────────────────────────────────────────
   const syncPerson = async (person: Person): Promise<void> => {
     try {
-      const res = await fetch('/api/people', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(person),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      await dbSyncPerson(person);
     } catch (_e: unknown) {
       console.warn('Could not sync to Supabase:', _e);
     }
@@ -270,13 +260,13 @@ const App: React.FC = () => {
   // ── Admin actions ─────────────────────────────────────────────────────────
   const handleDeletePerson = async (id: string): Promise<void> => {
     if (!confirm('Permanently delete this record?')) return;
-    try { await fetch(`/api/people/${id}`, { method: 'DELETE' }); } catch (_e: unknown) { /* intentional */ }
+    try { await dbDeletePerson(id); } catch (_e: unknown) { /* intentional */ }
     setPeople((prev) => prev.filter((p) => p.id !== id));
   };
 
   const handleClearDatabase = async (): Promise<void> => {
     if (!confirm('Delete ALL records from the database and local cache?')) return;
-    try { await fetch('/api/people', { method: 'DELETE' }); } catch (_e: unknown) { /* intentional */ }
+    try { await dbClearAll(); } catch (_e: unknown) { /* intentional */ }
     setPeople([]);
     localStorage.removeItem('pesel_vault_admin');
   };
