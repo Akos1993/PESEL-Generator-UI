@@ -1,6 +1,6 @@
 import React from 'react';
 import { Accessibility, X, Type, Eye } from 'lucide-react';
-import { TranslationKey } from '../constants';
+import { TranslationKey } from './constants';
 
 interface Props {
   isOpen: boolean;

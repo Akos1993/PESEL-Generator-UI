@@ -9,12 +9,12 @@ import { Language, Person, View, DbStatus } from './types';
 import { ADMIN_PASS, LANGUAGE_CONFIG, TRANSLATIONS, TranslationKey } from './constants';
 import { generatePESEL, getPeselExplanation } from './utils';
 
-import FormField      from './components/FormField';
-import PaymentModal   from './components/PaymentModal';
-import AdminView      from './components/AdminView';
-import LoginView      from './components/LoginView';
-import A11yModal      from './components/A11yModal';
-import PeselModal     from './components/PeselModal';
+import FormField      from './FormField';
+import PaymentModal   from './PaymentModal';
+import AdminView      from './AdminView';
+import LoginView      from './LoginView';
+import A11yModal      from './A11yModal';
+import PeselModal     from './PeselModal';
 
 // ─── DbDot ─── (defined here once, outside the render loop)
 const DbDot: React.FC<{ status: DbStatus }> = ({ status }) => (

@@ -3,9 +3,9 @@ import {
   X, ArrowLeft, ArrowRight, CreditCard, Smartphone, Globe,
   Wallet, Clock, CheckCircle,
 } from 'lucide-react';
-import { PaymentMethod, PaymentStep } from '../types';
-import { TranslationKey } from '../constants';
-import { formatCardNumber, formatExpiry, delay } from '../utils';
+import { PaymentMethod, PaymentStep } from './types';
+import { TranslationKey } from './constants';
+import { formatCardNumber, formatExpiry, delay } from './utils';
 
 interface Props {
   isOpen: boolean;

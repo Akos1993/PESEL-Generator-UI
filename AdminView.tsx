@@ -1,7 +1,7 @@
 import React from 'react';
 import { Database, Trash2, Download, ArrowLeft } from 'lucide-react';
-import { Person, DbStatus } from '../types';
-import { TranslationKey } from '../constants';
+import { Person, DbStatus } from './types';
+import { TranslationKey } from './constants';
 
 interface Props {
   people: Person[];

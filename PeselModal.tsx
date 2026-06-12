@@ -1,6 +1,6 @@
 import React from 'react';
 import { Fingerprint, X } from 'lucide-react';
-import { TranslationKey } from '../constants';
+import { TranslationKey } from './constants';
 
 interface Props {
   explanation: string | null;
