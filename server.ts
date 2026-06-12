@@ -2,12 +2,9 @@ import express from "express";
 import path from "path";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { createServer as createViteServer } from "vite";
-import multer from "multer";
-
 
 const app = express();
 const PORT = 3000;
-const upload = multer({ storage: multer.memoryStorage() });
 
 // Support large base64-encoded ID photo uploads
 app.use(express.json({ limit: "15mb" }));
@@ -27,21 +24,20 @@ const TABLE = "people";
  *   SUPABASE_SERVICE_ROLE_KEY – alias accepted for convenience
  *   SUPABASE_ANON_KEY         – alias accepted for convenience
  */
-export function getSupabase(): SupabaseClient {
+function getSupabase(): SupabaseClient {
   const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
     process.env.SUPABASE_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
     process.env.SUPABASE_ANON_KEY;
 
   if (!key) {
     throw new Error(
-      "Missing Supabase key. Set SUPABASE_SERVICE_ROLE_KEY in your environment variables."
+      "Missing Supabase key. Set SUPABASE_KEY (service_role or anon key) in your environment variables."
     );
   }
 
   return createClient(SUPABASE_URL, key);
 }
-
 
 // ─── Health check ────────────────────────────────────────────────────────────
 app.get("/api/health", async (_req, res) => {
@@ -91,59 +87,13 @@ app.post("/api/people", async (req, res) => {
     }
 
     const supabase = getSupabase();
-
-    // ─── Check if this person already exists ────────────────────────────────
-    const { data: existing } = await supabase
-      .from("people")
-      .select("*")
-      .eq("id", person.id)
-      .single();
-
-    // ─── If new entry → force verificationStatus = "pending" ───────────────
-    const payload = {
-      ...person,
-      verificationStatus: existing
-        ? person.verificationStatus ?? existing.verificationStatus
-        : "pending",
-      createdAt: existing ? existing.createdAt : Date.now()
-    };
-
-    // ─── Upsert the person ─────────────────────────────────────────────────
     const { data, error } = await supabase
-      .from("people")
-      .upsert(payload, { onConflict: "id" })
+      .from(TABLE)
+      .upsert(person, { onConflict: "id" })
       .select()
       .single();
 
     if (error) throw error;
-
-    // ─── Auto‑archive to history when approved ─────────────────────────────
-    try {
-      if (data.verificationStatus === "approved") {
-        console.log(`Archiving ${data.id} to history…`);
-
-        const { error: insertErr } = await supabase
-          .from("history")
-          .insert({
-            pesel: data.pesel,
-            created_at: new Date().toISOString()
-          });
-
-        if (insertErr) throw insertErr;
-
-        const { error: deleteErr } = await supabase
-          .from("people")
-          .delete()
-          .eq("id", data.id);
-
-        if (deleteErr) throw deleteErr;
-
-        console.log(`Archived ${data.id} successfully.`);
-      }
-    } catch (archiveErr: any) {
-      console.error("Archive error:", archiveErr.message);
-    }
-
     res.json(data);
   } catch (err: any) {
     console.error("Supabase upsert error:", err.message);
@@ -165,45 +115,6 @@ app.delete("/api/people/:id", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-// ---- UPLOAD document to Supabase Storage ----
-app.post("/api/upload-document", upload.single("file"), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: "No file provided" });
-    }
-
-    const supabase = getSupabase();
-    const bucket = "Pesel"; // make sure this matches your bucket name
-
-    const fileName = req.body.fileName || `document_${Date.now()}`;
-    const filePath = `pending-review/${fileName}`;
-
-    // Upload the file buffer to Supabase Storage
-    const { data, error } = await supabase.storage
-      .from(bucket)
-      .upload(filePath, req.file.buffer, {
-        contentType: req.file.mimetype,
-        upsert: true
-      });
-
-    if (error) throw error;
-
-    // Build a correct public URL
-    const publicUrl = `https://jxdtfbcyqdcdpgrpzgfh.supabase.co/storage/v1/object/public/${bucket}/${filePath}`;
-
-    res.json({
-      path: data.path,
-      publicUrl,
-      message: "Document uploaded successfully"
-    });
-
-  } catch (err: any) {
-    console.error("Document upload error:", err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
-
 
 // ─── DELETE all people (admin "Clear DB") ────────────────────────────────────
 // Uses .not("id", "is", null) to match every row without a literal filter value.
@@ -233,10 +144,11 @@ async function serveApp() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
+    // Vite outputs to "build/" (configured in vite.config.ts to match Azure SWA)
+    const buildPath = path.join(process.cwd(), "build");
+    app.use(express.static(buildPath));
     app.get("*", (_req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
+      res.sendFile(path.join(buildPath, "index.html"));
     });
   }
 
