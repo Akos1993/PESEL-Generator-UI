@@ -13,6 +13,7 @@ import { dbHealth, dbFetchPeople, dbSyncPerson, dbDeletePerson, dbClearAll, dbUp
 import FormField      from './FormField';
 import PaymentModal   from './PaymentModal';
 import AdminView      from './AdminView';
+import ReviewView     from './ReviewView';
 import LoginView      from './LoginView';
 import A11yModal      from './A11yModal';
 import PeselModal     from './PeselModal';
@@ -285,6 +286,15 @@ const App: React.FC = () => {
     localStorage.removeItem('pesel_vault_admin');
   };
 
+  // ── Document review (human verification decision) ────────────────────────
+  const handleReviewDecision = async (id: string, decision: 'verified' | 'rejected'): Promise<void> => {
+    const person = people.find((p) => p.id === id);
+    if (!person) return;
+    const updated: Person = { ...person, verificationStatus: decision };
+    setPeople((prev) => prev.map((p) => (p.id === id ? updated : p)));
+    await syncPerson(updated);
+  };
+
   const handleLogin = (e: React.FormEvent): void => {
     e.preventDefault();
     if (adminPass === ADMIN_PASS) { setView('admin'); setAdminPass(''); }
@@ -313,7 +323,24 @@ const App: React.FC = () => {
         onDeletePerson={(id) => void handleDeletePerson(id)}
         onClearDatabase={() => void handleClearDatabase()}
         onExport={exportData}
+        onOpenReview={() => setView('review')}
         onBack={() => setView('user')}
+      />
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // REVIEW VIEW
+  // ─────────────────────────────────────────────────────────────────────────
+  if (view === 'review') {
+    return (
+      <ReviewView
+        people={people}
+        isDarkMode={isDarkMode}
+        t={t}
+        onApprove={(id) => void handleReviewDecision(id, 'verified')}
+        onReject={(id) => void handleReviewDecision(id, 'rejected')}
+        onBack={() => setView('admin')}
       />
     );
   }

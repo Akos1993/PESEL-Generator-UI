@@ -1,5 +1,5 @@
 import React from 'react';
-import { Database, Trash2, Download, ArrowLeft } from 'lucide-react';
+import { Database, Trash2, Download, ArrowLeft, FileText } from 'lucide-react';
 import { Person, DbStatus } from './types';
 import { TranslationKey } from './constants';
 
@@ -12,6 +12,7 @@ interface Props {
   onDeletePerson: (id: string) => void;
   onClearDatabase: () => void;
   onExport: () => void;
+  onOpenReview: () => void;
   onBack: () => void;
 }
 
@@ -38,9 +39,11 @@ const AdminView: React.FC<Props> = ({
   onDeletePerson,
   onClearDatabase,
   onExport,
+  onOpenReview,
   onBack,
 }) => {
   const dark = isDarkMode;
+  const pendingReviewCount = people.filter((p) => p.idPhoto && p.verificationStatus !== 'verified').length;
 
   return (
     <div className={`min-h-screen p-8 ${dark ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-900'}`}>
@@ -66,6 +69,17 @@ const AdminView: React.FC<Props> = ({
           </div>
 
           <div className="flex flex-wrap gap-3">
+            <button
+              onClick={onOpenReview}
+              className="relative flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-all"
+            >
+              <FileText size={14} /> {t('reviewDocuments')}
+              {pendingReviewCount > 0 && (
+                <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-rose-600 text-white text-[10px] font-black">
+                  {pendingReviewCount}
+                </span>
+              )}
+            </button>
             <button
               onClick={onClearDatabase}
               className="flex items-center gap-2 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-all"

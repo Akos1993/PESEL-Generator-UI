@@ -87,6 +87,15 @@ const PL = {
   newApplication: 'Nowy Wniosek',
   applicationRef: 'Nr wniosku',
   submittedAt: 'Złożono',
+  // Human review
+  reviewPanel: 'Weryfikacja Dokumentów',
+  reviewDocuments: 'Weryfikacja Dokumentów',
+  reviewQueue: 'W kolejce',
+  noPendingDocs: 'Brak dokumentów do weryfikacji',
+  viewDocument: 'Zobacz dokument',
+  approve: 'Zatwierdź',
+  reject: 'Odrzuć',
+  backToAdmin: 'Powrót do Panelu',
 } as const;
 
 const ENG: Record<keyof typeof PL, string> = {
@@ -166,6 +175,15 @@ const ENG: Record<keyof typeof PL, string> = {
   newApplication: 'New Application',
   applicationRef: 'Reference',
   submittedAt: 'Submitted',
+  // Human review
+  reviewPanel: 'Document Review',
+  reviewDocuments: 'Document Review',
+  reviewQueue: 'In queue',
+  noPendingDocs: 'No documents pending review',
+  viewDocument: 'View document',
+  approve: 'Approve',
+  reject: 'Reject',
+  backToAdmin: 'Back to Admin',
 };
 
 const UKR: Record<keyof typeof PL, string> = {
@@ -245,6 +263,15 @@ const UKR: Record<keyof typeof PL, string> = {
   newApplication: 'Нова заявка',
   applicationRef: 'Номер заявки',
   submittedAt: 'Подано',
+  // Human review
+  reviewPanel: 'Перевірка документів',
+  reviewDocuments: 'Перевірка документів',
+  reviewQueue: 'В черзі',
+  noPendingDocs: 'Немає документів на перевірці',
+  viewDocument: 'Переглянути документ',
+  approve: 'Підтвердити',
+  reject: 'Відхилити',
+  backToAdmin: 'Назад до панелі',
 };
 
 export const TRANSLATIONS: Record<Language, typeof PL> = { PL, ENG, UKR };
