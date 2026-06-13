@@ -13,7 +13,7 @@ import { Person, DbStatus } from './types';
 const SUPABASE_URL    = 'https://jxdtfbcyqdcdpgrpzgfh.supabase.co';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 const TABLE           = 'people';
-const BUCKET          = 'id-documents';
+const BUCKET          = 'Pesel';
 
 let _client: SupabaseClient | null = null;
 
@@ -84,7 +84,7 @@ export async function dbClearAll(): Promise<void> {
 // ─── Storage bucket ───────────────────────────────────────────────────────────
 
 /**
- * Uploads a document file to the "id-documents" Supabase Storage bucket
+ * Uploads a document file to the "Pesel" Supabase Storage bucket
  * and returns its public URL.  The row's `idPhoto` column stores this URL
  * instead of a raw base64 string.
  *

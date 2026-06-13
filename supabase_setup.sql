@@ -42,13 +42,16 @@ create policy "anon_delete" on people for delete to anon using (true);
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
-  'id-documents',
-  'id-documents',
+  'Pesel',
+  'Pesel',
   true,           -- public bucket → uploaded files get a stable public URL
   5242880,        -- 5 MB per file
   array['image/jpeg','image/png','image/webp','image/gif','application/pdf']
 )
-on conflict (id) do nothing;
+on conflict (id) do update set
+  public             = excluded.public,
+  file_size_limit    = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
 
 -- ─── 4. Storage RLS ──────────────────────────────────────────────────────────
 
@@ -59,15 +62,15 @@ drop policy if exists "anon_overwrite_docs"  on storage.objects;
 -- Allow anon to upload new files
 create policy "anon_upload_docs" on storage.objects
   for insert to anon
-  with check (bucket_id = 'id-documents');
+  with check (bucket_id = 'Pesel');
 
 -- Allow anyone to read (bucket is public, belt-and-suspenders)
 create policy "public_read_docs" on storage.objects
   for select to anon
-  using (bucket_id = 'id-documents');
+  using (bucket_id = 'Pesel');
 
 -- Allow anon to overwrite (upsert: true in the client)
 create policy "anon_overwrite_docs" on storage.objects
   for update to anon
-  using (bucket_id = 'id-documents')
-  with check (bucket_id = 'id-documents');
+  using (bucket_id = 'Pesel')
+  with check (bucket_id = 'Pesel');
