@@ -109,7 +109,6 @@ const AdminView: React.FC<Props> = ({
                 <th className="px-6 py-4">Identity</th>
                 <th className="px-6 py-4">PESEL</th>
                 <th className="px-6 py-4">Verification</th>
-                <th className="px-6 py-4">Payment</th>
                 <th className="px-6 py-4 text-right">Created</th>
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
@@ -139,15 +138,6 @@ const AdminView: React.FC<Props> = ({
                         {p.verificationStatus}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${
-                        p.paymentStatus === 'paid'
-                          ? 'bg-green-500/15 text-green-600'
-                          : 'bg-slate-500/10 text-slate-500'
-                      }`}>
-                        {p.paymentStatus}
-                      </span>
-                    </td>
                     <td className="px-6 py-4 text-right opacity-40 text-xs">
                       {new Date(p.createdAt).toLocaleString()}
                     </td>
@@ -163,7 +153,7 @@ const AdminView: React.FC<Props> = ({
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="px-6 py-20 text-center opacity-30 font-bold uppercase tracking-widest italic">
+                  <td colSpan={5} className="px-6 py-20 text-center opacity-30 font-bold uppercase tracking-widest italic">
                     Database is empty
                   </td>
                 </tr>

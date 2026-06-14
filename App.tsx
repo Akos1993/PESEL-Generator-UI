@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Plus, IdCard, CheckCircle2, Sun, Moon, Volume2,
   Loader2, HelpCircle, Accessibility, Upload, ShieldCheck,
-  Clock, Lock, Database, Shield, Wallet,
+  Clock, Lock, Database, Shield,
 } from 'lucide-react';
 
 import { Language, Person, View, DbStatus } from './types';
@@ -11,7 +11,6 @@ import { generatePESEL, getPeselExplanation } from './utils';
 import { dbHealth, dbFetchPeople, dbSyncPerson, dbDeletePerson, dbClearAll, dbUploadDocument } from './db';
 
 import FormField      from './FormField';
-import PaymentModal   from './PaymentModal';
 import AdminView      from './AdminView';
 import ReviewView     from './ReviewView';
 import LoginView      from './LoginView';
@@ -99,9 +98,6 @@ const App: React.FC = () => {
   const [isVerifying, setIsVerifying]         = useState(false);
   const [aiExplanation, setAiExplanation]     = useState<string | null>(null);
   const fileInputRef                          = useRef<HTMLInputElement>(null);
-
-  // ── Payment modal ─────────────────────────────────────────────────────────
-  const [paymentOpen, setPaymentOpen] = useState(false);
 
   // ── TTS / Dictation ───────────────────────────────────────────────────────
   const [audioLoadingId, setAudioLoadingId]   = useState<string | null>(null);
@@ -300,7 +296,6 @@ const App: React.FC = () => {
       pesel:              generatePESEL(new Date(dob), gender),
       createdAt:          Date.now(),
       verificationStatus: 'none',
-      paymentStatus:      'unpaid',
     };
 
     setActivePerson(newPerson);
@@ -371,17 +366,6 @@ const App: React.FC = () => {
         if (fileInputRef.current) fileInputRef.current.value = '';
       }
     })();
-  };
-
-  // ── Payment callback ──────────────────────────────────────────────────────
-  const handlePaymentComplete = (_txId: string): void => {
-    setActivePerson((prev) => {
-      if (!prev) return null;
-      const updated: Person = { ...prev, paymentStatus: 'paid' };
-      // Stage 2 — persist payment status
-      void syncPerson(updated);
-      return updated;
-    });
   };
 
   // ── Admin actions ─────────────────────────────────────────────────────────
@@ -919,10 +903,6 @@ const App: React.FC = () => {
 
                   {/* Status / actions bar */}
                   <div className={`px-8 py-4 flex items-center gap-3 flex-wrap border-t ${dark ? 'border-slate-800' : 'border-slate-100'}`}>
-                    <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase ${activePerson.paymentStatus === 'paid' ? 'bg-green-500/10 text-green-600' : 'bg-amber-500/10 text-amber-600'}`}>
-                      {activePerson.paymentStatus === 'paid' ? <CheckCircle2 size={12} /> : <Clock size={12} />}
-                      {activePerson.paymentStatus === 'paid' ? t('paid') : t('unpaid')}
-                    </span>
                     <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase ${activePerson.verificationStatus === 'pending' ? 'bg-amber-500/10 text-amber-600' : 'bg-slate-500/10 text-slate-500'}`}>
                       <ShieldCheck size={12} />
                       {activePerson.verificationStatus === 'pending' ? t('statusPending') : 'Awaiting docs'}
@@ -946,35 +926,10 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Step 1 — Pay */}
-                {activePerson.paymentStatus !== 'paid' && (
-                  <div className={`rounded-[2rem] border p-6 ${dark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-black shrink-0">1</div>
-                        <div>
-                          <h3 className="font-black text-sm">{t('payToVerify')}</h3>
-                          <p className="text-xs opacity-40 mt-0.5">{t('feeNotice')}</p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => setPaymentOpen(true)}
-                        className="shrink-0 px-5 py-2.5 bg-indigo-600 text-white rounded-2xl font-black text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-2"
-                      >
-                        <Wallet size={16} /> {t('payNow')}
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 2 — Upload docs */}
-                <div className={`rounded-[2rem] border p-6 space-y-4 transition-all ${
-                  activePerson.paymentStatus !== 'paid'
-                    ? 'opacity-40 pointer-events-none'
-                    : dark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
-                }`}>
+                {/* Step 1 — Upload docs */}
+                <div className={`rounded-[2rem] border p-6 space-y-4 ${dark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
                   <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${activePerson.paymentStatus === 'paid' ? 'bg-indigo-600 text-white' : 'bg-slate-300 text-slate-500'}`}>2</div>
+                    <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-black shrink-0">1</div>
                     <div>
                       <h3 className="font-black text-sm">{t('docVerification')}</h3>
                       <p className="text-xs opacity-40 mt-0.5">{t('idDesc')}</p>
@@ -1027,14 +982,6 @@ const App: React.FC = () => {
       </div>
 
       {/* ── Modals ────────────────────────────────────────────────────── */}
-      <PaymentModal
-        isOpen={paymentOpen}
-        isDarkMode={dark}
-        t={t}
-        onPaymentComplete={handlePaymentComplete}
-        onClose={() => setPaymentOpen(false)}
-      />
-
       <A11yModal
         isOpen={isA11yOpen}
         isDarkMode={dark}
