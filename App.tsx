@@ -14,38 +14,38 @@ import MainLayout from './MainLayout';
 import Accordion from './Accordion';
 
 type FormDataType = {
-  applicantFirstName: string; applicantLastName: string; applicantStreet: string;
-  applicantHouseNumber: string; applicantApartmentNumber: string; applicantPostalCode: string; applicantCity: string;
-  firstName: string; lastName: string; secondName: string; otherNames: string; maidenName: string;
+  applicant_first_name: string; applicant_last_name: string; applicant_street: string;
+  applicant_house_number: string; applicant_apartment_number: string; applicant_postal_code: string; applicant_city: string;
+  first_name: string; last_name: string; second_name: string; other_names: string; maiden_name: string;
   dob: string; gender: 'male' | 'female';
-  birthPlace: string; countryOfBirth: string; countryOfResidence: string;
-  nationality: string; citizenshipStatus: 'polish' | 'stateless' | 'other';
-  fatherFirstName: string; fatherMaidenName: string; motherFirstName: string; motherMaidenName: string; civRegistryOffice: string;
-  idSeriesNumber: string; idValidityDate: string; idIssuingAuthority: string;
-  passportSeriesNumber: string; passportValidityDate: string;
-  otherDocSeriesNumber: string; otherDocValidityDate: string;
-  maritalStatus: 'single' | 'married' | 'divorced' | 'widow' | 'widower';
-  spouseFirstName: string; spouseMaidenName: string; spousePesel: string;
-  notificationMethod: 'paper' | 'electronic';
-  emailAddress: string; epuapAddress: string;
+  birth_place: string; country_of_birth: string; country_of_residence: string;
+  nationality: string; citizenship_status: 'polish' | 'stateless' | 'other';
+  father_first_name: string; father_maiden_name: string; mother_first_name: string; mother_maiden_name: string; civ_registry_office: string;
+  id_series_number: string; id_validity_date: string; id_issuing_authority: string;
+  passport_series_number: string; passport_validity_date: string;
+  other_doc_series_number: string; other_doc_validity_date: string;
+  marital_status: 'single' | 'married' | 'divorced' | 'widow' | 'widower';
+  spouse_first_name: string; spouse_maiden_name: string; spouse_pesel: string;
+  notification_method: 'paper' | 'electronic';
+  email_address: string; epuap_address: string;
 };
 
 const createLangText = (lang: Language, pl: string, ukr: string, en: string): string =>
   lang === 'PL' ? pl : lang === 'UKR' ? ukr : en;
 
 const INITIAL_FORM_DATA: FormDataType = {
-  applicantFirstName: '', applicantLastName: '', applicantStreet: '',
-  applicantHouseNumber: '', applicantApartmentNumber: '', applicantPostalCode: '', applicantCity: '',
-  firstName: '', lastName: '', secondName: '', otherNames: '', maidenName: '',
+  applicant_first_name: '', applicant_last_name: '', applicant_street: '',
+  applicant_house_number: '', applicant_apartment_number: '', applicant_postal_code: '', applicant_city: '',
+  first_name: '', last_name: '', second_name: '', other_names: '', maiden_name: '',
   dob: '', gender: 'male',
-  birthPlace: '', countryOfBirth: '', countryOfResidence: '',
-  nationality: '', citizenshipStatus: 'polish',
-  fatherFirstName: '', fatherMaidenName: '', motherFirstName: '', motherMaidenName: '', civRegistryOffice: '',
-  idSeriesNumber: '', idValidityDate: '', idIssuingAuthority: '',
-  passportSeriesNumber: '', passportValidityDate: '',
-  otherDocSeriesNumber: '', otherDocValidityDate: '',
-  maritalStatus: 'single', spouseFirstName: '', spouseMaidenName: '', spousePesel: '',
-  notificationMethod: 'paper', emailAddress: '', epuapAddress: '',
+  birth_place: '', country_of_birth: '', country_of_residence: '',
+  nationality: '', citizenship_status: 'polish',
+  father_first_name: '', father_maiden_name: '', mother_first_name: '', mother_maiden_name: '', civ_registry_office: '',
+  id_series_number: '', id_validity_date: '', id_issuing_authority: '',
+  passport_series_number: '', passport_validity_date: '',
+  other_doc_series_number: '', other_doc_validity_date: '',
+  marital_status: 'single', spouse_first_name: '', spouse_maiden_name: '', spouse_pesel: '',
+  notification_method: 'paper', email_address: '', epuap_address: '',
 };
 
 const App: React.FC = () => {
@@ -143,53 +143,53 @@ const App: React.FC = () => {
   const handleAddPerson = (e: React.FormEvent): void => {
     e.preventDefault();
     const {
-      applicantFirstName, applicantLastName, applicantStreet, applicantHouseNumber,
-      applicantPostalCode, applicantCity,
-      firstName, lastName, dob, nationality, gender, citizenshipStatus,
-      fatherFirstName, fatherMaidenName, motherFirstName, motherMaidenName,
-      notificationMethod, emailAddress, epuapAddress,
+      applicant_first_name, applicant_last_name, applicant_street, applicant_house_number,
+      applicant_postal_code, applicant_city,
+      first_name, last_name, dob, nationality, gender, citizenship_status,
+      father_first_name, father_maiden_name, mother_first_name, mother_maiden_name,
+      notification_method, email_address, epuap_address,
     } = formData;
 
-    if (!applicantFirstName || !applicantLastName || !applicantStreet ||
-        !applicantHouseNumber || !applicantPostalCode || !applicantCity ||
-        !firstName || !lastName || !dob || !nationality ||
-        !fatherFirstName || !fatherMaidenName || !motherFirstName || !motherMaidenName ||
-        !notificationMethod || (notificationMethod === 'electronic' && !emailAddress && !epuapAddress)) {
+    if (!applicant_first_name || !applicant_last_name || !applicant_street ||
+        !applicant_house_number || !applicant_postal_code || !applicant_city ||
+        !first_name || !last_name || !dob || !nationality ||
+        !father_first_name || !father_maiden_name || !mother_first_name || !mother_maiden_name ||
+        !notification_method || (notification_method === 'electronic' && !email_address && !epuap_address)) {
       alert('Please fill in all required fields');
       return;
     }
 
     const newPerson: Person = {
       id: crypto.randomUUID(),
-      firstName, lastName, dob, gender, nationality,
-      applicantFirstName, applicantLastName, applicantStreet, applicantHouseNumber,
-      applicantApartmentNumber: formData.applicantApartmentNumber,
-      applicantPostalCode, applicantCity,
-      secondName: formData.secondName,
-      otherNames: formData.otherNames,
-      maidenName: formData.maidenName,
-      birthPlace: formData.birthPlace,
-      countryOfBirth: formData.countryOfBirth,
-      countryOfResidence: formData.countryOfResidence,
-      citizenshipStatus,
-      fatherFirstName, fatherMaidenName,
-      motherFirstName, motherMaidenName,
-      civRegistryOffice: formData.civRegistryOffice,
-      idSeriesNumber: formData.idSeriesNumber,
-      idValidityDate: formData.idValidityDate,
-      idIssuingAuthority: formData.idIssuingAuthority,
-      passportSeriesNumber: formData.passportSeriesNumber,
-      passportValidityDate: formData.passportValidityDate,
-      otherDocSeriesNumber: formData.otherDocSeriesNumber,
-      otherDocValidityDate: formData.otherDocValidityDate,
-      maritalStatus: formData.maritalStatus,
-      spouseFirstName: formData.spouseFirstName,
-      spouseMaidenName: formData.spouseMaidenName,
-      spousePesel: formData.spousePesel,
-      notificationMethod, emailAddress, epuapAddress,
+      first_name, last_name, dob, gender, nationality,
+      applicant_first_name, applicant_last_name, applicant_street, applicant_house_number,
+      applicant_apartment_number: formData.applicant_apartment_number,
+      applicant_postal_code, applicant_city,
+      second_name: formData.second_name,
+      other_names: formData.other_names,
+      maiden_name: formData.maiden_name,
+      birth_place: formData.birth_place,
+      country_of_birth: formData.country_of_birth,
+      country_of_residence: formData.country_of_residence,
+      citizenship_status,
+      father_first_name, father_maiden_name,
+      mother_first_name, mother_maiden_name,
+      civ_registry_office: formData.civ_registry_office,
+      id_series_number: formData.id_series_number,
+      id_validity_date: formData.id_validity_date,
+      id_issuing_authority: formData.id_issuing_authority,
+      passport_series_number: formData.passport_series_number,
+      passport_validity_date: formData.passport_validity_date,
+      other_doc_series_number: formData.other_doc_series_number,
+      other_doc_validity_date: formData.other_doc_validity_date,
+      marital_status: formData.marital_status,
+      spouse_first_name: formData.spouse_first_name,
+      spouse_maiden_name: formData.spouse_maiden_name,
+      spouse_pesel: formData.spouse_pesel,
+      notification_method, email_address, epuap_address,
       pesel: generatePESEL(new Date(dob), gender),
-      createdAt: Date.now(),
-      verificationStatus: 'none',
+      created_at: Date.now(),
+      verification_status: 'none',
     };
 
     setActivePerson(newPerson);
@@ -206,9 +206,9 @@ const App: React.FC = () => {
 
     const feedback = createLangText(
       lang,
-      `Dokumenty przesłane pomyślnie. Wniosek weryfikowany dla: ${activePerson.firstName} ${activePerson.lastName}.`,
-      `Документи завантажені. Заявку верифікується для: ${activePerson.firstName} ${activePerson.lastName}.`,
-      `Documents uploaded. Application under review for: ${activePerson.firstName} ${activePerson.lastName}.`
+      `Dokumenty przesłane pomyślnie. Wniosek weryfikowany dla: ${activePerson.first_name} ${activePerson.last_name}.`,
+      `Документи завантажені. Заявку верифікується для: ${activePerson.first_name} ${activePerson.last_name}.`,
+      `Documents uploaded. Application under review for: ${activePerson.first_name} ${activePerson.last_name}.`
     );
 
     (async () => {
@@ -216,9 +216,9 @@ const App: React.FC = () => {
         const photoUrl = await dbUploadDocument(file, activePerson.pesel);
         const updated: Person = {
           ...activePerson,
-          verificationStatus: 'pending',
-          verificationDetails: feedback,
-          idPhoto: photoUrl,
+          verification_status: 'pending',
+          verification_details: feedback,
+          id_photo: photoUrl,
         };
 
         setPeople((prev) => {
@@ -261,7 +261,7 @@ const App: React.FC = () => {
   const handleReviewDecision = async (id: string, decision: 'verified' | 'rejected') => {
     const person = people.find((p) => p.id === id);
     if (!person) return;
-    const updated: Person = { ...person, verificationStatus: decision };
+    const updated: Person = { ...person, verification_status: decision };
     setPeople((prev) => prev.map((p) => (p.id === id ? updated : p)));
     await syncPerson(updated);
   };
@@ -537,8 +537,8 @@ const App: React.FC = () => {
                 children: (
                   <form onSubmit={handleAddPerson} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField label={t('applicantFirstName')} name="applicantFirstName" type="text" value={formData.applicantFirstName} required onChange={(v) => setFormData({ ...formData, applicantFirstName: v })} isDarkMode={false} />
-                      <FormField label={t('applicantLastName')} name="applicantLastName" type="text" value={formData.applicantLastName} required onChange={(v) => setFormData({ ...formData, applicantLastName: v })} isDarkMode={false} />
+                      <FormField label={t('applicantFirstName')} name="applicantFirstName" type="text" value={formData.applicant_first_name} required onChange={(v) => setFormData({ ...formData, applicant_first_name: v })} isDarkMode={false} />
+                      <FormField label={t('applicantLastName')} name="applicantLastName" type="text" value={formData.applicant_last_name} required onChange={(v) => setFormData({ ...formData, applicant_last_name: v })} isDarkMode={false} />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField label={t('street')} name="applicantStreet" type="text" value={formData.applicantStreet} required onChange={(v) => setFormData({ ...formData, applicantStreet: v })} isDarkMode={false} />
@@ -595,13 +595,13 @@ const App: React.FC = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-semibold mb-2">{t('notificationMethod')}</label>
-                      <select value={formData.notificationMethod} onChange={(e) => setFormData({ ...formData, notificationMethod: e.target.value as 'paper' | 'electronic' })} className="w-full px-3 py-2 border border-gray-300 rounded">
+                      <select value={formData.notification_method} onChange={(e) => setFormData({ ...formData, notificationMethod: e.target.value as 'paper' | 'electronic' })} className="w-full px-3 py-2 border border-gray-300 rounded">
                         <option value="paper">{t('notificationPaper')}</option>
                         <option value="electronic">{t('notificationElectronic')}</option>
                       </select>
                     </div>
-                    {formData.notificationMethod === 'electronic' && (
-                      <FormField label={t('emailAddress')} name="emailAddress" type="email" value={formData.emailAddress} onChange={(v) => setFormData({ ...formData, emailAddress: v })} isDarkMode={false} />
+                    {formData.notification_method === 'electronic' && (
+                      <FormField label={t('emailAddress')} name="emailAddress" type="email" value={formData.email_address} onChange={(v) => setFormData({ ...formData, emailAddress: v })} isDarkMode={false} />
                     )}
                     <button type="submit" className="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700">
                       {t('generateIdentity')}

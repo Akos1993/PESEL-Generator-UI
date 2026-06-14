@@ -5,59 +5,59 @@ export type DbStatus = 'connecting' | 'connected' | 'disconnected' | 'unconfigur
 
 export interface Person {
   id: string;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   dob: string;
   gender: 'male' | 'female';
   nationality: string;
   pesel: string;
-  createdAt: number;
-  verificationStatus: VerificationStatus;
-  verificationDetails?: string;
-  idPhoto?: string;
+  created_at: number;
+  verification_status: VerificationStatus;
+  verification_details?: string;
+  id_photo?: string;
 
   // ── Wnioskodawca (Applicant Info - Section 1)
-  applicantFirstName: string;
-  applicantLastName: string;
-  applicantStreet: string;
-  applicantHouseNumber: string;
-  applicantApartmentNumber?: string;
-  applicantPostalCode: string;
-  applicantCity: string;
+  applicant_first_name: string;
+  applicant_last_name: string;
+  applicant_street: string;
+  applicant_house_number: string;
+  applicant_apartment_number?: string;
+  applicant_postal_code: string;
+  applicant_city: string;
 
   // ── Person Additional Info (Section 2)
-  secondName?: string;
-  otherNames?: string;
-  maidenName?: string;
-  birthPlace?: string;
-  countryOfBirth?: string;
-  countryOfResidence?: string;
-  citizenshipStatus?: 'polish' | 'stateless' | 'other';
+  second_name?: string;
+  other_names?: string;
+  maiden_name?: string;
+  birth_place?: string;
+  country_of_birth?: string;
+  country_of_residence?: string;
+  citizenship_status?: 'polish' | 'stateless' | 'other';
 
   // ── Family Info (Section 3)
-  fatherFirstName?: string;
-  fatherMaidenName?: string;
-  motherFirstName?: string;
-  motherMaidenName?: string;
-  civRegistryOffice?: string;
+  father_first_name?: string;
+  father_maiden_name?: string;
+  mother_first_name?: string;
+  mother_maiden_name?: string;
+  civ_registry_office?: string;
 
   // ── Document Info (Section 3)
-  idSeriesNumber?: string;
-  idValidityDate?: string;
-  idIssuingAuthority?: string;
-  passportSeriesNumber?: string;
-  passportValidityDate?: string;
-  otherDocSeriesNumber?: string;
-  otherDocValidityDate?: string;
+  id_series_number?: string;
+  id_validity_date?: string;
+  id_issuing_authority?: string;
+  passport_series_number?: string;
+  passport_validity_date?: string;
+  other_doc_series_number?: string;
+  other_doc_validity_date?: string;
 
   // ── Marital Status (Section 4)
-  maritalStatus?: 'single' | 'married' | 'divorced' | 'widow' | 'widower';
-  spouseFirstName?: string;
-  spouseMaidenName?: string;
-  spousePesel?: string;
+  marital_status?: 'single' | 'married' | 'divorced' | 'widow' | 'widower';
+  spouse_first_name?: string;
+  spouse_maiden_name?: string;
+  spouse_pesel?: string;
 
   // ── Notification (Section 6)
-  notificationMethod?: 'paper' | 'electronic';
-  emailAddress?: string;
-  epuapAddress?: string;
+  notification_method?: 'paper' | 'electronic';
+  email_address?: string;
+  epuap_address?: string;
 }
