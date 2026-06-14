@@ -143,19 +143,35 @@ const App: React.FC = () => {
   const handleAddPerson = (e: React.FormEvent): void => {
     e.preventDefault();
     const {
-      applicant_first_name, applicant_last_name, applicant_street, applicant_house_number,
-      applicant_postal_code, applicant_city,
-      first_name, last_name, dob, nationality, gender, citizenship_status,
-      father_first_name, father_maiden_name, mother_first_name, mother_maiden_name,
-      notification_method, email_address, epuap_address,
+      applicantFirstName, applicantLastName, applicantStreet, applicantHouseNumber,
+      applicantPostalCode, applicantCity,
+      firstName, lastName, dob, nationality, gender, citizenshipStatus,
+      fatherFirstName, fatherMaidenName, motherFirstName, motherMaidenName,
+      notificationMethod, emailAddress, epuapAddress,
     } = formData;
 
-    if (!applicant_first_name || !applicant_last_name || !applicant_street ||
-        !applicant_house_number || !applicant_postal_code || !applicant_city ||
-        !first_name || !last_name || !dob || !nationality ||
-        !father_first_name || !father_maiden_name || !mother_first_name || !mother_maiden_name ||
-        !notification_method || (notification_method === 'electronic' && !email_address && !epuap_address)) {
-      alert('Please fill in all required fields');
+    const missingFields: string[] = [];
+    if (!applicantFirstName) missingFields.push('Applicant First Name');
+    if (!applicantLastName) missingFields.push('Applicant Last Name');
+    if (!applicantStreet) missingFields.push('Street');
+    if (!applicantHouseNumber) missingFields.push('House Number');
+    if (!applicantPostalCode) missingFields.push('Postal Code');
+    if (!applicantCity) missingFields.push('City');
+    if (!firstName) missingFields.push('First Name');
+    if (!lastName) missingFields.push('Last Name');
+    if (!dob) missingFields.push('Date of Birth');
+    if (!nationality) missingFields.push('Nationality');
+    if (!fatherFirstName) missingFields.push('Father First Name');
+    if (!fatherMaidenName) missingFields.push('Father Maiden Name');
+    if (!motherFirstName) missingFields.push('Mother First Name');
+    if (!motherMaidenName) missingFields.push('Mother Maiden Name');
+    if (!notificationMethod) missingFields.push('Notification Method');
+    if (notificationMethod === 'electronic' && !emailAddress && !epuapAddress) {
+      missingFields.push('Email Address or ePUAP Address');
+    }
+
+    if (missingFields.length > 0) {
+      alert(`Please fill in required fields:\n\n${missingFields.join('\n')}`);
       return;
     }
 
