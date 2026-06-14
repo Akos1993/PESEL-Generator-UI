@@ -14,38 +14,42 @@ import MainLayout from './MainLayout';
 import Accordion from './Accordion';
 
 type FormDataType = {
-  applicant_first_name: string; applicant_last_name: string; applicant_street: string;
-  applicant_house_number: string; applicant_apartment_number: string; applicant_postal_code: string; applicant_city: string;
-  first_name: string; last_name: string; second_name: string; other_names: string; maiden_name: string;
+  applicantFirstName: string; applicantLastName: string; applicantStreet: string;
+  applicantHouseNumber: string; applicantApartmentNumber: string; applicantPostalCode: string; applicantCity: string;
+  firstName: string; lastName: string; secondName: string; otherNames: string; maidenName: string;
   dob: string; gender: 'male' | 'female';
-  birth_place: string; country_of_birth: string; country_of_residence: string;
-  nationality: string; citizenship_status: 'polish' | 'stateless' | 'other';
-  father_first_name: string; father_maiden_name: string; mother_first_name: string; mother_maiden_name: string; civ_registry_office: string;
-  id_series_number: string; id_validity_date: string; id_issuing_authority: string;
-  passport_series_number: string; passport_validity_date: string;
-  other_doc_series_number: string; other_doc_validity_date: string;
-  marital_status: 'single' | 'married' | 'divorced' | 'widow' | 'widower';
-  spouse_first_name: string; spouse_maiden_name: string; spouse_pesel: string;
-  notification_method: 'paper' | 'electronic';
-  email_address: string; epuap_address: string;
+  birthPlace: string; countryOfBirth: string; countryOfResidence: string;
+  nationality: string; citizenshipStatus: 'polish' | 'stateless' | 'other';
+  fatherFirstName: string; fatherMaidenName: string; motherFirstName: string; motherMaidenName: string; civRegistryOffice: string;
+  idSeriesNumber: string; idValidityDate: string; idIssuingAuthority: string;
+  passportSeriesNumber: string; passportValidityDate: string;
+  otherDocSeriesNumber: string; otherDocValidityDate: string;
+  maritalStatus: 'single' | 'married' | 'divorced' | 'widow' | 'widower';
+  spouseFirstName: string; spouseMaidenName: string; spousePesel: string;
+  notificationMethod: 'paper' | 'electronic';
+  emailAddress: string; epuapAddress: string;
+  idPhoto: string;
+  proofOfResidence: string;
 };
 
 const createLangText = (lang: Language, pl: string, ukr: string, en: string): string =>
   lang === 'PL' ? pl : lang === 'UKR' ? ukr : en;
 
 const INITIAL_FORM_DATA: FormDataType = {
-  applicant_first_name: '', applicant_last_name: '', applicant_street: '',
-  applicant_house_number: '', applicant_apartment_number: '', applicant_postal_code: '', applicant_city: '',
-  first_name: '', last_name: '', second_name: '', other_names: '', maiden_name: '',
+  applicantFirstName: '', applicantLastName: '', applicantStreet: '',
+  applicantHouseNumber: '', applicantApartmentNumber: '', applicantPostalCode: '', applicantCity: '',
+  firstName: '', lastName: '', secondName: '', otherNames: '', maidenName: '',
   dob: '', gender: 'male',
-  birth_place: '', country_of_birth: '', country_of_residence: '',
-  nationality: '', citizenship_status: 'polish',
-  father_first_name: '', father_maiden_name: '', mother_first_name: '', mother_maiden_name: '', civ_registry_office: '',
-  id_series_number: '', id_validity_date: '', id_issuing_authority: '',
-  passport_series_number: '', passport_validity_date: '',
-  other_doc_series_number: '', other_doc_validity_date: '',
-  marital_status: 'single', spouse_first_name: '', spouse_maiden_name: '', spouse_pesel: '',
-  notification_method: 'paper', email_address: '', epuap_address: '',
+  birthPlace: '', countryOfBirth: '', countryOfResidence: '',
+  nationality: '', citizenshipStatus: 'polish',
+  fatherFirstName: '', fatherMaidenName: '', motherFirstName: '', motherMaidenName: '', civRegistryOffice: '',
+  idSeriesNumber: '', idValidityDate: '', idIssuingAuthority: '',
+  passportSeriesNumber: '', passportValidityDate: '',
+  otherDocSeriesNumber: '', otherDocValidityDate: '',
+  maritalStatus: 'single', spouseFirstName: '', spouseMaidenName: '', spousePesel: '',
+  notificationMethod: 'paper', emailAddress: '', epuapAddress: '',
+  idPhoto: '',
+  proofOfResidence: '',
 };
 
 const App: React.FC = () => {
@@ -322,67 +326,6 @@ const App: React.FC = () => {
     setView('generator');
   };
 
-  const generateTestPeople = async (): Promise<void> => {
-    const names = ['John', 'Jane', 'Michael', 'Sarah', 'David', 'Emma', 'Robert', 'Lisa'];
-    const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis'];
-    const cities = ['Warsaw', 'Krakow', 'Gdansk', 'Wroclaw', 'Poznań', 'Lodz'];
-
-    for (let i = 0; i < 3; i++) {
-      const firstName = names[Math.floor(Math.random() * names.length)];
-      const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-      const dob = new Date(1980 + Math.random() * 40, Math.random() * 12, 1 + Math.random() * 28);
-      const gender = Math.random() > 0.5 ? 'male' : 'female';
-
-      const testPerson: Person = {
-        id: crypto.randomUUID(),
-        dob: dob.toISOString().split('T')[0],
-        gender,
-        nationality: 'Polish',
-        firstname: firstName,
-        lastname: lastName,
-        applicantfirstname: firstName,
-        applicantlastname: lastName,
-        applicantstreet: `Test Street ${i + 1}`,
-        applicanthousenumber: `${i + 1}`,
-        applicantpostalcode: '00-000',
-        applicantcity: cities[Math.floor(Math.random() * cities.length)],
-        secondname: '',
-        othernames: '',
-        maidenname: '',
-        birthplace: 'Poland',
-        countryofbirth: 'Poland',
-        countryofresidence: 'Poland',
-        citizenshipstatus: 'polish',
-        fatherfirstname: 'Test Father',
-        fathermaidenname: 'TestFather',
-        motherfirstname: 'Test Mother',
-        mothermaidenname: 'TestMother',
-        civregistryoffice: 'Test Office',
-        idseriesnumber: `TEST${Math.random().toString().slice(2, 6)}`,
-        idvaliditydate: new Date(2030, 0, 1).toISOString().split('T')[0],
-        idissuingauthority: 'Test Authority',
-        passportseriesnumber: '',
-        passportvaliditydate: '',
-        otherdocseriesnumber: '',
-        otherdocvaliditydate: '',
-        maritalstatus: 'single',
-        spousefirstname: '',
-        spousemaidenname: '',
-        spousepesel: '',
-        notificationmethod: 'paper',
-        emailaddress: `test${i}@example.com`,
-        epuapaddress: '',
-        pesel: generatePESEL(dob, gender),
-        createdAt: Date.now(),
-        verificationdetails: 'Test data - auto-generated',
-        verificationstatus: 'none',
-      };
-
-      setPeople((prev) => [testPerson, ...prev]);
-      await syncPerson(testPerson).catch(() => {});
-    }
-    alert('Generated 3 test people');
-  };
 
   const exportData = (): void => {
     const blob = new Blob([JSON.stringify(people, null, 2)], { type: 'application/json' });
@@ -595,16 +538,6 @@ const App: React.FC = () => {
           <h1 className="text-3xl font-bold mb-2">{t('title')}</h1>
           <p className="text-gray-600 mb-8">{t('subtitle')}</p>
 
-          <div className="mb-6">
-            <button
-              onClick={generateTestPeople}
-              className="px-3 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 opacity-50 hover:opacity-100 transition-opacity"
-              title="Debug: Generate 3 test people"
-            >
-              🧪 Generate Test Data
-            </button>
-          </div>
-
           {submittedApplication && !activePerson ? (
             <div className="mb-8 p-6 bg-amber-50 border border-amber-200 rounded-lg">
               <h3 className="text-lg font-bold text-amber-900 mb-2">{t('underReview')}</h3>
@@ -751,6 +684,46 @@ const App: React.FC = () => {
                         <FormField label={`Spouse PESEL ${t('optional')}`} name="spousePesel" type="text" value={formData.spousePesel} onChange={(v) => setFormData({ ...formData, spousePesel: v })} isDarkMode={false} />
                       </div>
                     )}
+
+                    <div className="border-t pt-6 mt-6">
+                      <h4 className="font-semibold text-lg mb-4">Document Upload</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg">
+                          <label className="block text-sm font-semibold mb-3">ID Document (Passport, ID Card, etc.)</label>
+                          <input
+                            type="file"
+                            accept="image/*,.pdf"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                setFormData({ ...formData, idPhoto: file.name });
+                              }
+                            }}
+                            className="w-full text-sm text-gray-600 cursor-pointer"
+                          />
+                          <p className="text-xs text-gray-500 mt-2">Max 15MB. Formats: JPG, PNG, PDF</p>
+                          {formData.idPhoto && <p className="text-xs text-green-600 mt-1">✓ {formData.idPhoto}</p>}
+                        </div>
+
+                        <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg">
+                          <label className="block text-sm font-semibold mb-3">Proof of Residence (>6 months)</label>
+                          <input
+                            type="file"
+                            accept="image/*,.pdf"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                setFormData({ ...formData, proofOfResidence: file.name });
+                              }
+                            }}
+                            className="w-full text-sm text-gray-600 cursor-pointer"
+                          />
+                          <p className="text-xs text-gray-500 mt-2">Max 15MB. Formats: JPG, PNG, PDF</p>
+                          {formData.proofOfResidence && <p className="text-xs text-green-600 mt-1">✓ {formData.proofOfResidence}</p>}
+                        </div>
+                      </div>
+                    </div>
+
                     <button type="submit" className="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700">
                       {t('generateIdentity')}
                     </button>
