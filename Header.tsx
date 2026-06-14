@@ -1,11 +1,9 @@
 import React from 'react';
-import { Sun, Moon, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { Language } from './types';
 import { LANGUAGE_CONFIG } from './constants';
 
 interface HeaderProps {
-  isDarkMode: boolean;
-  setIsDarkMode: (value: boolean) => void;
   lang: Language;
   setLang: (lang: Language) => void;
   onMenuToggle: () => void;
@@ -13,8 +11,6 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({
-  isDarkMode,
-  setIsDarkMode,
   lang,
   setLang,
   onMenuToggle,
@@ -64,15 +60,6 @@ const Header: React.FC<HeaderProps> = ({
               </button>
             ))}
           </div>
-
-          {/* Theme toggle */}
-          <button
-            onClick={() => setIsDarkMode(!isDarkMode)}
-            className="p-2 hover:bg-gray-100 rounded-lg text-gray-700 transition-colors"
-            title="Toggle dark mode"
-          >
-            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
 
           {/* mObywatel button */}
           <button className="hidden md:flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 font-semibold text-sm transition-colors">

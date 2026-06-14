@@ -26,7 +26,6 @@ const App: React.FC = () => {
   const [dbMessage, setDbMessage] = useState('');
 
   // ── UI preferences
-  const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('pesel_theme') === 'dark');
   const [lang, setLang] = useState<Language>(() => (localStorage.getItem('pesel_lang') as Language) || 'PL');
   const [fontScale, setFontScale] = useState(() => Number(localStorage.getItem('pesel_font_scale')) || 1);
   const [isHighContrast, setIsHighContrast] = useState(() => localStorage.getItem('pesel_high_contrast') === 'true');
@@ -63,12 +62,10 @@ const App: React.FC = () => {
 
   // ── Persist settings
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', isDarkMode);
-    localStorage.setItem('pesel_theme', isDarkMode ? 'dark' : 'light');
     localStorage.setItem('pesel_lang', lang);
     localStorage.setItem('pesel_font_scale', fontScale.toString());
     localStorage.setItem('pesel_high_contrast', isHighContrast.toString());
-  }, [isDarkMode, lang, fontScale, isHighContrast]);
+  }, [lang, fontScale, isHighContrast]);
 
   // ── DB initialisation
   useEffect(() => {
@@ -325,7 +322,7 @@ const App: React.FC = () => {
     return (
       <AdminView
         people={people}
-        isDarkMode={isDarkMode}
+        isDarkMode={false}
         dbStatus={dbStatus}
         dbMessage={dbMessage}
         t={t}
@@ -342,7 +339,7 @@ const App: React.FC = () => {
     return (
       <ReviewView
         people={people}
-        isDarkMode={isDarkMode}
+        isDarkMode={false}
         t={t}
         onApprove={(id) => void handleReviewDecision(id, 'verified')}
         onReject={(id) => void handleReviewDecision(id, 'rejected')}
@@ -354,7 +351,7 @@ const App: React.FC = () => {
   if (view === 'login') {
     return (
       <LoginView
-        isDarkMode={isDarkMode}
+        isDarkMode={false}
         t={t}
         adminPass={adminPass}
         setAdminPass={setAdminPass}
@@ -367,8 +364,6 @@ const App: React.FC = () => {
   // ── USER VIEW (default)
   return (
     <MainLayout
-      isDarkMode={isDarkMode}
-      setIsDarkMode={setIsDarkMode}
       lang={lang}
       setLang={setLang}
       currentView={view}
@@ -411,17 +406,17 @@ const App: React.FC = () => {
                 children: (
                   <form onSubmit={handleAddPerson} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField label={t('applicantFirstName')} name="applicantFirstName" type="text" value={formData.applicantFirstName} required onChange={(v) => setFormData({ ...formData, applicantFirstName: v })} isDarkMode={isDarkMode} />
-                      <FormField label={t('applicantLastName')} name="applicantLastName" type="text" value={formData.applicantLastName} required onChange={(v) => setFormData({ ...formData, applicantLastName: v })} isDarkMode={isDarkMode} />
+                      <FormField label={t('applicantFirstName')} name="applicantFirstName" type="text" value={formData.applicantFirstName} required onChange={(v) => setFormData({ ...formData, applicantFirstName: v })} isDarkMode={false} />
+                      <FormField label={t('applicantLastName')} name="applicantLastName" type="text" value={formData.applicantLastName} required onChange={(v) => setFormData({ ...formData, applicantLastName: v })} isDarkMode={false} />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField label={t('street')} name="applicantStreet" type="text" value={formData.applicantStreet} required onChange={(v) => setFormData({ ...formData, applicantStreet: v })} isDarkMode={isDarkMode} />
-                      <FormField label={t('houseNumber')} name="applicantHouseNumber" type="text" value={formData.applicantHouseNumber} required onChange={(v) => setFormData({ ...formData, applicantHouseNumber: v })} isDarkMode={isDarkMode} />
+                      <FormField label={t('street')} name="applicantStreet" type="text" value={formData.applicantStreet} required onChange={(v) => setFormData({ ...formData, applicantStreet: v })} isDarkMode={false} />
+                      <FormField label={t('houseNumber')} name="applicantHouseNumber" type="text" value={formData.applicantHouseNumber} required onChange={(v) => setFormData({ ...formData, applicantHouseNumber: v })} isDarkMode={false} />
                     </div>
-                    <FormField label={`${t('apartmentNumber')} ${t('optional')}`} name="applicantApartmentNumber" type="text" value={formData.applicantApartmentNumber} onChange={(v) => setFormData({ ...formData, applicantApartmentNumber: v })} isDarkMode={isDarkMode} />
+                    <FormField label={`${t('apartmentNumber')} ${t('optional')}`} name="applicantApartmentNumber" type="text" value={formData.applicantApartmentNumber} onChange={(v) => setFormData({ ...formData, applicantApartmentNumber: v })} isDarkMode={false} />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField label={t('postalCode')} name="applicantPostalCode" type="text" value={formData.applicantPostalCode} required onChange={(v) => setFormData({ ...formData, applicantPostalCode: v })} isDarkMode={isDarkMode} />
-                      <FormField label={t('city')} name="applicantCity" type="text" value={formData.applicantCity} required onChange={(v) => setFormData({ ...formData, applicantCity: v })} isDarkMode={isDarkMode} />
+                      <FormField label={t('postalCode')} name="applicantPostalCode" type="text" value={formData.applicantPostalCode} required onChange={(v) => setFormData({ ...formData, applicantPostalCode: v })} isDarkMode={false} />
+                      <FormField label={t('city')} name="applicantCity" type="text" value={formData.applicantCity} required onChange={(v) => setFormData({ ...formData, applicantCity: v })} isDarkMode={false} />
                     </div>
                   </form>
                 ),
@@ -433,12 +428,12 @@ const App: React.FC = () => {
                 children: (
                   <form className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <FormField label={t('firstName')} name="firstName" type="text" value={formData.firstName} required onChange={(v) => setFormData({ ...formData, firstName: v })} isDarkMode={isDarkMode} />
-                      <FormField label={t('lastName')} name="lastName" type="text" value={formData.lastName} required onChange={(v) => setFormData({ ...formData, lastName: v })} isDarkMode={isDarkMode} />
-                      <FormField label={t('nationality')} name="nationality" type="text" value={formData.nationality} required onChange={(v) => setFormData({ ...formData, nationality: v })} isDarkMode={isDarkMode} />
+                      <FormField label={t('firstName')} name="firstName" type="text" value={formData.firstName} required onChange={(v) => setFormData({ ...formData, firstName: v })} isDarkMode={false} />
+                      <FormField label={t('lastName')} name="lastName" type="text" value={formData.lastName} required onChange={(v) => setFormData({ ...formData, lastName: v })} isDarkMode={false} />
+                      <FormField label={t('nationality')} name="nationality" type="text" value={formData.nationality} required onChange={(v) => setFormData({ ...formData, nationality: v })} isDarkMode={false} />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField label={t('dob')} name="dob" type="date" value={formData.dob} required onChange={(v) => setFormData({ ...formData, dob: v })} isDarkMode={isDarkMode} />
+                      <FormField label={t('dob')} name="dob" type="date" value={formData.dob} required onChange={(v) => setFormData({ ...formData, dob: v })} isDarkMode={false} />
                       <div>
                         <label className="block text-sm font-semibold mb-2">{t('gender')}</label>
                         <select value={formData.gender} onChange={(e) => setFormData({ ...formData, gender: e.target.value as 'male' | 'female' })} className="w-full px-3 py-2 border border-gray-300 rounded">
@@ -448,12 +443,12 @@ const App: React.FC = () => {
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField label={t('fatherFirstName')} name="fatherFirstName" type="text" value={formData.fatherFirstName} required onChange={(v) => setFormData({ ...formData, fatherFirstName: v })} isDarkMode={isDarkMode} />
-                      <FormField label={t('fatherMaidenName')} name="fatherMaidenName" type="text" value={formData.fatherMaidenName} required onChange={(v) => setFormData({ ...formData, fatherMaidenName: v })} isDarkMode={isDarkMode} />
+                      <FormField label={t('fatherFirstName')} name="fatherFirstName" type="text" value={formData.fatherFirstName} required onChange={(v) => setFormData({ ...formData, fatherFirstName: v })} isDarkMode={false} />
+                      <FormField label={t('fatherMaidenName')} name="fatherMaidenName" type="text" value={formData.fatherMaidenName} required onChange={(v) => setFormData({ ...formData, fatherMaidenName: v })} isDarkMode={false} />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField label={t('motherFirstName')} name="motherFirstName" type="text" value={formData.motherFirstName} required onChange={(v) => setFormData({ ...formData, motherFirstName: v })} isDarkMode={isDarkMode} />
-                      <FormField label={t('motherMaidenName')} name="motherMaidenName" type="text" value={formData.motherMaidenName} required onChange={(v) => setFormData({ ...formData, motherMaidenName: v })} isDarkMode={isDarkMode} />
+                      <FormField label={t('motherFirstName')} name="motherFirstName" type="text" value={formData.motherFirstName} required onChange={(v) => setFormData({ ...formData, motherFirstName: v })} isDarkMode={false} />
+                      <FormField label={t('motherMaidenName')} name="motherMaidenName" type="text" value={formData.motherMaidenName} required onChange={(v) => setFormData({ ...formData, motherMaidenName: v })} isDarkMode={false} />
                     </div>
                   </form>
                 ),
@@ -464,8 +459,8 @@ const App: React.FC = () => {
                 children: (
                   <form onSubmit={handleAddPerson} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField label={t('idSeriesNumber')} name="idSeriesNumber" type="text" value={formData.idSeriesNumber} onChange={(v) => setFormData({ ...formData, idSeriesNumber: v })} isDarkMode={isDarkMode} />
-                      <FormField label={t('idValidityDate')} name="idValidityDate" type="date" value={formData.idValidityDate} onChange={(v) => setFormData({ ...formData, idValidityDate: v })} isDarkMode={isDarkMode} />
+                      <FormField label={t('idSeriesNumber')} name="idSeriesNumber" type="text" value={formData.idSeriesNumber} onChange={(v) => setFormData({ ...formData, idSeriesNumber: v })} isDarkMode={false} />
+                      <FormField label={t('idValidityDate')} name="idValidityDate" type="date" value={formData.idValidityDate} onChange={(v) => setFormData({ ...formData, idValidityDate: v })} isDarkMode={false} />
                     </div>
                     <div>
                       <label className="block text-sm font-semibold mb-2">{t('notificationMethod')}</label>
@@ -475,7 +470,7 @@ const App: React.FC = () => {
                       </select>
                     </div>
                     {formData.notificationMethod === 'electronic' && (
-                      <FormField label={t('emailAddress')} name="emailAddress" type="email" value={formData.emailAddress} onChange={(v) => setFormData({ ...formData, emailAddress: v })} isDarkMode={isDarkMode} />
+                      <FormField label={t('emailAddress')} name="emailAddress" type="email" value={formData.emailAddress} onChange={(v) => setFormData({ ...formData, emailAddress: v })} isDarkMode={false} />
                     )}
                     <button type="submit" className="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700">
                       {t('generateIdentity')}
@@ -538,7 +533,7 @@ const App: React.FC = () => {
       {/* Modals */}
       <A11yModal
         isOpen={isA11yOpen}
-        isDarkMode={isDarkMode}
+        isDarkMode={false}
         t={t}
         fontScale={fontScale}
         setFontScale={setFontScale}
@@ -549,7 +544,7 @@ const App: React.FC = () => {
 
       <PeselModal
         explanation={aiExplanation}
-        isDarkMode={isDarkMode}
+        isDarkMode={false}
         t={t}
         onClose={() => setAiExplanation(null)}
       />
