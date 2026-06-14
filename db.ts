@@ -67,7 +67,10 @@ export async function dbSyncPerson(person: Person): Promise<void> {
   const { error } = await getClient()
     .from(TABLE)
     .upsert(person, { onConflict: 'id' });
-  if (error) throw error;
+  if (error) {
+    const msg = error instanceof Error ? error.message : JSON.stringify(error);
+    throw new Error(`Failed to sync person to Supabase: ${msg}`);
+  }
 }
 
 export async function dbDeletePerson(id: string): Promise<void> {
@@ -98,7 +101,10 @@ export async function dbUploadDocument(file: File, pesel: string): Promise<strin
     .from(BUCKET)
     .upload(path, file, { cacheControl: '3600', upsert: true });
 
-  if (uploadError) throw uploadError;
+  if (uploadError) {
+    const msg = uploadError instanceof Error ? uploadError.message : JSON.stringify(uploadError);
+    throw new Error(`Document upload to Supabase failed: ${msg}`);
+  }
 
   const { data } = getClient()
     .storage
