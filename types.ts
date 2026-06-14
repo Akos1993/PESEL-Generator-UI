@@ -5,14 +5,11 @@ export type DbStatus = 'connecting' | 'connected' | 'disconnected' | 'unconfigur
 
 export interface Person {
   id: string;
-  firstname: string;
-  lastname: string;
   dob: string;
   gender: 'male' | 'female';
   nationality: string;
   pesel: string;
-  createdat: number;
-  verificationstatus: VerificationStatus;
+  createdAt: number;
   verificationdetails?: string;
   idphoto?: string;
 
@@ -60,4 +57,7 @@ export interface Person {
   notificationmethod?: 'paper' | 'electronic';
   emailaddress?: string;
   epuapaddress?: string;
+
+  // ── Verification Status
+  verificationstatus?: VerificationStatus;
 }

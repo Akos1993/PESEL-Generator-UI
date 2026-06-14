@@ -177,8 +177,6 @@ const App: React.FC = () => {
 
     const newPerson: Person = {
       id: crypto.randomUUID(),
-      firstname: firstName,
-      lastname: lastName,
       dob, gender, nationality,
       applicantfirstname: applicantFirstName,
       applicantlastname: applicantLastName,
@@ -214,7 +212,8 @@ const App: React.FC = () => {
       emailaddress: emailAddress,
       epuapaddress: epuapAddress,
       pesel: generatePESEL(new Date(dob), gender),
-      createdat: Date.now(),
+      createdAt: Date.now(),
+      verificationdetails: '',
       verificationstatus: 'none',
     };
 
