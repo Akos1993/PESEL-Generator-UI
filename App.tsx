@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, IdCard, Volume2, Loader2, HelpCircle, Accessibility, Upload, ShieldCheck } from 'lucide-react';
+import { Loader2, HelpCircle, Upload } from 'lucide-react';
 import { Language, Person, View, DbStatus } from './types';
 import { ADMIN_PASS, TRANSLATIONS, TranslationKey } from './constants';
 import { generatePESEL, getPeselExplanation } from './utils';
@@ -10,9 +10,43 @@ import AdminView from './AdminView';
 import ReviewView from './ReviewView';
 import LoginView from './LoginView';
 import A11yModal from './A11yModal';
-import PeselModal from './PeselModal';
 import MainLayout from './MainLayout';
 import Accordion from './Accordion';
+
+type FormDataType = {
+  applicantFirstName: string; applicantLastName: string; applicantStreet: string;
+  applicantHouseNumber: string; applicantApartmentNumber: string; applicantPostalCode: string; applicantCity: string;
+  firstName: string; lastName: string; secondName: string; otherNames: string; maidenName: string;
+  dob: string; gender: 'male' | 'female';
+  birthPlace: string; countryOfBirth: string; countryOfResidence: string;
+  nationality: string; citizenshipStatus: 'polish' | 'stateless' | 'other';
+  fatherFirstName: string; fatherMaidenName: string; motherFirstName: string; motherMaidenName: string; civRegistryOffice: string;
+  idSeriesNumber: string; idValidityDate: string; idIssuingAuthority: string;
+  passportSeriesNumber: string; passportValidityDate: string;
+  otherDocSeriesNumber: string; otherDocValidityDate: string;
+  maritalStatus: 'single' | 'married' | 'divorced' | 'widow' | 'widower';
+  spouseFirstName: string; spouseMaidenName: string; spousePesel: string;
+  notificationMethod: 'paper' | 'electronic';
+  emailAddress: string; epuapAddress: string;
+};
+
+const createLangText = (lang: Language, pl: string, ukr: string, en: string): string =>
+  lang === 'PL' ? pl : lang === 'UKR' ? ukr : en;
+
+const INITIAL_FORM_DATA: FormDataType = {
+  applicantFirstName: '', applicantLastName: '', applicantStreet: '',
+  applicantHouseNumber: '', applicantApartmentNumber: '', applicantPostalCode: '', applicantCity: '',
+  firstName: '', lastName: '', secondName: '', otherNames: '', maidenName: '',
+  dob: '', gender: 'male',
+  birthPlace: '', countryOfBirth: '', countryOfResidence: '',
+  nationality: '', citizenshipStatus: 'polish',
+  fatherFirstName: '', fatherMaidenName: '', motherFirstName: '', motherMaidenName: '', civRegistryOffice: '',
+  idSeriesNumber: '', idValidityDate: '', idIssuingAuthority: '',
+  passportSeriesNumber: '', passportValidityDate: '',
+  otherDocSeriesNumber: '', otherDocValidityDate: '',
+  maritalStatus: 'single', spouseFirstName: '', spouseMaidenName: '', spousePesel: '',
+  notificationMethod: 'paper', emailAddress: '', epuapAddress: '',
+};
 
 const App: React.FC = () => {
   // ── Navigation
@@ -41,31 +75,12 @@ const App: React.FC = () => {
   const [isA11yOpen, setIsA11yOpen] = useState(false);
 
   // ── Form
-  const [formData, setFormData] = useState({
-    applicantFirstName: '', applicantLastName: '', applicantStreet: '',
-    applicantHouseNumber: '', applicantApartmentNumber: '', applicantPostalCode: '', applicantCity: '',
-    firstName: '', lastName: '', secondName: '', otherNames: '', maidenName: '',
-    dob: '', gender: 'male' as 'male' | 'female',
-    birthPlace: '', countryOfBirth: '', countryOfResidence: '', nationality: '', citizenshipStatus: 'polish' as 'polish' | 'stateless' | 'other',
-    fatherFirstName: '', fatherMaidenName: '', motherFirstName: '', motherMaidenName: '', civRegistryOffice: '',
-    idSeriesNumber: '', idValidityDate: '', idIssuingAuthority: '',
-    passportSeriesNumber: '', passportValidityDate: '',
-    otherDocSeriesNumber: '', otherDocValidityDate: '',
-    maritalStatus: 'single' as 'single' | 'married' | 'divorced' | 'widow' | 'widower',
-    spouseFirstName: '', spouseMaidenName: '', spousePesel: '',
-    notificationMethod: 'paper' as 'paper' | 'electronic',
-    emailAddress: '', epuapAddress: '',
-  });
+  const [formData, setFormData] = useState<FormDataType>(INITIAL_FORM_DATA);
   const [adminPass, setAdminPass] = useState('');
 
   // ── Verification
   const [isVerifying, setIsVerifying] = useState(false);
-  const [aiExplanation, setAiExplanation] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // ── TTS / Dictation
-  const [audioLoadingId, setAudioLoadingId] = useState<string | null>(null);
-  const [dictatingField, setDictatingField] = useState<string | null>(null);
 
   const t = (key: TranslationKey): string => TRANSLATIONS[lang][key] ?? TRANSLATIONS.PL[key];
 
@@ -124,64 +139,6 @@ const App: React.FC = () => {
     }
   };
 
-  // ── TTS
-  const handleTTS = (text: string, id = 'tts'): void => {
-    if (!('speechSynthesis' in window)) return;
-    if (audioLoadingId === id) {
-      window.speechSynthesis.cancel();
-      setAudioLoadingId(null);
-      return;
-    }
-    setAudioLoadingId(id);
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = lang === 'PL' ? 'pl-PL' : lang === 'UKR' ? 'uk-UA' : 'en-US';
-    const clearLoading = (): void => setAudioLoadingId(null);
-    utterance.onend = clearLoading;
-    utterance.onerror = clearLoading;
-    window.speechSynthesis.speak(utterance);
-  };
-
-  const handleReadAloudIdentity = (p: Person): void => {
-    const text =
-      lang === 'PL'
-        ? `Tożsamość: ${p.firstName} ${p.lastName}. Obywatelstwo: ${p.nationality}. Urodzony: ${p.dob}. PESEL: ${p.pesel}.`
-        : lang === 'UKR'
-          ? `Особа: ${p.firstName} ${p.lastName}. Громадянство: ${p.nationality}. Народжений: ${p.dob}. PESEL: ${p.pesel}.`
-          : `Identity: ${p.firstName} ${p.lastName}. Nationality: ${p.nationality}. Born: ${p.dob}. PESEL: ${p.pesel}.`;
-    handleTTS(text, 'identity');
-  };
-
-  // ── Dictation
-  const handleDictate = (field: keyof typeof formData): void => {
-    if (dictatingField) return;
-    const SR =
-      (window as unknown as { SpeechRecognition?: unknown; webkitSpeechRecognition?: unknown }).SpeechRecognition ??
-      (window as unknown as { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition;
-
-    if (!SR) { alert('Speech recognition not supported.'); return; }
-
-    const recogniser = new (SR as any)();
-    recogniser.lang = lang === 'UKR' ? 'uk-UA' : lang === 'PL' ? 'pl-PL' : 'en-US';
-    recogniser.interimResults = false;
-    recogniser.maxAlternatives = 1;
-    recogniser.onstart = (): void => setDictatingField(field);
-    recogniser.onend = (): void => setDictatingField(null);
-    recogniser.onerror = (): void => setDictatingField(null);
-    recogniser.onresult = (e: any): void => {
-      const transcript = String(e.results[0][0].transcript);
-      if (field === 'gender') {
-        const lower = transcript.toLowerCase();
-        setFormData((prev) => ({
-          ...prev,
-          gender: lower.includes('m') || lower.includes('ч') ? 'male' : 'female',
-        }));
-      } else {
-        setFormData((prev) => ({ ...prev, [field]: transcript }));
-      }
-    };
-    recogniser.start();
-  };
-
   // ── Form submission
   const handleAddPerson = (e: React.FormEvent): void => {
     e.preventDefault();
@@ -237,20 +194,8 @@ const App: React.FC = () => {
 
     setActivePerson(newPerson);
     setSubmittedApplication(null);
-    setFormData({
-      applicantFirstName: '', applicantLastName: '', applicantStreet: '',
-      applicantHouseNumber: '', applicantApartmentNumber: '', applicantPostalCode: '', applicantCity: '',
-      firstName: '', lastName: '', secondName: '', otherNames: '', maidenName: '',
-      dob: '', gender: 'male', birthPlace: '', countryOfBirth: '', countryOfResidence: '',
-      nationality: '', citizenshipStatus: 'polish',
-      fatherFirstName: '', fatherMaidenName: '', motherFirstName: '', motherMaidenName: '', civRegistryOffice: '',
-      idSeriesNumber: '', idValidityDate: '', idIssuingAuthority: '',
-      passportSeriesNumber: '', passportValidityDate: '',
-      otherDocSeriesNumber: '', otherDocValidityDate: '',
-      maritalStatus: 'single', spouseFirstName: '', spouseMaidenName: '', spousePesel: '',
-      notificationMethod: 'paper', emailAddress: '', epuapAddress: '',
-    });
-    void syncPerson(newPerson);
+    setFormData(INITIAL_FORM_DATA);
+    syncPerson(newPerson).catch(() => {});
   };
 
   // ── Document verification
@@ -259,14 +204,14 @@ const App: React.FC = () => {
     if (!file || !activePerson) return;
     setIsVerifying(true);
 
-    const feedback =
-      lang === 'PL'
-        ? `Dokumenty przesłane pomyślnie. Wniosek weryfikowany dla: ${activePerson.firstName} ${activePerson.lastName}.`
-        : lang === 'UKR'
-          ? `Документи завантажені. Заявку верифікується для: ${activePerson.firstName} ${activePerson.lastName}.`
-          : `Documents uploaded. Application under review for: ${activePerson.firstName} ${activePerson.lastName}.`;
+    const feedback = createLangText(
+      lang,
+      `Dokumenty przesłane pomyślnie. Wniosek weryfikowany dla: ${activePerson.firstName} ${activePerson.lastName}.`,
+      `Документи завантажені. Заявку верифікується для: ${activePerson.firstName} ${activePerson.lastName}.`,
+      `Documents uploaded. Application under review for: ${activePerson.firstName} ${activePerson.lastName}.`
+    );
 
-    void (async () => {
+    (async () => {
       try {
         const photoUrl = await dbUploadDocument(file, activePerson.pesel);
         const updated: Person = {
@@ -296,24 +241,24 @@ const App: React.FC = () => {
         setIsVerifying(false);
         if (fileInputRef.current) fileInputRef.current.value = '';
       }
-    })();
+    })().catch(() => {});
   };
 
   // ── Admin actions
-  const handleDeletePerson = async (id: string): Promise<void> => {
+  const handleDeletePerson = async (id: string) => {
     if (!confirm('Permanently delete this record?')) return;
-    try { await dbDeletePerson(id); } catch (_e: unknown) { }
+    try { await dbDeletePerson(id); } catch { }
     setPeople((prev) => prev.filter((p) => p.id !== id));
   };
 
-  const handleClearDatabase = async (): Promise<void> => {
+  const handleClearDatabase = async () => {
     if (!confirm('Delete ALL records from the database and local cache?')) return;
-    try { await dbClearAll(); } catch (_e: unknown) { }
+    try { await dbClearAll(); } catch { }
     setPeople([]);
     localStorage.removeItem('pesel_vault_admin');
   };
 
-  const handleReviewDecision = async (id: string, decision: 'verified' | 'rejected'): Promise<void> => {
+  const handleReviewDecision = async (id: string, decision: 'verified' | 'rejected') => {
     const person = people.find((p) => p.id === id);
     if (!person) return;
     const updated: Person = { ...person, verificationStatus: decision };
@@ -367,8 +312,8 @@ const App: React.FC = () => {
         dbStatus={dbStatus}
         dbMessage={dbMessage}
         t={t}
-        onDeletePerson={(id) => void handleDeletePerson(id)}
-        onClearDatabase={() => void handleClearDatabase()}
+        onDeletePerson={(id) => { handleDeletePerson(id).catch(() => {}); }}
+        onClearDatabase={() => { handleClearDatabase().catch(() => {}); }}
         onExport={exportData}
         onOpenReview={() => setView('review')}
         onBack={() => setView('generator')}
@@ -382,8 +327,8 @@ const App: React.FC = () => {
         people={people}
         isDarkMode={false}
         t={t}
-        onApprove={(id) => void handleReviewDecision(id, 'verified')}
-        onReject={(id) => void handleReviewDecision(id, 'rejected')}
+        onApprove={(id) => { handleReviewDecision(id, 'verified').catch(() => {}); }}
+        onReject={(id) => { handleReviewDecision(id, 'rejected').catch(() => {}); }}
         onBack={() => setView('admin')}
       />
     );
@@ -679,13 +624,10 @@ const App: React.FC = () => {
 
               <div className="mb-6">
                 <button
-                  onClick={() => handleReadAloudIdentity(activePerson)}
-                  className="mr-2 px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm"
-                >
-                  <Volume2 size={14} className="inline mr-1" /> {t('readOutLoud')}
-                </button>
-                <button
-                  onClick={() => setAiExplanation(getPeselExplanation(activePerson.pesel, activePerson.dob, activePerson.gender, lang))}
+                  onClick={() => {
+                    const explanation = getPeselExplanation(activePerson.pesel, activePerson.dob, activePerson.gender, lang);
+                    alert(explanation);
+                  }}
                   className="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm"
                 >
                   <HelpCircle size={14} className="inline mr-1" /> {t('explainStructure')}
@@ -726,13 +668,6 @@ const App: React.FC = () => {
         isHighContrast={isHighContrast}
         setIsHighContrast={setIsHighContrast}
         onClose={() => setIsA11yOpen(false)}
-      />
-
-      <PeselModal
-        explanation={aiExplanation}
-        isDarkMode={false}
-        t={t}
-        onClose={() => setAiExplanation(null)}
       />
 
       {/* User Login Modal */}

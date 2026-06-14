@@ -84,23 +84,3 @@ export const getPeselExplanation = (
     `*All calculations processed locally.*`
   );
 };
-
-// ─── Payment input formatters ─────────────────────────────────────────────────
-
-/** Formats a raw digit string into groups of 4: "1234 5678 9012 3456" */
-export const formatCardNumber = (raw: string): string =>
-  raw
-    .replace(/\D/g, '')
-    .slice(0, 16)
-    .replace(/(\d{4})(?=\d)/g, '$1 ');
-
-/** Formats a raw digit string into MM/YY: "12/27" */
-export const formatExpiry = (raw: string): string => {
-  const digits = raw.replace(/\D/g, '').slice(0, 4);
-  return digits.length >= 3 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
-};
-
-// ─── Async delay ──────────────────────────────────────────────────────────────
-
-export const delay = (ms: number): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, ms));

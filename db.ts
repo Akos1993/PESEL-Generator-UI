@@ -20,13 +20,14 @@ let _client: SupabaseClient | null = null;
 function getClient(): SupabaseClient {
   if (!SUPABASE_ANON_KEY) {
     throw new Error(
-      'VITE_SUPABASE_ANON_KEY is not set. ' +
-      'Add it as a GitHub secret and pass it to the build step in your SWA workflow.',
+      'VITE_SUPABASE_ANON_KEY is not set. Add it as a GitHub secret and pass it to the build step in your SWA workflow.',
     );
   }
   if (!_client) _client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   return _client;
 }
+
+const getErrorMsg = (e: unknown): string => e instanceof Error ? e.message : String(e);
 
 // ─── Health ───────────────────────────────────────────────────────────────────
 
@@ -41,11 +42,9 @@ export async function dbHealth(): Promise<{ status: DbStatus; message: string }>
     const { error } = await getClient().from(TABLE).select('id').limit(1);
     if (error) throw error;
     return { status: 'connected', message: `Connected to ${SUPABASE_URL}` };
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    const isInvalidKey =
-      msg.toLowerCase().includes('invalid api key') ||
-      msg.toLowerCase().includes('jwt');
+  } catch (e) {
+    const msg = getErrorMsg(e);
+    const isInvalidKey = msg.toLowerCase().includes('invalid api key') || msg.toLowerCase().includes('jwt');
     return {
       status: isInvalidKey ? 'unconfigured' : 'disconnected',
       message: msg,

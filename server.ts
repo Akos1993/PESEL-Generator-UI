@@ -6,7 +6,6 @@ import { createServer as createViteServer } from "vite";
 const app = express();
 const PORT = 3000;
 
-// Support large base64-encoded ID photo uploads
 app.use(express.json({ limit: "15mb" }));
 app.use(express.urlencoded({ extended: true, limit: "15mb" }));
 
@@ -39,23 +38,27 @@ function getSupabase(): SupabaseClient {
   return createClient(SUPABASE_URL, key);
 }
 
+const getErrorMessage = (err: unknown): string =>
+  err instanceof Error ? err.message : 'Unknown error';
+
 // ─── Health check ────────────────────────────────────────────────────────────
 app.get("/api/health", async (_req, res) => {
   try {
-    const supabase = getSupabase(); // throws if key missing
+    const supabase = getSupabase();
     const { error } = await supabase.from(TABLE).select("id").limit(1);
     if (error) throw error;
     res.json({
       status: "connected",
       message: `Successfully connected to Supabase (${SUPABASE_URL}).`,
     });
-  } catch (err: any) {
+  } catch (err) {
+    const msg = getErrorMessage(err);
     const unconfigured =
-      err.message.includes("Missing Supabase") ||
-      err.message.includes("Invalid API key");
+      msg.includes("Missing Supabase") ||
+      msg.includes("Invalid API key");
     res.json({
       status: unconfigured ? "unconfigured" : "disconnected",
-      message: err.message,
+      message: msg,
     });
   }
 });
@@ -71,9 +74,8 @@ app.get("/api/people", async (_req, res) => {
 
     if (error) throw error;
     res.json(data ?? []);
-  } catch (err: any) {
-    console.warn("Supabase fetch warning:", err.message);
-    // Return empty array so the client falls back to localStorage gracefully
+  } catch (err) {
+    console.warn("Supabase fetch warning:", getErrorMessage(err));
     res.status(200).json([]);
   }
 });
@@ -95,9 +97,9 @@ app.post("/api/people", async (req, res) => {
 
     if (error) throw error;
     res.json(data);
-  } catch (err: any) {
-    console.error("Supabase upsert error:", err.message);
-    res.status(500).json({ error: err.message });
+  } catch (err) {
+    console.error("Supabase upsert error:", getErrorMessage(err));
+    res.status(500).json({ error: getErrorMessage(err) });
   }
 });
 
@@ -110,28 +112,26 @@ app.delete("/api/people/:id", async (req, res) => {
 
     if (error) throw error;
     res.json({ success: true, message: `Deleted identity ${id}.` });
-  } catch (err: any) {
-    console.error("Supabase delete error:", err.message);
-    res.status(500).json({ error: err.message });
+  } catch (err) {
+    console.error("Supabase delete error:", getErrorMessage(err));
+    res.status(500).json({ error: getErrorMessage(err) });
   }
 });
 
 // ─── DELETE all people (admin "Clear DB") ────────────────────────────────────
-// Uses .not("id", "is", null) to match every row without a literal filter value.
-// Note: this requires either RLS to be disabled on the table, or a service_role key.
 app.delete("/api/people", async (_req, res) => {
   try {
     const supabase = getSupabase();
     const { error } = await supabase
       .from(TABLE)
       .delete()
-      .not("id", "is", null); // matches all rows
+      .not("id", "is", null);
 
     if (error) throw error;
     res.json({ success: true, message: "All records deleted from Supabase." });
-  } catch (err: any) {
-    console.error("Supabase clear-db error:", err.message);
-    res.status(500).json({ error: err.message });
+  } catch (err) {
+    console.error("Supabase clear-db error:", getErrorMessage(err));
+    res.status(500).json({ error: getErrorMessage(err) });
   }
 });
 
