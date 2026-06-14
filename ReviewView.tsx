@@ -18,7 +18,7 @@ const ReviewView: React.FC<Props> = ({ people, isDarkMode, t, onApprove, onRejec
   const dark = isDarkMode;
 
   // Documents uploaded to the bucket, awaiting a human verification decision.
-  const queue = people.filter((p) => p.idPhoto && p.verificationStatus !== 'verified');
+  const queue = people.filter((p) => p.idphoto && p.verificationstatus !== 'verified');
 
   return (
     <div className={`min-h-screen p-8 ${dark ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-900'}`}>
@@ -53,18 +53,18 @@ const ReviewView: React.FC<Props> = ({ people, isDarkMode, t, onApprove, onRejec
 
                 {/* Document preview */}
                 <a
-                  href={p.idPhoto}
+                  href={p.idphoto}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`block aspect-[4/3] flex items-center justify-center overflow-hidden ${dark ? 'bg-slate-950' : 'bg-slate-100'}`}
                 >
-                  {p.idPhoto && isPdf(p.idPhoto) ? (
+                  {p.idphoto && isPdf(p.idphoto) ? (
                     <div className="flex flex-col items-center gap-2 text-indigo-400">
                       <FileText size={40} />
                       <span className="text-xs font-black uppercase tracking-wider">PDF — {t('viewDocument')}</span>
                     </div>
                   ) : (
-                    <img src={p.idPhoto} alt={`${p.firstName} ${p.lastName}`} className="w-full h-full object-contain" />
+                    <img src={p.idphoto} alt={`${p.firstname} ${p.lastname}`} className="w-full h-full object-contain" />
                   )}
                 </a>
 
@@ -72,14 +72,14 @@ const ReviewView: React.FC<Props> = ({ people, isDarkMode, t, onApprove, onRejec
                 <div className="p-5 space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="font-black">{p.firstName} {p.lastName}</p>
+                      <p className="font-black">{p.firstname} {p.lastname}</p>
                       <p className="text-xs opacity-50 mt-0.5">{p.nationality} · {p.dob}</p>
                     </div>
                     <code className="bg-indigo-500/10 px-2 py-1 rounded text-indigo-500 font-bold text-[10px] whitespace-nowrap">{p.pesel}</code>
                   </div>
 
                   <a
-                    href={p.idPhoto}
+                    href={p.idphoto}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-500 hover:text-indigo-400 transition-colors"

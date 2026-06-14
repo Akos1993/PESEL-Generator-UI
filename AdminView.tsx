@@ -43,7 +43,7 @@ const AdminView: React.FC<Props> = ({
   onBack,
 }) => {
   const dark = isDarkMode;
-  const pendingReviewCount = people.filter((p) => p.idPhoto && p.verificationStatus !== 'verified').length;
+  const pendingReviewCount = people.filter((p) => p.idphoto && p.verificationstatus !== 'verified').length;
 
   return (
     <div className={`min-h-screen p-8 ${dark ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-900'}`}>
@@ -130,12 +130,12 @@ const AdminView: React.FC<Props> = ({
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${
-                        p.verificationStatus === 'verified'  ? 'bg-green-500/15 text-green-600'  :
-                        p.verificationStatus === 'pending'   ? 'bg-amber-500/15 text-amber-600'  :
-                        p.verificationStatus === 'rejected'  ? 'bg-red-500/15   text-red-600'    :
+                        p.verificationstatus === 'verified'  ? 'bg-green-500/15 text-green-600'  :
+                        p.verificationstatus === 'pending'   ? 'bg-amber-500/15 text-amber-600'  :
+                        p.verificationstatus === 'rejected'  ? 'bg-red-500/15   text-red-600'    :
                         'bg-slate-500/10 text-slate-500'
                       }`}>
-                        {p.verificationStatus}
+                        {p.verificationstatus}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right opacity-40 text-xs">

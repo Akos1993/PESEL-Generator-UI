@@ -177,35 +177,45 @@ const App: React.FC = () => {
 
     const newPerson: Person = {
       id: crypto.randomUUID(),
-      firstName, lastName, dob, gender, nationality,
-      applicantFirstName, applicantLastName, applicantStreet, applicantHouseNumber,
-      applicantApartmentNumber: formData.applicantApartmentNumber,
-      applicantPostalCode, applicantCity,
-      secondName: formData.secondName,
-      otherNames: formData.otherNames,
-      maidenName: formData.maidenName,
-      birthPlace: formData.birthPlace,
-      countryOfBirth: formData.countryOfBirth,
-      countryOfResidence: formData.countryOfResidence,
-      citizenshipStatus,
-      fatherFirstName, fatherMaidenName,
-      motherFirstName, motherMaidenName,
-      civRegistryOffice: formData.civRegistryOffice,
-      idSeriesNumber: formData.idSeriesNumber,
-      idValidityDate: formData.idValidityDate,
-      idIssuingAuthority: formData.idIssuingAuthority,
-      passportSeriesNumber: formData.passportSeriesNumber,
-      passportValidityDate: formData.passportValidityDate,
-      otherDocSeriesNumber: formData.otherDocSeriesNumber,
-      otherDocValidityDate: formData.otherDocValidityDate,
-      maritalStatus: formData.maritalStatus,
-      spouseFirstName: formData.spouseFirstName,
-      spouseMaidenName: formData.spouseMaidenName,
-      spousePesel: formData.spousePesel,
-      notificationMethod, emailAddress, epuapAddress,
+      firstname: firstName,
+      lastname: lastName,
+      dob, gender, nationality,
+      applicantfirstname: applicantFirstName,
+      applicantlastname: applicantLastName,
+      applicantstreet: applicantStreet,
+      applicanthousenumber: applicantHouseNumber,
+      applicantapartmentnumber: formData.applicantApartmentNumber,
+      applicantpostalcode: applicantPostalCode,
+      applicantcity: applicantCity,
+      secondname: formData.secondName,
+      othernames: formData.otherNames,
+      maidenname: formData.maidenName,
+      birthplace: formData.birthPlace,
+      countryofbirth: formData.countryOfBirth,
+      countryofresidence: formData.countryOfResidence,
+      citizenshipstatus: citizenshipStatus,
+      fatherfirstname: fatherFirstName,
+      fathermaidenname: fatherMaidenName,
+      motherfirstname: motherFirstName,
+      mothermaidenname: motherMaidenName,
+      civregistryoffice: formData.civRegistryOffice,
+      idseriesnumber: formData.idSeriesNumber,
+      idvaliditydate: formData.idValidityDate,
+      idissuingauthority: formData.idIssuingAuthority,
+      passportseriesnumber: formData.passportSeriesNumber,
+      passportvaliditydate: formData.passportValidityDate,
+      otherdocseriesnumber: formData.otherDocSeriesNumber,
+      otherdocvaliditydate: formData.otherDocValidityDate,
+      maritalstatus: formData.maritalStatus,
+      spousefirstname: formData.spouseFirstName,
+      spousemaidenname: formData.spouseMaidenName,
+      spousepesel: formData.spousePesel,
+      notificationmethod: notificationMethod,
+      emailaddress: emailAddress,
+      epuapaddress: epuapAddress,
       pesel: generatePESEL(new Date(dob), gender),
-      createdAt: Date.now(),
-      verificationStatus: 'none',
+      createdat: Date.now(),
+      verificationstatus: 'none',
     };
 
     setActivePerson(newPerson);
@@ -232,9 +242,9 @@ const App: React.FC = () => {
         const photoUrl = await dbUploadDocument(file, activePerson.pesel);
         const updated: Person = {
           ...activePerson,
-          verification_status: 'pending',
-          verification_details: feedback,
-          id_photo: photoUrl,
+          verificationstatus: 'pending',
+          verificationdetails: feedback,
+          idphoto: photoUrl,
         };
 
         setPeople((prev) => {
@@ -277,7 +287,7 @@ const App: React.FC = () => {
   const handleReviewDecision = async (id: string, decision: 'verified' | 'rejected') => {
     const person = people.find((p) => p.id === id);
     if (!person) return;
-    const updated: Person = { ...person, verification_status: decision };
+    const updated: Person = { ...person, verificationstatus: decision };
     setPeople((prev) => prev.map((p) => (p.id === id ? updated : p)));
     await syncPerson(updated);
   };
@@ -681,7 +691,7 @@ const App: React.FC = () => {
             <div className="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-lg">
               <h3 className="text-lg font-bold text-blue-900 mb-4">{t('activeIdentity')}</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div><span className="text-xs font-semibold text-blue-700">Name</span><p className="font-semibold">{activePerson.firstName} {activePerson.lastName}</p></div>
+                <div><span className="text-xs font-semibold text-blue-700">Name</span><p className="font-semibold">{activePerson.firstname} {activePerson.lastname}</p></div>
                 <div><span className="text-xs font-semibold text-blue-700">PESEL</span><p className="font-mono text-lg font-bold">{activePerson.pesel}</p></div>
                 <div><span className="text-xs font-semibold text-blue-700">DOB</span><p>{activePerson.dob}</p></div>
                 <div><span className="text-xs font-semibold text-blue-700">Gender</span><p>{activePerson.gender === 'male' ? t('male') : t('female')}</p></div>
