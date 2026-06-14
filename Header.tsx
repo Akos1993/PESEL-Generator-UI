@@ -8,6 +8,9 @@ interface HeaderProps {
   setLang: (lang: Language) => void;
   onMenuToggle: () => void;
   menuOpen: boolean;
+  loggedInUser?: { email: string; pesel: string } | null;
+  onMObywatelClick?: () => void;
+  onLogout?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -15,6 +18,9 @@ const Header: React.FC<HeaderProps> = ({
   setLang,
   onMenuToggle,
   menuOpen,
+  loggedInUser,
+  onMObywatelClick,
+  onLogout,
 }) => {
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -62,9 +68,24 @@ const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* mObywatel button */}
-          <button className="hidden md:flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 font-semibold text-sm transition-colors">
-            👤 mObywatel
-          </button>
+          {loggedInUser ? (
+            <div className="hidden md:flex items-center gap-3">
+              <span className="text-sm text-gray-700">Zalogowany</span>
+              <button
+                onClick={onLogout}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold text-sm transition-colors"
+              >
+                Wyloguj
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={onMObywatelClick}
+              className="hidden md:flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 font-semibold text-sm transition-colors"
+            >
+              👤 mObywatel
+            </button>
+          )}
         </div>
       </div>
     </header>

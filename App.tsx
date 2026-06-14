@@ -18,6 +18,15 @@ const App: React.FC = () => {
   // ── Navigation
   const [view, setView] = useState<View>('generator');
 
+  // ── User Authentication
+  const [loggedInUser, setLoggedInUser] = useState<{ email: string; pesel: string } | null>(() => {
+    const saved = localStorage.getItem('pesel_logged_in_user');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPesel, setLoginPesel] = useState('');
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
   // ── People / DB
   const [people, setPeople] = useState<Person[]>([]);
   const [activePerson, setActivePerson] = useState<Person | null>(null);
@@ -66,6 +75,15 @@ const App: React.FC = () => {
     localStorage.setItem('pesel_font_scale', fontScale.toString());
     localStorage.setItem('pesel_high_contrast', isHighContrast.toString());
   }, [lang, fontScale, isHighContrast]);
+
+  // ── Persist logged in user
+  useEffect(() => {
+    if (loggedInUser) {
+      localStorage.setItem('pesel_logged_in_user', JSON.stringify(loggedInUser));
+    } else {
+      localStorage.removeItem('pesel_logged_in_user');
+    }
+  }, [loggedInUser]);
 
   // ── DB initialisation
   useEffect(() => {
@@ -309,6 +327,29 @@ const App: React.FC = () => {
     else alert(t('invalidPass'));
   };
 
+  const handleUserLogin = (e: React.FormEvent): void => {
+    e.preventDefault();
+    if (!loginEmail || !loginPesel) {
+      alert('Please enter email and PESEL');
+      return;
+    }
+    const matchingPerson = people.find(p => p.emailAddress === loginEmail && p.pesel === loginPesel);
+    if (matchingPerson) {
+      setLoggedInUser({ email: loginEmail, pesel: loginPesel });
+      setShowLoginModal(false);
+      setLoginEmail('');
+      setLoginPesel('');
+      setView('mydata');
+    } else {
+      alert('Email lub PESEL nie znaleziony. Sprawdź dane lub złóż nowy wniosek.');
+    }
+  };
+
+  const handleUserLogout = (): void => {
+    setLoggedInUser(null);
+    setView('generator');
+  };
+
   const exportData = (): void => {
     const blob = new Blob([JSON.stringify(people, null, 2)], { type: 'application/json' });
     const anchor = document.createElement('a');
@@ -362,6 +403,33 @@ const App: React.FC = () => {
   }
 
   if (view === 'mydata') {
+    if (!loggedInUser) {
+      return (
+        <MainLayout
+          lang={lang}
+          setLang={setLang}
+          currentView={view}
+          onViewChange={setView}
+          breadcrumbs={[{ label: 'Moja data' }]}
+        >
+          <div className="max-w-4xl">
+            <h1 className="text-3xl font-bold mb-2">Moja data</h1>
+            <div className="text-center p-12 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-gray-700 mb-4">Zaloguj się, aby zobaczyć swoją dane</p>
+              <button
+                onClick={() => setShowLoginModal(true)}
+                className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Zaloguj się
+              </button>
+            </div>
+          </div>
+        </MainLayout>
+      );
+    }
+
+    const userApplications = people.filter(p => p.emailAddress === loggedInUser.email && p.pesel === loggedInUser.pesel);
+
     return (
       <MainLayout
         lang={lang}
@@ -369,24 +437,43 @@ const App: React.FC = () => {
         currentView={view}
         onViewChange={setView}
         breadcrumbs={[{ label: 'Moja data' }]}
+        loggedInUser={loggedInUser}
+        onLogout={handleUserLogout}
       >
         <div className="max-w-4xl">
-          <h1 className="text-3xl font-bold mb-2">Moja data</h1>
-          <p className="text-gray-600 mb-8">Tutaj możesz sprawdzić status swoich złożonych wniosków</p>
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">Moja data</h1>
+              <p className="text-gray-600">Zalogowany: {loggedInUser.email}</p>
+            </div>
+            <button
+              onClick={handleUserLogout}
+              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            >
+              Wyloguj się
+            </button>
+          </div>
 
-          {people.length === 0 ? (
+          {userApplications.length === 0 ? (
             <div className="text-center p-12 bg-gray-50 rounded-lg border border-gray-200">
-              <p className="text-gray-600">Brak złożonych wniosków</p>
+              <p className="text-gray-600 mb-4">Brak złożonych wniosków</p>
+              <button
+                onClick={() => setView('generator')}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Złóż nowy wniosek
+              </button>
             </div>
           ) : (
             <div className="space-y-4">
-              {people.map((person) => (
+              {userApplications.map((person) => (
                 <div key={person.id} className="p-6 border border-gray-200 rounded-lg bg-white hover:bg-gray-50">
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="font-bold text-lg">{person.firstName} {person.lastName}</h3>
-                      <p className="text-sm text-gray-600 mt-1">PESEL: <span className="font-mono">{person.pesel}</span></p>
+                      <p className="text-sm text-gray-600 mt-1">PESEL: <span className="font-mono font-bold">{person.pesel}</span></p>
                       <p className="text-sm text-gray-600">Data urodzenia: {person.dob}</p>
+                      <p className="text-sm text-gray-600 mt-2">Złożono: {new Date(person.createdAt).toLocaleDateString('pl-PL')}</p>
                     </div>
                     <div className="text-right">
                       <span className={`inline-block px-3 py-1 rounded text-xs font-semibold ${
@@ -395,8 +482,13 @@ const App: React.FC = () => {
                         person.verificationStatus === 'rejected' ? 'bg-red-100 text-red-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
-                        {person.verificationStatus}
+                        {person.verificationStatus === 'verified' ? 'Zweryfikowany' :
+                         person.verificationStatus === 'pending' ? 'W weryfikacji' :
+                         person.verificationStatus === 'rejected' ? 'Odrzucony' : 'Oczekujący'}
                       </span>
+                      {person.verificationDetails && (
+                        <p className="text-xs text-gray-600 mt-2">{person.verificationDetails}</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -460,6 +552,9 @@ const App: React.FC = () => {
       currentView={view}
       onViewChange={setView}
       breadcrumbs={[{ label: 'Generator PESEL' }]}
+      loggedInUser={loggedInUser}
+      onLogout={handleUserLogout}
+      onMObywatelClick={() => setShowLoginModal(true)}
     >
       <div style={{ fontSize: `${fontScale}rem` }}>
         <div className="max-w-4xl">
@@ -639,6 +734,61 @@ const App: React.FC = () => {
         t={t}
         onClose={() => setAiExplanation(null)}
       />
+
+      {/* User Login Modal */}
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
+            <h2 className="text-2xl font-bold mb-6">Zaloguj się do mObywatela</h2>
+            <form onSubmit={handleUserLogin} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold mb-2">Email</label>
+                <input
+                  type="email"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  placeholder="Twój email"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">PESEL</label>
+                <input
+                  type="text"
+                  value={loginPesel}
+                  onChange={(e) => setLoginPesel(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  placeholder="Twój numer PESEL"
+                  required
+                />
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
+                >
+                  Zaloguj się
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowLoginModal(false);
+                    setLoginEmail('');
+                    setLoginPesel('');
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-semibold"
+                >
+                  Anuluj
+                </button>
+              </div>
+              <p className="text-xs text-gray-600 text-center mt-4">
+                Użyj tego samego emaila i numeru PESEL, które podałeś podczas składania wniosku
+              </p>
+            </form>
+          </div>
+        </div>
+      )}
     </MainLayout>
   );
 };

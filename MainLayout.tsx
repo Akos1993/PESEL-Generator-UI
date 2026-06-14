@@ -12,6 +12,9 @@ interface MainLayoutProps {
   onViewChange: (view: View) => void;
   breadcrumbs?: { label: string; onClick?: () => void }[];
   children: React.ReactNode;
+  loggedInUser?: { email: string; pesel: string } | null;
+  onLogout?: () => void;
+  onMObywatelClick?: () => void;
 }
 
 const MainLayout: React.FC<MainLayoutProps> = ({
@@ -21,6 +24,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   onViewChange,
   breadcrumbs = [],
   children,
+  loggedInUser,
+  onLogout,
+  onMObywatelClick,
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -38,6 +44,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({
         setLang={setLang}
         onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
         menuOpen={sidebarOpen}
+        loggedInUser={loggedInUser}
+        onMObywatelClick={onMObywatelClick}
+        onLogout={onLogout}
       />
 
       {/* Breadcrumb */}
