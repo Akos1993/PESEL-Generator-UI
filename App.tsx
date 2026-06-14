@@ -600,6 +600,26 @@ const App: React.FC = () => {
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField label={`${t('secondName')} ${t('optional')}`} name="secondName" type="text" value={formData.secondName} onChange={(v) => setFormData({ ...formData, secondName: v })} isDarkMode={false} />
+                      <FormField label={`${t('otherNames')} ${t('optional')}`} name="otherNames" type="text" value={formData.otherNames} onChange={(v) => setFormData({ ...formData, otherNames: v })} isDarkMode={false} />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField label={`${t('maidenName')} ${t('optional')}`} name="maidenName" type="text" value={formData.maidenName} onChange={(v) => setFormData({ ...formData, maidenName: v })} isDarkMode={false} />
+                      <FormField label={`${t('birthPlace')} ${t('optional')}`} name="birthPlace" type="text" value={formData.birthPlace} onChange={(v) => setFormData({ ...formData, birthPlace: v })} isDarkMode={false} />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <FormField label={`${t('countryOfBirth')} ${t('optional')}`} name="countryOfBirth" type="text" value={formData.countryOfBirth} onChange={(v) => setFormData({ ...formData, countryOfBirth: v })} isDarkMode={false} />
+                      <FormField label={`${t('countryOfResidence')} ${t('optional')}`} name="countryOfResidence" type="text" value={formData.countryOfResidence} onChange={(v) => setFormData({ ...formData, countryOfResidence: v })} isDarkMode={false} />
+                      <div>
+                        <label className="block text-sm font-semibold mb-2">{t('citizenshipStatus')} {t('optional')}</label>
+                        <select value={formData.citizenshipStatus} onChange={(e) => setFormData({ ...formData, citizenshipStatus: e.target.value as 'polish' | 'stateless' | 'other' })} className="w-full px-3 py-2 border border-gray-300 rounded">
+                          <option value="polish">{t('citizenshipPolish')}</option>
+                          <option value="stateless">{t('citizenshipStateless')}</option>
+                          <option value="other">{t('citizenshipOther')}</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField label={t('fatherFirstName')} name="fatherFirstName" type="text" value={formData.fatherFirstName} required onChange={(v) => setFormData({ ...formData, fatherFirstName: v })} isDarkMode={false} />
                       <FormField label={t('fatherMaidenName')} name="fatherMaidenName" type="text" value={formData.fatherMaidenName} required onChange={(v) => setFormData({ ...formData, fatherMaidenName: v })} isDarkMode={false} />
                     </div>
@@ -619,6 +639,35 @@ const App: React.FC = () => {
                       <FormField label={t('idSeriesNumber')} name="idSeriesNumber" type="text" value={formData.idSeriesNumber} onChange={(v) => setFormData({ ...formData, idSeriesNumber: v })} isDarkMode={false} />
                       <FormField label={t('idValidityDate')} name="idValidityDate" type="date" value={formData.idValidityDate} onChange={(v) => setFormData({ ...formData, idValidityDate: v })} isDarkMode={false} />
                     </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField label={`${t('idIssuingAuthority')} ${t('optional')}`} name="idIssuingAuthority" type="text" value={formData.idIssuingAuthority} onChange={(v) => setFormData({ ...formData, idIssuingAuthority: v })} isDarkMode={false} />
+                      <FormField label={`${t('civRegistryOffice')} ${t('optional')}`} name="civRegistryOffice" type="text" value={formData.civRegistryOffice} onChange={(v) => setFormData({ ...formData, civRegistryOffice: v })} isDarkMode={false} />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField label={`Passport Series Number ${t('optional')}`} name="passportSeriesNumber" type="text" value={formData.passportSeriesNumber} onChange={(v) => setFormData({ ...formData, passportSeriesNumber: v })} isDarkMode={false} />
+                      <FormField label={`Passport Validity Date ${t('optional')}`} name="passportValidityDate" type="date" value={formData.passportValidityDate} onChange={(v) => setFormData({ ...formData, passportValidityDate: v })} isDarkMode={false} />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField label={`Other Document Series Number ${t('optional')}`} name="otherDocSeriesNumber" type="text" value={formData.otherDocSeriesNumber} onChange={(v) => setFormData({ ...formData, otherDocSeriesNumber: v })} isDarkMode={false} />
+                      <FormField label={`Other Document Validity Date ${t('optional')}`} name="otherDocValidityDate" type="date" value={formData.otherDocValidityDate} onChange={(v) => setFormData({ ...formData, otherDocValidityDate: v })} isDarkMode={false} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold mb-2">Marital Status {t('optional')}</label>
+                      <select value={formData.maritalStatus} onChange={(e) => setFormData({ ...formData, maritalStatus: e.target.value as 'single' | 'married' | 'divorced' | 'widow' | 'widower' })} className="w-full px-3 py-2 border border-gray-300 rounded">
+                        <option value="single">Single</option>
+                        <option value="married">Married</option>
+                        <option value="divorced">Divorced</option>
+                        <option value="widow">Widow</option>
+                        <option value="widower">Widower</option>
+                      </select>
+                    </div>
+                    {(formData.maritalStatus === 'married' || formData.maritalStatus === 'divorced') && (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <FormField label={`Spouse First Name ${t('optional')}`} name="spouseFirstName" type="text" value={formData.spouseFirstName} onChange={(v) => setFormData({ ...formData, spouseFirstName: v })} isDarkMode={false} />
+                        <FormField label={`Spouse Maiden Name ${t('optional')}`} name="spouseMaidenName" type="text" value={formData.spouseMaidenName} onChange={(v) => setFormData({ ...formData, spouseMaidenName: v })} isDarkMode={false} />
+                        <FormField label={`Spouse PESEL ${t('optional')}`} name="spousePesel" type="text" value={formData.spousePesel} onChange={(v) => setFormData({ ...formData, spousePesel: v })} isDarkMode={false} />
+                      </div>
+                    )}
                     <button type="submit" className="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700">
                       {t('generateIdentity')}
                     </button>
