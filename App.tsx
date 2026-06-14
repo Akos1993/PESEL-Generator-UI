@@ -706,7 +706,7 @@ const App: React.FC = () => {
                         </div>
 
                         <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg">
-                          <label className="block text-sm font-semibold mb-3">Proof of Residence (>6 months)</label>
+                          <label className="block text-sm font-semibold mb-3">Proof of Residence (&gt;6 months)</label>
                           <input
                             type="file"
                             accept="image/*,.pdf"
