@@ -553,8 +553,8 @@ const App: React.FC = () => {
                 children: (
                   <form onSubmit={handleAddPerson} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField label={t('applicantFirstName')} name="applicantFirstName" type="text" value={formData.applicant_first_name} required onChange={(v) => setFormData({ ...formData, applicant_first_name: v })} isDarkMode={false} />
-                      <FormField label={t('applicantLastName')} name="applicantLastName" type="text" value={formData.applicant_last_name} required onChange={(v) => setFormData({ ...formData, applicant_last_name: v })} isDarkMode={false} />
+                      <FormField label={t('applicantFirstName')} name="applicantFirstName" type="text" value={formData.applicantFirstName} required onChange={(v) => setFormData({ ...formData, applicantFirstName: v })} isDarkMode={false} />
+                      <FormField label={t('applicantLastName')} name="applicantLastName" type="text" value={formData.applicantLastName} required onChange={(v) => setFormData({ ...formData, applicantLastName: v })} isDarkMode={false} />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField label={t('street')} name="applicantStreet" type="text" value={formData.applicantStreet} required onChange={(v) => setFormData({ ...formData, applicantStreet: v })} isDarkMode={false} />
@@ -611,13 +611,13 @@ const App: React.FC = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-semibold mb-2">{t('notificationMethod')}</label>
-                      <select value={formData.notification_method} onChange={(e) => setFormData({ ...formData, notificationMethod: e.target.value as 'paper' | 'electronic' })} className="w-full px-3 py-2 border border-gray-300 rounded">
+                      <select value={formData.notificationMethod} onChange={(e) => setFormData({ ...formData, notificationMethod: e.target.value as 'paper' | 'electronic' })} className="w-full px-3 py-2 border border-gray-300 rounded">
                         <option value="paper">{t('notificationPaper')}</option>
                         <option value="electronic">{t('notificationElectronic')}</option>
                       </select>
                     </div>
-                    {formData.notification_method === 'electronic' && (
-                      <FormField label={t('emailAddress')} name="emailAddress" type="email" value={formData.email_address} onChange={(v) => setFormData({ ...formData, emailAddress: v })} isDarkMode={false} />
+                    {formData.notificationMethod === 'electronic' && (
+                      <FormField label={t('emailAddress')} name="emailAddress" type="email" value={formData.emailAddress} onChange={(v) => setFormData({ ...formData, emailAddress: v })} isDarkMode={false} />
                     )}
                     <button type="submit" className="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700">
                       {t('generateIdentity')}
