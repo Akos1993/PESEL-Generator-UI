@@ -96,9 +96,83 @@ const PL = {
   approve: 'Zatwierdź',
   reject: 'Odrzuć',
   backToAdmin: 'Powrót do Panelu',
+  // Wnioskodawca (applicant) section
+  applicantSection: 'Wnioskodawca',
+  applicantSectionDesc: 'Osoba składająca wniosek i adres do korespondencji.',
+  personSection: 'Osoba, której dotyczy wniosek',
+  applicantFirstName: 'Imię wnioskodawcy',
+  applicantLastName: 'Nazwisko wnioskodawcy',
+  street: 'Ulica',
+  houseNumber: 'Numer domu',
+  apartmentNumber: 'Numer lokalu',
+  postalCode: 'Kod pocztowy',
+  city: 'Miejscowość',
+
+  // Wizard steps
+  step: 'Krok',
+  of: 'z',
+  previous: 'Wstecz',
+  next: 'Dalej',
+
+  // Person additional info (Step 2)
+  secondName: 'Imię drugie',
+  otherNames: 'Imiona kolejne',
+  maidenName: 'Nazwisko rodowe',
+  birthPlace: 'Miejsce urodzenia',
+  countryOfBirth: 'Kraj urodzenia',
+  countryOfResidence: 'Kraj zamieszkania',
+  citizenshipStatus: 'Obywatelstwo/Status',
+  citizenshipPolish: 'Polskie',
+  citizenshipStateless: 'Bezpaństwowiec',
+  citizenshipOther: 'Inne',
+
+  // Family info
+  familySection: 'Dane rodziców',
+  fatherFirstName: "Imię ojca",
+  fatherMaidenName: "Nazwisko rodowe ojca",
+  motherFirstName: "Imię matki",
+  motherMaidenName: "Nazwisko rodowe matki",
+  civRegistryOffice: 'Urząd stanu cywilnego (urodzenia)',
+
+  // Document info
+  documentSection: 'Dokumenty',
+  idSection: 'Dowód osobisty',
+  idSeriesNumber: 'Seria i numer',
+  idValidityDate: 'Data ważności',
+  idIssuingAuthority: 'Organ wydający',
+  passportSection: 'Paszport',
+  passportSeriesNumber: 'Seria i numer',
+  passportValidityDate: 'Data ważności',
+  otherDocSection: 'Inny dokument',
+  otherDocSeriesNumber: 'Seria i numer',
+  otherDocValidityDate: 'Data ważności',
+
+  // Marital status
+  maritalStatusSection: 'Stan cywilny',
+  maritalStatus: 'Stan cywilny',
+  maritalSingle: 'Kawaler/Panna',
+  maritalMarried: 'Żonaty/Zamężna',
+  maritalDivorced: 'Rozwiedziony/Rozwiedziona',
+  maritalWidow: 'Wdowiec/Wdowa',
+  spouseFirstName: 'Imię małżonka',
+  spouseMaidenName: 'Nazwisko rodowe małżonka',
+  spousePesel: 'PESEL małżonka',
+
+  // Notification
+  notificationSection: 'Powiadomienie o nadaniu PESEL',
+  notificationMethod: 'Forma dokumentu',
+  notificationPaper: 'Papierowa',
+  notificationElectronic: 'Elektroniczna',
+  emailAddress: 'Adres e-mail',
+  epuapAddress: 'Adres skrzynki ePUAP',
+
+  // Form hints
+  optional: '(opcjonalnie)',
+  required: '(wymagane)',
+  fillIfAvailable: 'Wypełnij, jeśli dane są dostępne',
 } as const;
 
-const ENG: Record<keyof typeof PL, string> = {
+const ENG = {
   title: 'PESEL Master',
   subtitle: 'Identity Generator & Verification',
   manualEntry: 'New Application',
@@ -184,9 +258,83 @@ const ENG: Record<keyof typeof PL, string> = {
   approve: 'Approve',
   reject: 'Reject',
   backToAdmin: 'Back to Admin',
-};
+  // Wnioskodawca (applicant) section
+  applicantSection: 'Applicant',
+  applicantSectionDesc: 'The person submitting this application and their correspondence address.',
+  personSection: 'Person the application concerns',
+  applicantFirstName: "Applicant's First Name",
+  applicantLastName: "Applicant's Last Name",
+  street: 'Street',
+  houseNumber: 'House No.',
+  apartmentNumber: 'Apartment No.',
+  postalCode: 'Postal Code',
+  city: 'City',
 
-const UKR: Record<keyof typeof PL, string> = {
+  // Wizard steps
+  step: 'Step',
+  of: 'of',
+  previous: 'Previous',
+  next: 'Next',
+
+  // Person additional info (Step 2)
+  secondName: 'Second Name',
+  otherNames: 'Other Names',
+  maidenName: 'Maiden Name',
+  birthPlace: 'Place of Birth',
+  countryOfBirth: 'Country of Birth',
+  countryOfResidence: 'Country of Residence',
+  citizenshipStatus: 'Citizenship/Status',
+  citizenshipPolish: 'Polish',
+  citizenshipStateless: 'Stateless',
+  citizenshipOther: 'Other',
+
+  // Family info
+  familySection: 'Parent Information',
+  fatherFirstName: 'Father\'s First Name',
+  fatherMaidenName: 'Father\'s Maiden Name',
+  motherFirstName: 'Mother\'s First Name',
+  motherMaidenName: 'Mother\'s Maiden Name',
+  civRegistryOffice: 'Civil Registry Office (Birth)',
+
+  // Document info
+  documentSection: 'Documents',
+  idSection: 'ID Card',
+  idSeriesNumber: 'Series and Number',
+  idValidityDate: 'Validity Date',
+  idIssuingAuthority: 'Issuing Authority',
+  passportSection: 'Passport',
+  passportSeriesNumber: 'Series and Number',
+  passportValidityDate: 'Validity Date',
+  otherDocSection: 'Other Document',
+  otherDocSeriesNumber: 'Series and Number',
+  otherDocValidityDate: 'Validity Date',
+
+  // Marital status
+  maritalStatusSection: 'Marital Status',
+  maritalStatus: 'Marital Status',
+  maritalSingle: 'Single',
+  maritalMarried: 'Married',
+  maritalDivorced: 'Divorced',
+  maritalWidow: 'Widow/Widower',
+  spouseFirstName: 'Spouse\'s First Name',
+  spouseMaidenName: 'Spouse\'s Maiden Name',
+  spousePesel: 'Spouse\'s PESEL',
+
+  // Notification
+  notificationSection: 'PESEL Assignment Notification',
+  notificationMethod: 'Document Form',
+  notificationPaper: 'Paper',
+  notificationElectronic: 'Electronic',
+  emailAddress: 'Email Address',
+  epuapAddress: 'ePUAP Address',
+
+  // Form hints
+  optional: '(optional)',
+  required: '(required)',
+  fillIfAvailable: 'Fill if data is available',
+} as const;
+
+const UKR = {
   title: 'PESEL Майстер',
   subtitle: 'Генератор ідентифікації та перевірка',
   manualEntry: 'Нова заявка',
@@ -272,9 +420,83 @@ const UKR: Record<keyof typeof PL, string> = {
   approve: 'Підтвердити',
   reject: 'Відхилити',
   backToAdmin: 'Назад до панелі',
-};
+  // Wnioskodawca (applicant) section
+  applicantSection: 'Заявник',
+  applicantSectionDesc: 'Особа, яка подає цю заявку, та її адреса для листування.',
+  personSection: 'Особа, стосовно якої подається заявка',
+  applicantFirstName: "Ім'я заявника",
+  applicantLastName: 'Прізвище заявника',
+  street: 'Вулиця',
+  houseNumber: 'Номер будинку',
+  apartmentNumber: 'Номер квартири',
+  postalCode: 'Поштовий індекс',
+  city: 'Місто',
 
-export const TRANSLATIONS: Record<Language, typeof PL> = { PL, ENG, UKR };
+  // Wizard steps
+  step: 'Крок',
+  of: 'з',
+  previous: 'Назад',
+  next: 'Далі',
+
+  // Person additional info (Step 2)
+  secondName: 'Друге ім\'я',
+  otherNames: 'Інші імена',
+  maidenName: 'Дівоче прізвище',
+  birthPlace: 'Місце народження',
+  countryOfBirth: 'Країна народження',
+  countryOfResidence: 'Країна проживання',
+  citizenshipStatus: 'Громадянство/Статус',
+  citizenshipPolish: 'Польське',
+  citizenshipStateless: 'Без громадянства',
+  citizenshipOther: 'Інше',
+
+  // Family info
+  familySection: 'Інформація про батьків',
+  fatherFirstName: "Ім'я батька",
+  fatherMaidenName: 'Дівоче прізвище батька',
+  motherFirstName: "Ім'я матері",
+  motherMaidenName: 'Дівоче прізвище матері',
+  civRegistryOffice: 'Орган реєстрації (Народження)',
+
+  // Document info
+  documentSection: 'Документи',
+  idSection: 'Посвідчення особи',
+  idSeriesNumber: 'Серія та номер',
+  idValidityDate: 'Дата закінчення дії',
+  idIssuingAuthority: 'Орган видачі',
+  passportSection: 'Паспорт',
+  passportSeriesNumber: 'Серія та номер',
+  passportValidityDate: 'Дата закінчення дії',
+  otherDocSection: 'Інший документ',
+  otherDocSeriesNumber: 'Серія та номер',
+  otherDocValidityDate: 'Дата закінчення дії',
+
+  // Marital status
+  maritalStatusSection: 'Сімейний стан',
+  maritalStatus: 'Сімейний стан',
+  maritalSingle: 'Холостяк/Не заміжня',
+  maritalMarried: 'Одружений/Заміжня',
+  maritalDivorced: 'Розлучений/Розлучена',
+  maritalWidow: 'Вдівець/Вдова',
+  spouseFirstName: "Ім'я супутника",
+  spouseMaidenName: 'Дівоче прізвище супутника',
+  spousePesel: 'PESEL супутника',
+
+  // Notification
+  notificationSection: 'Повідомлення про присвоєння PESEL',
+  notificationMethod: 'Форма документа',
+  notificationPaper: 'Папір',
+  notificationElectronic: 'Електроний',
+  emailAddress: 'Адреса електронної пошти',
+  epuapAddress: 'Адреса скриньки ePUAP',
+
+  // Form hints
+  optional: '(опціонально)',
+  required: '(обов\'язково)',
+  fillIfAvailable: 'Заповніть, якщо доступні дані',
+} as const;
+
+export const TRANSLATIONS = { PL, ENG, UKR };
 
 /** Union of all translation key names — use this as the type for `t` prop. */
 export type TranslationKey = keyof typeof PL;

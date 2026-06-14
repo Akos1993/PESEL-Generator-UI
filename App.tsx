@@ -48,12 +48,50 @@ const App: React.FC = () => {
   const [isA11yOpen, setIsA11yOpen]       = useState(false);
 
   // ── Form ──────────────────────────────────────────────────────────────────
+  const [wizardStep, setWizardStep] = useState(1);
   const [formData, setFormData] = useState({
-    firstName:   '',
-    lastName:    '',
-    dob:         '',
-    gender:      'male' as 'male' | 'female',
+    // ── Step 1: Applicant Info ──────────────────────────────────────────────
+    applicantFirstName: '',
+    applicantLastName: '',
+    applicantStreet: '',
+    applicantHouseNumber: '',
+    applicantApartmentNumber: '',
+    applicantPostalCode: '',
+    applicantCity: '',
+    // ── Step 2: Person Info ─────────────────────────────────────────────────
+    firstName: '',
+    lastName: '',
+    secondName: '',
+    otherNames: '',
+    maidenName: '',
+    dob: '',
+    gender: 'male' as 'male' | 'female',
+    birthPlace: '',
+    countryOfBirth: '',
+    countryOfResidence: '',
     nationality: '',
+    citizenshipStatus: 'polish' as 'polish' | 'stateless' | 'other',
+    // Family info (Step 2, required)
+    fatherFirstName: '',
+    fatherMaidenName: '',
+    motherFirstName: '',
+    motherMaidenName: '',
+    civRegistryOffice: '',
+    // ── Step 3: Documents & Marital Status ──────────────────────────────────
+    idSeriesNumber: '',
+    idValidityDate: '',
+    idIssuingAuthority: '',
+    passportSeriesNumber: '',
+    passportValidityDate: '',
+    otherDocSeriesNumber: '',
+    otherDocValidityDate: '',
+    maritalStatus: 'single' as 'single' | 'married' | 'divorced' | 'widow' | 'widower',
+    spouseFirstName: '',
+    spouseMaidenName: '',
+    spousePesel: '',
+    notificationMethod: 'paper' as 'paper' | 'electronic',
+    emailAddress: '',
+    epuapAddress: '',
   });
   const [adminPass, setAdminPass] = useState('');
 
@@ -189,16 +227,76 @@ const App: React.FC = () => {
   // ── Form submission ───────────────────────────────────────────────────────
   const handleAddPerson = (e: React.FormEvent): void => {
     e.preventDefault();
-    const { firstName, lastName, dob, nationality, gender } = formData;
-    if (!firstName || !lastName || !dob || !nationality) return;
+    const {
+      // Applicant
+      applicantFirstName, applicantLastName, applicantStreet, applicantHouseNumber,
+      applicantPostalCode, applicantCity,
+      // Person
+      firstName, lastName, dob, nationality, gender, citizenshipStatus,
+      // Family
+      fatherFirstName, fatherMaidenName, motherFirstName, motherMaidenName,
+      // Notification
+      notificationMethod, emailAddress, epuapAddress,
+    } = formData;
+
+    // Validate required fields from all steps
+    if (!applicantFirstName || !applicantLastName || !applicantStreet ||
+        !applicantHouseNumber || !applicantPostalCode || !applicantCity ||
+        !firstName || !lastName || !dob || !nationality ||
+        !fatherFirstName || !fatherMaidenName || !motherFirstName || !motherMaidenName ||
+        !notificationMethod || (notificationMethod === 'electronic' && !emailAddress && !epuapAddress)) {
+      alert('Please fill in all required fields');
+      return;
+    }
 
     const newPerson: Person = {
       id:                 crypto.randomUUID(),
+      // Basic person info
       firstName,
       lastName,
       dob,
       gender,
       nationality,
+      // Applicant
+      applicantFirstName,
+      applicantLastName,
+      applicantStreet,
+      applicantHouseNumber,
+      applicantApartmentNumber: formData.applicantApartmentNumber,
+      applicantPostalCode,
+      applicantCity,
+      // Additional person info
+      secondName: formData.secondName,
+      otherNames: formData.otherNames,
+      maidenName: formData.maidenName,
+      birthPlace: formData.birthPlace,
+      countryOfBirth: formData.countryOfBirth,
+      countryOfResidence: formData.countryOfResidence,
+      citizenshipStatus,
+      // Family
+      fatherFirstName,
+      fatherMaidenName,
+      motherFirstName,
+      motherMaidenName,
+      civRegistryOffice: formData.civRegistryOffice,
+      // Documents
+      idSeriesNumber: formData.idSeriesNumber,
+      idValidityDate: formData.idValidityDate,
+      idIssuingAuthority: formData.idIssuingAuthority,
+      passportSeriesNumber: formData.passportSeriesNumber,
+      passportValidityDate: formData.passportValidityDate,
+      otherDocSeriesNumber: formData.otherDocSeriesNumber,
+      otherDocValidityDate: formData.otherDocValidityDate,
+      // Marital status
+      maritalStatus: formData.maritalStatus,
+      spouseFirstName: formData.spouseFirstName,
+      spouseMaidenName: formData.spouseMaidenName,
+      spousePesel: formData.spousePesel,
+      // Notification
+      notificationMethod,
+      emailAddress,
+      epuapAddress,
+      // System
       pesel:              generatePESEL(new Date(dob), gender),
       createdAt:          Date.now(),
       verificationStatus: 'none',
@@ -207,7 +305,21 @@ const App: React.FC = () => {
 
     setActivePerson(newPerson);
     setSubmittedApplication(null);
-    setFormData({ firstName: '', lastName: '', dob: '', gender: 'male', nationality: '' });
+    // Reset form and wizard
+    setWizardStep(1);
+    setFormData({
+      applicantFirstName: '', applicantLastName: '', applicantStreet: '',
+      applicantHouseNumber: '', applicantApartmentNumber: '', applicantPostalCode: '', applicantCity: '',
+      firstName: '', lastName: '', secondName: '', otherNames: '', maidenName: '',
+      dob: '', gender: 'male', birthPlace: '', countryOfBirth: '', countryOfResidence: '',
+      nationality: '', citizenshipStatus: 'polish',
+      fatherFirstName: '', fatherMaidenName: '', motherFirstName: '', motherMaidenName: '', civRegistryOffice: '',
+      idSeriesNumber: '', idValidityDate: '', idIssuingAuthority: '',
+      passportSeriesNumber: '', passportValidityDate: '',
+      otherDocSeriesNumber: '', otherDocValidityDate: '',
+      maritalStatus: 'single', spouseFirstName: '', spouseMaidenName: '', spousePesel: '',
+      notificationMethod: 'paper', emailAddress: '', epuapAddress: '',
+    });
     // Stage 1 — persist the record immediately so it appears in the admin DB
     void syncPerson(newPerson);
   };
@@ -441,84 +553,297 @@ const App: React.FC = () => {
         {/* ── Main grid ───────────────────────────────────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-          {/* ── Left: form ────────────────────────────────────────────── */}
+          {/* ── Left: wizard form ─────────────────────────────────────── */}
           <div className="lg:col-span-4">
             <div className={`rounded-[2.5rem] shadow-2xl border overflow-hidden ${dark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-              <div className={`border-b px-10 py-5 flex items-center gap-3 font-black uppercase text-[10px] tracking-[0.2em] opacity-50 ${dark ? 'border-slate-800' : 'border-slate-100'}`}>
-                <Plus size={14} /> {t('manualEntry')}
+              <div className={`border-b px-10 py-5 flex items-center justify-between font-black uppercase text-[10px] tracking-[0.2em] opacity-50 ${dark ? 'border-slate-800' : 'border-slate-100'}`}>
+                <div className="flex items-center gap-3">
+                  <Plus size={14} /> {t('manualEntry')}
+                </div>
+                <span>{t('step')} {wizardStep} {t('of')} 3</span>
               </div>
               <form onSubmit={handleAddPerson} className="p-8 space-y-6">
-                {(['firstName', 'lastName', 'nationality'] as const).map((field) => (
-                  <FormField
-                    key={field}
-                    label={t(field)}
-                    name={field}
-                    type="text"
-                    value={formData[field]}
-                    required
-                    placeholder={field === 'nationality' ? 'e.g. Polish, Ukrainian' : undefined}
-                    onChange={(v) => setFormData({ ...formData, [field]: v })}
-                    onTTS={() => handleTTS(`${t(field)}: ${formData[field] || '–'}`, field)}
-                    isAudioLoading={audioLoadingId === field}
-                    onDictate={() => handleDictate(field)}
-                    isDictating={dictatingField === field}
-                    isDarkMode={dark}
-                    readOutLoudLabel={t('readOutLoud')}
-                    dictateLabel={t('dictate')}
-                    listeningLabel={t('listening')}
-                  />
-                ))}
 
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Date of birth */}
-                  <FormField
-                    label={t('dob')}
-                    name="dob"
-                    type="date"
-                    value={formData.dob}
-                    required
-                    onChange={(v) => setFormData({ ...formData, dob: v })}
-                    onTTS={() => handleTTS(`${t('dob')}: ${formData.dob || '–'}`, 'dob')}
-                    isAudioLoading={audioLoadingId === 'dob'}
-                    onDictate={() => handleDictate('dob')}
-                    isDictating={dictatingField === 'dob'}
-                    isDarkMode={dark}
-                    readOutLoudLabel={t('readOutLoud')}
-                    dictateLabel={t('dictate')}
-                    listeningLabel={t('listening')}
-                  />
-
-                  {/* Gender */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className="text-[10px] font-black uppercase opacity-40 block tracking-widest">
-                        {t('gender')}
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => handleTTS(`${t('gender')}: ${formData.gender === 'male' ? t('male') : t('female')}`, 'gen')}
-                        className={`p-1.5 rounded-lg transition-all ${audioLoadingId === 'gen' ? 'text-indigo-500 animate-pulse bg-indigo-500/10' : 'hover:bg-slate-500/10 opacity-40 hover:opacity-100'}`}
-                      >
-                        <Volume2 size={12} />
-                      </button>
+                {/* ── STEP 1: APPLICANT INFO ─────────────────────────────── */}
+                {wizardStep === 1 && (
+                  <>
+                    <h3 className="text-sm font-black uppercase opacity-60 mb-4">{t('applicantSection')}</h3>
+                    {(['applicantFirstName', 'applicantLastName'] as const).map((field) => (
+                      <FormField
+                        key={field}
+                        label={t(field)}
+                        name={field}
+                        type="text"
+                        value={formData[field]}
+                        required
+                        onChange={(v) => setFormData({ ...formData, [field]: v })}
+                        isDarkMode={dark}
+                      />
+                    ))}
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        label={t('street')}
+                        name="applicantStreet"
+                        type="text"
+                        value={formData.applicantStreet}
+                        required
+                        onChange={(v) => setFormData({ ...formData, applicantStreet: v })}
+                        isDarkMode={dark}
+                      />
+                      <FormField
+                        label={t('houseNumber')}
+                        name="applicantHouseNumber"
+                        type="text"
+                        value={formData.applicantHouseNumber}
+                        required
+                        onChange={(v) => setFormData({ ...formData, applicantHouseNumber: v })}
+                        isDarkMode={dark}
+                      />
                     </div>
-                    <select
-                      value={formData.gender}
-                      onChange={(e) => setFormData({ ...formData, gender: e.target.value as 'male' | 'female' })}
-                      className={`w-full px-4 py-3.5 rounded-2xl border outline-none transition-all ${dark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`}
-                    >
-                      <option value="male">{t('male')}</option>
-                      <option value="female">{t('female')}</option>
-                    </select>
-                  </div>
-                </div>
+                    <FormField
+                      label={`${t('apartmentNumber')} ${t('optional')}`}
+                      name="applicantApartmentNumber"
+                      type="text"
+                      value={formData.applicantApartmentNumber}
+                      onChange={(v) => setFormData({ ...formData, applicantApartmentNumber: v })}
+                      isDarkMode={dark}
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        label={t('postalCode')}
+                        name="applicantPostalCode"
+                        type="text"
+                        value={formData.applicantPostalCode}
+                        required
+                        onChange={(v) => setFormData({ ...formData, applicantPostalCode: v })}
+                        isDarkMode={dark}
+                      />
+                      <FormField
+                        label={t('city')}
+                        name="applicantCity"
+                        type="text"
+                        value={formData.applicantCity}
+                        required
+                        onChange={(v) => setFormData({ ...formData, applicantCity: v })}
+                        isDarkMode={dark}
+                      />
+                    </div>
+                  </>
+                )}
 
-                <button
-                  type="submit"
-                  className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-indigo-500/25 hover:bg-indigo-700 active:scale-95 transition-all uppercase tracking-widest text-xs flex items-center justify-center gap-2"
-                >
-                  <IdCard size={16} /> {t('generateIdentity')}
-                </button>
+                {/* ── STEP 2: PERSON & FAMILY INFO ───────────────────────── */}
+                {wizardStep === 2 && (
+                  <>
+                    <h3 className="text-sm font-black uppercase opacity-60 mb-4">{t('personSection')}</h3>
+                    {(['firstName', 'lastName', 'nationality'] as const).map((field) => (
+                      <FormField
+                        key={field}
+                        label={t(field)}
+                        name={field}
+                        type="text"
+                        value={formData[field]}
+                        required
+                        placeholder={field === 'nationality' ? 'e.g. Polish, Ukrainian' : undefined}
+                        onChange={(v) => setFormData({ ...formData, [field]: v })}
+                        isDarkMode={dark}
+                      />
+                    ))}
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        label={t('dob')}
+                        name="dob"
+                        type="date"
+                        value={formData.dob}
+                        required
+                        onChange={(v) => setFormData({ ...formData, dob: v })}
+                        isDarkMode={dark}
+                      />
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase opacity-40 block tracking-widest">{t('gender')}</label>
+                        <select
+                          value={formData.gender}
+                          onChange={(e) => setFormData({ ...formData, gender: e.target.value as 'male' | 'female' })}
+                          className={`w-full px-4 py-3.5 rounded-2xl border outline-none transition-all ${dark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`}
+                        >
+                          <option value="male">{t('male')}</option>
+                          <option value="female">{t('female')}</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        label={`${t('secondName')} ${t('optional')}`}
+                        name="secondName"
+                        type="text"
+                        value={formData.secondName}
+                        onChange={(v) => setFormData({ ...formData, secondName: v })}
+                        isDarkMode={dark}
+                      />
+                      <FormField
+                        label={`${t('maidenName')} ${t('optional')}`}
+                        name="maidenName"
+                        type="text"
+                        value={formData.maidenName}
+                        onChange={(v) => setFormData({ ...formData, maidenName: v })}
+                        isDarkMode={dark}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        label={`${t('birthPlace')} ${t('optional')}`}
+                        name="birthPlace"
+                        type="text"
+                        value={formData.birthPlace}
+                        onChange={(v) => setFormData({ ...formData, birthPlace: v })}
+                        isDarkMode={dark}
+                      />
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase opacity-40 block tracking-widest">{t('citizenshipStatus')}</label>
+                        <select
+                          value={formData.citizenshipStatus}
+                          onChange={(e) => setFormData({ ...formData, citizenshipStatus: e.target.value as any })}
+                          className={`w-full px-4 py-3.5 rounded-2xl border outline-none transition-all ${dark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`}
+                        >
+                          <option value="polish">{t('citizenshipPolish')}</option>
+                          <option value="stateless">{t('citizenshipStateless')}</option>
+                          <option value="other">{t('citizenshipOther')}</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <h3 className="text-sm font-black uppercase opacity-60 mt-6 mb-4">{t('familySection')} {t('required')}</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        label={t('fatherFirstName')}
+                        name="fatherFirstName"
+                        type="text"
+                        value={formData.fatherFirstName}
+                        required
+                        onChange={(v) => setFormData({ ...formData, fatherFirstName: v })}
+                        isDarkMode={dark}
+                      />
+                      <FormField
+                        label={t('fatherMaidenName')}
+                        name="fatherMaidenName"
+                        type="text"
+                        value={formData.fatherMaidenName}
+                        required
+                        onChange={(v) => setFormData({ ...formData, fatherMaidenName: v })}
+                        isDarkMode={dark}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        label={t('motherFirstName')}
+                        name="motherFirstName"
+                        type="text"
+                        value={formData.motherFirstName}
+                        required
+                        onChange={(v) => setFormData({ ...formData, motherFirstName: v })}
+                        isDarkMode={dark}
+                      />
+                      <FormField
+                        label={t('motherMaidenName')}
+                        name="motherMaidenName"
+                        type="text"
+                        value={formData.motherMaidenName}
+                        required
+                        onChange={(v) => setFormData({ ...formData, motherMaidenName: v })}
+                        isDarkMode={dark}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* ── STEP 3: DOCUMENTS & NOTIFICATION ───────────────────── */}
+                {wizardStep === 3 && (
+                  <>
+                    <h3 className="text-sm font-black uppercase opacity-60 mb-4">{t('documentSection')} {t('optional')}</h3>
+
+                    <div className="text-xs opacity-50 mb-4 p-2 border-l-2 border-amber-500">{t('fillIfAvailable')}</div>
+
+                    <details className="border rounded-lg p-3 cursor-pointer">
+                      <summary className="font-bold text-sm">{t('idSection')}</summary>
+                      <div className="space-y-3 mt-3">
+                        <FormField label={t('idSeriesNumber')} name="idSeriesNumber" type="text" value={formData.idSeriesNumber} onChange={(v) => setFormData({ ...formData, idSeriesNumber: v })} isDarkMode={dark} />
+                        <FormField label={t('idValidityDate')} name="idValidityDate" type="date" value={formData.idValidityDate} onChange={(v) => setFormData({ ...formData, idValidityDate: v })} isDarkMode={dark} />
+                        <FormField label={t('idIssuingAuthority')} name="idIssuingAuthority" type="text" value={formData.idIssuingAuthority} onChange={(v) => setFormData({ ...formData, idIssuingAuthority: v })} isDarkMode={dark} />
+                      </div>
+                    </details>
+
+                    <details className="border rounded-lg p-3 cursor-pointer">
+                      <summary className="font-bold text-sm">{t('passportSection')}</summary>
+                      <div className="space-y-3 mt-3">
+                        <FormField label={t('passportSeriesNumber')} name="passportSeriesNumber" type="text" value={formData.passportSeriesNumber} onChange={(v) => setFormData({ ...formData, passportSeriesNumber: v })} isDarkMode={dark} />
+                        <FormField label={t('passportValidityDate')} name="passportValidityDate" type="date" value={formData.passportValidityDate} onChange={(v) => setFormData({ ...formData, passportValidityDate: v })} isDarkMode={dark} />
+                      </div>
+                    </details>
+
+                    <h3 className="text-sm font-black uppercase opacity-60 mt-6 mb-4">{t('maritalStatusSection')} {t('optional')}</h3>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase opacity-40 block tracking-widest">{t('maritalStatus')}</label>
+                      <select value={formData.maritalStatus} onChange={(e) => setFormData({ ...formData, maritalStatus: e.target.value as any })} className={`w-full px-4 py-3.5 rounded-2xl border outline-none transition-all ${dark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`}>
+                        <option value="single">{t('maritalSingle')}</option>
+                        <option value="married">{t('maritalMarried')}</option>
+                        <option value="divorced">{t('maritalDivorced')}</option>
+                        <option value="widow">{t('maritalWidow')}</option>
+                      </select>
+                    </div>
+                    {(formData.maritalStatus === 'married' || formData.maritalStatus === 'divorced' || formData.maritalStatus === 'widow') && (
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField label={t('spouseFirstName')} name="spouseFirstName" type="text" value={formData.spouseFirstName} onChange={(v) => setFormData({ ...formData, spouseFirstName: v })} isDarkMode={dark} />
+                        <FormField label={t('spouseMaidenName')} name="spouseMaidenName" type="text" value={formData.spouseMaidenName} onChange={(v) => setFormData({ ...formData, spouseMaidenName: v })} isDarkMode={dark} />
+                      </div>
+                    )}
+
+                    <h3 className="text-sm font-black uppercase opacity-60 mt-6 mb-4">{t('notificationSection')} {t('required')}</h3>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase opacity-40 block tracking-widest">{t('notificationMethod')}</label>
+                      <select value={formData.notificationMethod} onChange={(e) => setFormData({ ...formData, notificationMethod: e.target.value as any })} className={`w-full px-4 py-3.5 rounded-2xl border outline-none transition-all ${dark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`}>
+                        <option value="paper">{t('notificationPaper')}</option>
+                        <option value="electronic">{t('notificationElectronic')}</option>
+                      </select>
+                    </div>
+                    {formData.notificationMethod === 'electronic' && (
+                      <div className="grid grid-cols-1 gap-4">
+                        <FormField label={`${t('emailAddress')} ${t('optional')}`} name="emailAddress" type="email" value={formData.emailAddress} onChange={(v) => setFormData({ ...formData, emailAddress: v })} isDarkMode={dark} />
+                        <FormField label={`${t('epuapAddress')} ${t('optional')}`} name="epuapAddress" type="text" value={formData.epuapAddress} onChange={(v) => setFormData({ ...formData, epuapAddress: v })} isDarkMode={dark} />
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Navigation buttons */}
+                <div className="flex gap-3 pt-4">
+                  {wizardStep > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setWizardStep(wizardStep - 1)}
+                      className="flex-1 border border-indigo-600 text-indigo-600 font-black py-3 rounded-2xl hover:bg-indigo-600/10 active:scale-95 transition-all uppercase tracking-widest text-xs"
+                    >
+                      ← {t('previous')}
+                    </button>
+                  )}
+                  {wizardStep < 3 ? (
+                    <button
+                      type="button"
+                      onClick={() => setWizardStep(wizardStep + 1)}
+                      className="flex-1 bg-indigo-600 text-white font-black py-3 rounded-2xl shadow-xl shadow-indigo-500/25 hover:bg-indigo-700 active:scale-95 transition-all uppercase tracking-widest text-xs"
+                    >
+                      {t('next')} →
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      className="flex-1 bg-indigo-600 text-white font-black py-3 rounded-2xl shadow-xl shadow-indigo-500/25 hover:bg-indigo-700 active:scale-95 transition-all uppercase tracking-widest text-xs flex items-center justify-center gap-2"
+                    >
+                      <IdCard size={16} /> {t('generateIdentity')}
+                    </button>
+                  )}
+                </div>
               </form>
             </div>
           </div>
