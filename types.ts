@@ -12,17 +12,20 @@ export interface Person {
   createdAt: number;
   verificationdetails?: string;
   idphoto?: string;
+  verificationstatus?: VerificationStatus;
 
   // ── Wnioskodawca (Applicant Info - Section 1)
-  applicantfirstname: string;
-  applicantlastname: string;
-  applicantstreet: string;
-  applicanthousenumber: string;
+  applicantfirstname?: string;
+  applicantlastname?: string;
+  applicantstreet?: string;
+  applicanthousenumber?: string;
   applicantapartmentnumber?: string;
-  applicantpostalcode: string;
-  applicantcity: string;
+  applicantpostalcode?: string;
+  applicantcity?: string;
 
   // ── Person Additional Info (Section 2)
+  firstname?: string;
+  lastname?: string;
   secondname?: string;
   othernames?: string;
   maidenname?: string;
@@ -57,7 +60,4 @@ export interface Person {
   notificationmethod?: 'paper' | 'electronic';
   emailaddress?: string;
   epuapaddress?: string;
-
-  // ── Verification Status
-  verificationstatus?: VerificationStatus;
 }

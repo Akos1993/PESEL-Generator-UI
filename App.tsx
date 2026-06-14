@@ -178,6 +178,8 @@ const App: React.FC = () => {
     const newPerson: Person = {
       id: crypto.randomUUID(),
       dob, gender, nationality,
+      firstname: firstName,
+      lastname: lastName,
       applicantfirstname: applicantFirstName,
       applicantlastname: applicantLastName,
       applicantstreet: applicantStreet,
@@ -336,6 +338,8 @@ const App: React.FC = () => {
         dob: dob.toISOString().split('T')[0],
         gender,
         nationality: 'Polish',
+        firstname: firstName,
+        lastname: lastName,
         applicantfirstname: firstName,
         applicantlastname: lastName,
         applicantstreet: `Test Street ${i + 1}`,
