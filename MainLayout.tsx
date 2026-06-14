@@ -24,10 +24,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const mapViewToSidebarView = (view: View): 'user' | 'admin' | 'review' => {
-    if (view === 'login') return 'user';
-    if (view === 'review') return 'review';
-    return 'user';
+  const mapViewToSidebarView = (view: View): 'generator' | 'mydata' | 'help' => {
+    if (view === 'mydata') return 'mydata';
+    if (view === 'help') return 'help';
+    return 'generator';
   };
 
   return (
@@ -50,6 +50,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           activeView={mapViewToSidebarView(currentView)}
           onNavigate={(view) => {
             onViewChange(view);
+            setSidebarOpen(false);
+          }}
+          onAdminClick={() => {
+            onViewChange('login');
             setSidebarOpen(false);
           }}
           isOpen={sidebarOpen}

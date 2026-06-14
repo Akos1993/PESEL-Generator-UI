@@ -16,7 +16,7 @@ import Accordion from './Accordion';
 
 const App: React.FC = () => {
   // ── Navigation
-  const [view, setView] = useState<View>('user');
+  const [view, setView] = useState<View>('generator');
 
   // ── People / DB
   const [people, setPeople] = useState<Person[]>([]);
@@ -330,7 +330,7 @@ const App: React.FC = () => {
         onClearDatabase={() => void handleClearDatabase()}
         onExport={exportData}
         onOpenReview={() => setView('review')}
-        onBack={() => setView('user')}
+        onBack={() => setView('generator')}
       />
     );
   }
@@ -355,20 +355,111 @@ const App: React.FC = () => {
         t={t}
         adminPass={adminPass}
         setAdminPass={setAdminPass}
-        onLogin={handleLogin}
-        onBack={() => setView('user')}
+        onLogin={() => { setView('admin'); setAdminPass(''); }}
+        onBack={() => setView('generator')}
       />
     );
   }
 
-  // ── USER VIEW (default)
+  if (view === 'mydata') {
+    return (
+      <MainLayout
+        lang={lang}
+        setLang={setLang}
+        currentView={view}
+        onViewChange={setView}
+        breadcrumbs={[{ label: 'Moja data' }]}
+      >
+        <div className="max-w-4xl">
+          <h1 className="text-3xl font-bold mb-2">Moja data</h1>
+          <p className="text-gray-600 mb-8">Tutaj możesz sprawdzić status swoich złożonych wniosków</p>
+
+          {people.length === 0 ? (
+            <div className="text-center p-12 bg-gray-50 rounded-lg border border-gray-200">
+              <p className="text-gray-600">Brak złożonych wniosków</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {people.map((person) => (
+                <div key={person.id} className="p-6 border border-gray-200 rounded-lg bg-white hover:bg-gray-50">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-bold text-lg">{person.firstName} {person.lastName}</h3>
+                      <p className="text-sm text-gray-600 mt-1">PESEL: <span className="font-mono">{person.pesel}</span></p>
+                      <p className="text-sm text-gray-600">Data urodzenia: {person.dob}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className={`inline-block px-3 py-1 rounded text-xs font-semibold ${
+                        person.verificationStatus === 'verified' ? 'bg-green-100 text-green-800' :
+                        person.verificationStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        person.verificationStatus === 'rejected' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {person.verificationStatus}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (view === 'help') {
+    return (
+      <MainLayout
+        lang={lang}
+        setLang={setLang}
+        currentView={view}
+        onViewChange={setView}
+        breadcrumbs={[{ label: 'Pomoc' }]}
+      >
+        <div className="max-w-4xl">
+          <h1 className="text-3xl font-bold mb-2">Pomoc</h1>
+          <p className="text-gray-600 mb-8">Odpowiedzi na najczęściej zadawane pytania</p>
+
+          <div className="space-y-6">
+            <div className="p-6 border border-gray-200 rounded-lg">
+              <h3 className="font-bold text-lg mb-2">Co to jest PESEL?</h3>
+              <p className="text-gray-700">PESEL to Powszechny Elektroniczny System Ewidencji Ludności - unikalny numer identyfikacyjny każdej osoby zarejestrowanej w Polsce.</p>
+            </div>
+
+            <div className="p-6 border border-gray-200 rounded-lg">
+              <h3 className="font-bold text-lg mb-2">Jak złożyć wniosek?</h3>
+              <ol className="text-gray-700 list-decimal list-inside space-y-2">
+                <li>Wypełnij formularz na stronie głównej</li>
+                <li>Podaj wszystkie wymagane informacje</li>
+                <li>Załącz wymagane dokumenty</li>
+                <li>Złóż wniosek i czekaj na weryfikację</li>
+              </ol>
+            </div>
+
+            <div className="p-6 border border-gray-200 rounded-lg">
+              <h3 className="font-bold text-lg mb-2">Jakie dokumenty są wymagane?</h3>
+              <p className="text-gray-700">Wymagany jest ważny dowód osobisty, paszport lub inne oficjalne dokumenty tożsamości oraz potwierdzenie zameldowania ponad 6 miesięcy.</p>
+            </div>
+
+            <div className="p-6 border border-gray-200 rounded-lg">
+              <h3 className="font-bold text-lg mb-2">Jak długo trwa weryfikacja?</h3>
+              <p className="text-gray-700">Proces weryfikacji zwykle trwa od 5 do 10 dni roboczych. Będziesz powiadomiony o statusie na podaną stronę lub email.</p>
+            </div>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  // ── GENERATOR VIEW (default)
   return (
     <MainLayout
       lang={lang}
       setLang={setLang}
       currentView={view}
       onViewChange={setView}
-      breadcrumbs={[{ label: 'Get a PESEL ID - a service for foreigners' }]}
+      breadcrumbs={[{ label: 'Generator PESEL' }]}
     >
       <div style={{ fontSize: `${fontScale}rem` }}>
         <div className="max-w-4xl">

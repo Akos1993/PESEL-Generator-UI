@@ -1,6 +1,6 @@
 export type Language = 'PL' | 'ENG' | 'UKR';
 export type VerificationStatus = 'none' | 'pending' | 'verified' | 'rejected';
-export type View = 'user' | 'login' | 'admin' | 'review';
+export type View = 'generator' | 'mydata' | 'help' | 'login' | 'admin' | 'review';
 export type DbStatus = 'connecting' | 'connected' | 'disconnected' | 'unconfigured';
 
 export interface Person {
