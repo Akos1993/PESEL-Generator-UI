@@ -320,6 +320,66 @@ const App: React.FC = () => {
     setView('generator');
   };
 
+  const generateTestPeople = async (): Promise<void> => {
+    const names = ['John', 'Jane', 'Michael', 'Sarah', 'David', 'Emma', 'Robert', 'Lisa'];
+    const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis'];
+    const cities = ['Warsaw', 'Krakow', 'Gdansk', 'Wroclaw', 'Poznań', 'Lodz'];
+
+    for (let i = 0; i < 3; i++) {
+      const firstName = names[Math.floor(Math.random() * names.length)];
+      const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+      const dob = new Date(1980 + Math.random() * 40, Math.random() * 12, 1 + Math.random() * 28);
+      const gender = Math.random() > 0.5 ? 'male' : 'female';
+
+      const testPerson: Person = {
+        id: crypto.randomUUID(),
+        dob: dob.toISOString().split('T')[0],
+        gender,
+        nationality: 'Polish',
+        applicantfirstname: firstName,
+        applicantlastname: lastName,
+        applicantstreet: `Test Street ${i + 1}`,
+        applicanthousenumber: `${i + 1}`,
+        applicantpostalcode: '00-000',
+        applicantcity: cities[Math.floor(Math.random() * cities.length)],
+        secondname: '',
+        othernames: '',
+        maidenname: '',
+        birthplace: 'Poland',
+        countryofbirth: 'Poland',
+        countryofresidence: 'Poland',
+        citizenshipstatus: 'polish',
+        fatherfirstname: 'Test Father',
+        fathermaidenname: 'TestFather',
+        motherfirstname: 'Test Mother',
+        mothermaidenname: 'TestMother',
+        civregistryoffice: 'Test Office',
+        idseriesnumber: `TEST${Math.random().toString().slice(2, 6)}`,
+        idvaliditydate: new Date(2030, 0, 1).toISOString().split('T')[0],
+        idissuingauthority: 'Test Authority',
+        passportseriesnumber: '',
+        passportvaliditydate: '',
+        otherdocseriesnumber: '',
+        otherdocvaliditydate: '',
+        maritalstatus: 'single',
+        spousefirstname: '',
+        spousemaidenname: '',
+        spousepesel: '',
+        notificationmethod: 'paper',
+        emailaddress: `test${i}@example.com`,
+        epuapaddress: '',
+        pesel: generatePESEL(dob, gender),
+        createdAt: Date.now(),
+        verificationdetails: 'Test data - auto-generated',
+        verificationstatus: 'none',
+      };
+
+      setPeople((prev) => [testPerson, ...prev]);
+      await syncPerson(testPerson).catch(() => {});
+    }
+    alert('Generated 3 test people');
+  };
+
   const exportData = (): void => {
     const blob = new Blob([JSON.stringify(people, null, 2)], { type: 'application/json' });
     const anchor = document.createElement('a');
@@ -530,6 +590,16 @@ const App: React.FC = () => {
         <div className="max-w-4xl">
           <h1 className="text-3xl font-bold mb-2">{t('title')}</h1>
           <p className="text-gray-600 mb-8">{t('subtitle')}</p>
+
+          <div className="mb-6">
+            <button
+              onClick={generateTestPeople}
+              className="px-3 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 opacity-50 hover:opacity-100 transition-opacity"
+              title="Debug: Generate 3 test people"
+            >
+              🧪 Generate Test Data
+            </button>
+          </div>
 
           {submittedApplication && !activePerson ? (
             <div className="mb-8 p-6 bg-amber-50 border border-amber-200 rounded-lg">
